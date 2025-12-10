@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useCart } from "../context/CartContext";
-import FloatingCartButton from "@/components/FloatingCartButton";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -167,7 +166,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-      <FloatingCartButton />
     </div>
   );
 }

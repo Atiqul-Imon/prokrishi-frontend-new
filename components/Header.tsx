@@ -205,7 +205,7 @@ export default function Header() {
             </nav>
 
             {/* Right: Search, Actions */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-2 md:gap-4 lg:gap-6 flex-shrink-0">
               {/* Search Bar - Desktop */}
               <div
                 className={`hidden lg:block relative transition-all duration-300 ${

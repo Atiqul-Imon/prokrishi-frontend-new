@@ -1,16 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { ShoppingCart } from "lucide-react";
 
 export default function FloatingCartButton() {
   const { cartCount, cartTotal } = useCart();
+  const pathname = usePathname();
+
+  // Don't show on mobile or in admin panel
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <Link
       href="/cart"
-      className="fixed right-4 md:right-6 top-1/2 -translate-y-1/2 z-40"
+      className="fixed right-4 md:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:block"
       aria-label="Open cart"
     >
       <div className="flex flex-col rounded-xl overflow-hidden shadow-2xl border border-emerald-100 bg-white hover:shadow-emerald-200/70 transition">
