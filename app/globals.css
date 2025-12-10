@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* Brand palette: Emerald/Amber */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+  --primary-green: #0f9d58;
+  --primary-amber: #f59e0b;
+  --brand-emerald: #0f9d58;
+  --brand-emerald-600: #0c7c45;
+  --brand-emerald-50: #e8f5ed;
+  --brand-amber: #f59e0b;
+  --brand-amber-600: #d97706;
+  --brand-amber-50: #fff7eb;
+  --muted: #6b7280;
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --ring: #f59e0b;
 }
 
 @theme inline {
@@ -12,15 +25,51 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.08);
+  border-radius: 18px;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-white transition shadow-md;
+  background: linear-gradient(135deg, var(--brand-amber), var(--brand-amber-600));
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+}
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-emerald-700 transition;
+  background: var(--brand-emerald-50);
+  border: 1px solid var(--brand-emerald);
+}
+.btn-ghost:hover {
+  background: #dff1e6;
+}
+
+.input-field {
+  @apply w-full rounded-xl px-3.5 py-2.5 text-sm transition focus:outline-none;
+  background: #f9fafb;
+}
+.input-field:focus {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
 }

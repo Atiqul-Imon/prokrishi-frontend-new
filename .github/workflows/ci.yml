@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend-new/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./frontend-new
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: ./frontend-new
+      run: npm run lint
+    
+    - name: Type check
+      working-directory: ./frontend-new
+      run: npm run type-check
+      continue-on-error: true
+    
+    - name: Build
+      working-directory: ./frontend-new
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3500/api' }}
+

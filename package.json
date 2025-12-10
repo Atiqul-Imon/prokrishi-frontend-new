@@ -1,17 +1,24 @@
 {
-  "name": "frontend-new",
-  "version": "0.1.0",
+  "name": "prokrishi-frontend",
+  "version": "1.0.0",
   "private": true,
+  "description": "Prokrishi e-commerce frontend built with Next.js",
+  "author": "Prokrishi Team",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "axios": "^1.13.2",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.556.0",
     "next": "16.0.8",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

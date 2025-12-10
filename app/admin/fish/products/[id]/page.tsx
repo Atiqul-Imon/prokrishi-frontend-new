@@ -1,0 +1,301 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { fishProductApi } from "../../../../utils/fishApi";
+import { ArrowLeft, Edit, Fish, DollarSign, PackageCheck, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+
+export default function FishProductDetailsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const productId = params.id as string;
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const result = await fishProductApi.getById(productId);
+        setProduct(result.fishProduct || result);
+      } catch (err: any) {
+        setError(err.message || "Failed to load fish product");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block w-6 h-6 border-2 border-slate-200 dark:border-slate-800 border-t-slate-900 dark:border-t-slate-100 rounded-full animate-spin"></div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-6">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
+            <div>
+              <h3 className="text-sm font-semibold text-red-900 dark:text-red-200">Error</h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">{error || "Product not found"}</p>
+            </div>
+          </div>
+        </div>
+        <Link href="/admin/fish/products">
+          <Button variant="outline">Back to Fish Products</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const getTotalStock = () => {
+    if (!product.sizeCategories || product.sizeCategories.length === 0) return 0;
+    return product.sizeCategories.reduce((sum: number, cat: any) => sum + (cat.stock || 0), 0);
+  };
+
+  const getPriceRange = () => {
+    if (!product.sizeCategories || product.sizeCategories.length === 0) return "N/A";
+    const prices = product.sizeCategories
+      .filter((cat: any) => cat.status === "active")
+      .map((cat: any) => cat.pricePerKg)
+      .filter((p: any) => p != null);
+    if (prices.length === 0) return "N/A";
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    if (min === max) {
+      return `৳${min.toLocaleString()}/kg`;
+    }
+    return `৳${min.toLocaleString()} - ৳${max.toLocaleString()}/kg`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/fish/products">
+            <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <ArrowLeft size={18} />
+            </button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{product.name}</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Fish Product Details</p>
+          </div>
+        </div>
+        <Link href={`/admin/fish/products/edit/${productId}`}>
+          <Button variant="primary" className="flex items-center gap-2 text-sm">
+            <Edit size={16} />
+            Edit Product
+          </Button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Image */}
+          {product.image && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Product Image</h2>
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full max-w-md h-auto rounded-lg object-cover"
+              />
+            </div>
+          )}
+
+          {/* Description */}
+          {(product.description || product.shortDescription) && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Description</h2>
+              {product.shortDescription && (
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">{product.shortDescription}</p>
+              )}
+              {product.description && (
+                <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{product.description}</p>
+              )}
+            </div>
+          )}
+
+          {/* Size Categories */}
+          {product.sizeCategories && product.sizeCategories.length > 0 && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Size Categories</h2>
+              <div className="space-y-3">
+                {product.sizeCategories.map((cat: any, index: number) => (
+                  <div
+                    key={cat._id || index}
+                    className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{cat.label}</span>
+                        {cat.isDefault && (
+                          <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300 rounded">
+                            Default
+                          </span>
+                        )}
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            cat.status === "active"
+                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {cat.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Price/Kg</p>
+                        <p className="font-medium text-slate-900 dark:text-slate-100">
+                          ৳{cat.pricePerKg?.toLocaleString() || 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Stock</p>
+                        <p className="font-medium text-slate-900 dark:text-slate-100">{cat.stock || 0} kg</p>
+                      </div>
+                      {cat.minWeight && (
+                        <div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Min Weight</p>
+                          <p className="font-medium text-slate-900 dark:text-slate-100">{cat.minWeight} kg</p>
+                        </div>
+                      )}
+                      {cat.maxWeight && (
+                        <div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Max Weight</p>
+                          <p className="font-medium text-slate-900 dark:text-slate-100">{cat.maxWeight} kg</p>
+                        </div>
+                      )}
+                      {cat.sku && (
+                        <div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">SKU</p>
+                          <p className="font-medium text-slate-900 dark:text-slate-100 font-mono text-xs">
+                            {cat.sku}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Product Info */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Product Information</h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <Fish className="text-slate-600 dark:text-slate-400" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Category</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {product.category?.name || "মাছ"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <DollarSign className="text-slate-600 dark:text-slate-400" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Price Range</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{getPriceRange()}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <PackageCheck className="text-slate-600 dark:text-slate-400" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Total Stock</p>
+                  <p
+                    className={`text-sm font-medium ${
+                      getTotalStock() < 10
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-slate-900 dark:text-slate-100"
+                    }`}
+                  >
+                    {getTotalStock()} kg
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <PackageCheck className="text-slate-600 dark:text-slate-400" size={16} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Status</p>
+                  <span
+                    className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${
+                      product.status === "active"
+                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {product.status || "inactive"}
+                  </span>
+                </div>
+              </div>
+
+              {product.sku && (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <PackageCheck className="text-slate-600 dark:text-slate-400" size={16} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">SKU</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 font-mono">
+                      {product.sku}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {product.isFeatured && (
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                    <PackageCheck className="text-slate-600 dark:text-slate-400" size={16} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Featured</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Yes</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

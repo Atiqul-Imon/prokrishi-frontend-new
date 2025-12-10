@@ -1,0 +1,364 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { getProductById } from "../../utils/api";
+import { useCart } from "../../context/CartContext";
+import type { Product } from "@/types/models";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
+
+export default function ProductDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { addToCart } = useCart();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [variantId, setVariantId] = useState<string | undefined>(undefined);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await getProductById(id);
+        setProduct(res.product);
+      } catch (err: any) {
+        setError(err?.message || "Failed to load product");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id]);
+
+  const price = useMemo(() => {
+    if (!product) return 0;
+    if (product.hasVariants && variantId) {
+      const variant = product.variants?.find((v) => v._id === variantId);
+      return variant?.price ?? product.price;
+    }
+    return product.price;
+  }, [product, variantId]);
+
+  const selectedVariant = useMemo(() => {
+    if (!product) return null;
+    if (product.hasVariants && variantId) {
+      return product.variants?.find((v) => v._id === variantId);
+    }
+    return null;
+  }, [product, variantId]);
+
+  const currentStock = useMemo(() => {
+    if (selectedVariant) return selectedVariant.stock || 0;
+    return product?.stock || 0;
+  }, [product, selectedVariant]);
+
+  const inStock = currentStock > 0;
+  const unit = selectedVariant?.unit || product?.unit || "pcs";
+
+  const productImages = useMemo(() => {
+    if (!product) return [];
+    return product.images && product.images.length > 0 
+      ? product.images 
+      : (product.image ? [product.image] : []);
+  }, [product]);
+
+  const isFishProduct = useMemo(() => {
+    if (!product) return false;
+    return (product as any).isFishProduct === true ||
+      ((product as any).sizeCategories && Array.isArray((product as any).sizeCategories) && (product as any).sizeCategories.length > 0);
+  }, [product]);
+
+  const sizeCategories = useMemo(() => {
+    if (!product) return [];
+    return (product as any).sizeCategories || [];
+  }, [product]);
+
+  const handleQuantityChange = (delta: number) => {
+    const newQuantity = Math.max(1, quantity + delta);
+    if (inStock && newQuantity <= currentStock) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center py-12">
+            <div className="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-600 mt-4">Loading product…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-white py-12">
+        <div className="container mx-auto px-4">
+          <Card padding="lg">
+            <div className="text-center py-12">
+              <p className="text-red-600 text-lg">{error || "Product not found"}</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white py-8 pb-16">
+      <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
+        <div className="grid gap-4 lg:grid-cols-2 max-w-6xl mx-auto">
+          {/* Product Image Section */}
+          <div className="space-y-4">
+            <Card padding="none" variant="elevated" className="overflow-hidden">
+              <div className="aspect-square w-full bg-gray-100 relative group">
+                {productImages[selectedImageIndex] ? (
+                  <img
+                    src={productImages[selectedImageIndex]}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="w-16 h-16 text-gray-400" />
+                  </div>
+                )}
+                {!inStock && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Badge variant="error" size="lg">Out of Stock</Badge>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Image Thumbnails */}
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {productImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition ${
+                      selectedImageIndex === idx
+                        ? "ring-2 ring-green-600 ring-offset-2"
+                        : "hover:ring-2 hover:ring-green-300"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Product Info Section */}
+          <div className="space-y-4">
+            {/* Product Header */}
+            <Card padding="lg" variant="elevated">
+              <div className="space-y-3">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">
+                    {product.name}
+                  </h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {isFishProduct && (
+                      <Badge variant="warning" size="md">
+                        🐟 Fish Product
+                      </Badge>
+                    )}
+                    {inStock ? (
+                      <Badge variant="success" size="md">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        In Stock
+                      </Badge>
+                    ) : (
+                      <Badge variant="error" size="md">
+                        Out of Stock
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-sm text-gray-500">Price</p>
+                    <p className="text-4xl font-bold text-gray-900">৳{price.toLocaleString()}</p>
+                    {unit !== "pcs" && (
+                      <p className="text-sm text-gray-500">/ {unit}</p>
+                    )}
+                  </div>
+                  {currentStock > 0 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      Stock available: {currentStock} {unit}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Variants */}
+            {product.hasVariants && product.variants && product.variants.length > 0 && (
+              <Card padding="lg" variant="elevated">
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-gray-900">Select Variant</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {product.variants.map((v) => {
+                      const isSelected = variantId === v._id;
+                      const variantInStock = (v.stock || 0) > 0;
+                      return (
+                        <button
+                          key={v._id}
+                          onClick={() => {
+                            setVariantId(v._id);
+                            setQuantity(1);
+                          }}
+                          disabled={!variantInStock}
+                          className={`rounded-xl px-4 py-4 text-sm font-semibold transition text-left ${
+                            isSelected
+                              ? "bg-green-50 text-green-900 ring-2 ring-green-200"
+                              : variantInStock
+                              ? "bg-white hover:bg-green-50/50"
+                              : "bg-gray-50 text-gray-400 cursor-not-allowed opacity-60"
+                          }`}
+                        >
+                          <div className="font-bold">{v.label || v.unit}</div>
+                          <div className="text-xs mt-1">৳{v.price}</div>
+                          {!variantInStock && (
+                            <div className="text-xs text-red-600 mt-1">Out of stock</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Fish Product Size Categories */}
+            {isFishProduct && sizeCategories.length > 0 && (
+              <Card padding="lg" variant="elevated">
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold text-gray-900">Select Size Category</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {sizeCategories.map((sc: any) => {
+                      const isSelected = variantId === sc._id;
+                      return (
+                        <button
+                          key={sc._id}
+                          onClick={() => {
+                            setVariantId(sc._id);
+                            setQuantity(1);
+                          }}
+                          className={`rounded-xl px-4 py-4 text-sm font-semibold transition text-left ${
+                            isSelected
+                              ? "bg-green-50 text-green-900 ring-2 ring-green-200"
+                              : "bg-white hover:bg-green-50/50"
+                          }`}
+                        >
+                          <div className="font-bold">{sc.label || "Size"}</div>
+                          <div className="text-xs mt-1">৳{sc.pricePerKg}/kg</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Quantity Selector & Add to Cart */}
+            <Card padding="lg" variant="elevated">
+              <div className="space-y-4">
+                {/* Quantity Selector */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      disabled={quantity <= 1}
+                      className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1 px-4 py-2 rounded-lg bg-gray-50 text-center">
+                      <span className="text-lg font-bold text-gray-900">{quantity}</span>
+                      {unit !== "pcs" && (
+                        <span className="text-sm text-gray-500 ml-2">{unit}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      disabled={!inStock || quantity >= currentStock}
+                      className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {inStock && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Total: ৳{(price * quantity).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                {/* Add to Cart Button */}
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold text-lg py-4"
+                  onClick={() => addToCart(product, quantity, variantId)}
+                  disabled={!inStock}
+                >
+                  {inStock ? "Add to Cart" : "Out of Stock"}
+                </Button>
+
+                {/* Shipping Info */}
+                <div className="pt-4 border-t border-gray-200 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Truck className="w-4 h-4 text-green-600" />
+                    <span>Inside Dhaka: ৳80 · Outside Dhaka: ৳150</span>
+                  </div>
+                  {isFishProduct && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Package className="w-4 h-4 text-amber-600" />
+                      <span>Fish orders have separate delivery flow</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+          </div>
+        </div>
+
+        {/* Product Description - Full Width Section */}
+        {product.description && (
+          <div className="mt-12 max-w-6xl mx-auto">
+            <Card padding="lg" variant="elevated">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
+                Product Description
+              </h2>
+              <div className="prose prose-lg max-w-none">
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
+                  {product.description}
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
