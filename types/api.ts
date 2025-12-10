@@ -37,9 +37,15 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   search?: string;
+  q?: string; // Query/search term (alternative to search)
   category?: string;
   sort?: string;
+  sortBy?: string; // Alternative to sort
   order?: "asc" | "desc";
+  sortOrder?: "asc" | "desc"; // Alternative to order
+  minPrice?: number;
+  maxPrice?: number;
+  status?: string;
 }
 
 export interface ProductsResponse extends ApiResponse {

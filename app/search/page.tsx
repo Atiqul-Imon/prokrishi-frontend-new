@@ -60,16 +60,23 @@ function SearchPageContent() {
     setError("");
 
     try {
-      const data = await searchProducts({
-        q: query,
-        category,
-        minPrice: minPrice || 0,
-        maxPrice: maxPrice || 999999,
-        sortBy,
-        sortOrder,
+      // Build search params object with proper types
+      const searchParams: any = {
+        search: query || undefined,
+        category: category || undefined,
         page: parseInt(page) || 1,
-        status,
-      });
+      };
+      
+      // Add optional numeric params
+      if (minPrice) searchParams.minPrice = parseInt(minPrice);
+      if (maxPrice) searchParams.maxPrice = parseInt(maxPrice);
+      
+      // Add sort params
+      if (sortBy && sortBy !== "name") searchParams.sort = sortBy;
+      if (sortOrder) searchParams.order = sortOrder as "asc" | "desc";
+      if (status) searchParams.status = status;
+      
+      const data = await searchProducts(searchParams);
 
       setResults(data);
     } catch (err: any) {
@@ -172,7 +179,7 @@ function SearchPageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)]"
                   >
                     <option value="">All Categories</option>
-                    {results.categories?.map((cat) => (
+                    {results.categories?.map((cat: any) => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
                       </option>
@@ -261,7 +268,7 @@ function SearchPageContent() {
                   <p className="text-red-600">{error}</p>
                 </div>
               </Card>
-            ) : results.products.length === 0 ? (
+            ) : !results.products || results.products.length === 0 ? (
               <Card padding="lg">
                 <div className="text-center py-12">
                   <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -276,7 +283,7 @@ function SearchPageContent() {
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                  {results.products.map((product) => (
+                  {(results.products || []).map((product: any) => (
                     <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
