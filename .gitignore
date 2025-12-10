@@ -8,6 +8,10 @@
 
 # testing
 /coverage
+/.nyc_output
+/playwright-report
+/test-results
+/playwright/.cache
 
 # next.js
 /.next/
@@ -31,10 +35,6 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Allow example env files
-!.env.example
-!env.*.example
 
 # vercel
 .vercel
