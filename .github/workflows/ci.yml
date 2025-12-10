@@ -17,33 +17,27 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        # Cache is optional - removing cache-dependency-path to avoid path resolution issues
-        # The build will work fine without caching, just slightly slower
     
     - name: Cache node modules
       uses: actions/cache@v4
       with:
-        path: frontend-new/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend-new/package-lock.json') }}
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
     
     - name: Install dependencies
-      working-directory: ./frontend-new
       run: npm ci
     
     - name: Run linter
-      working-directory: ./frontend-new
       run: npm run lint
       continue-on-error: true
     
     - name: Type check
-      working-directory: ./frontend-new
       run: npm run type-check
       continue-on-error: true
     
     - name: Build
-      working-directory: ./frontend-new
       run: npm run build
       env:
         NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3500/api' }}
