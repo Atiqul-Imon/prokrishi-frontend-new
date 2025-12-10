@@ -17,10 +17,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        # Path relative to repository root
-        cache-dependency-path: |
-          frontend-new/package-lock.json
+        # Cache is optional - removing cache-dependency-path to avoid path resolution issues
+        # The build will work fine without caching, just slightly slower
+    
+    - name: Cache node modules
+      uses: actions/cache@v4
+      with:
+        path: frontend-new/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('frontend-new/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
     
     - name: Install dependencies
       working-directory: ./frontend-new
