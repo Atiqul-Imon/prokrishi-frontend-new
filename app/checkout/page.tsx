@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { placeOrder, createPaymentSession, getShippingQuote } from "../utils/api";
+import { placeOrder, createPaymentSession, getShippingQuote, validateCartApi } from "../utils/api";
 import { fishOrderApi } from "../utils/fishApi";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +31,7 @@ export default function CheckoutPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [validationChanges, setValidationChanges] = useState<string | null>(null);
 
   const isFish = (item: any) =>
     item?.isFishProduct === true ||
@@ -141,6 +142,7 @@ export default function CheckoutPage() {
 
   async function handlePlaceOrder() {
     setMessage(null);
+    setValidationChanges(null);
     if (!selectedZone) {
       setMessage("Select delivery zone (Inside Dhaka or Outside Dhaka).");
       return;
@@ -206,11 +208,35 @@ export default function CheckoutPage() {
         console.error("Failed to get final shipping quote, using cached value:", err);
       }
 
+      // Pre-validate cart server-side
+      const validatePayload = {
+        orderItems: cart.map((item) => ({
+          product: item.id || item._id,
+          quantity: item.quantity,
+          variantId: item.variantId,
+          name: item.name,
+          price: item.variantSnapshot?.price || item.price,
+        })),
+      };
+      const validation = await validateCartApi(validatePayload);
+      if (validation?.hasChanges) {
+        const unavailable = validation.items?.filter((i: any) => !i.available) || [];
+        const reduced = validation.items?.filter((i: any) => i.available && i.finalQty !== i.requestedQty) || [];
+        let msg = "We updated your cart:";
+        if (unavailable.length > 0) {
+          msg += ` ${unavailable.length} item(s) unavailable.`;
+        }
+        if (reduced.length > 0) {
+          msg += ` Quantities adjusted for ${reduced.length} item(s).`;
+        }
+        setValidationChanges(msg);
+      }
+
+      const validatedTotal =
+        typeof validation?.totalPrice === "number" ? validation.totalPrice : cartTotal;
+
       if (regularProducts.length > 0) {
-        const regularOrderTotalPrice = regularProducts.reduce(
-          (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
-          0
-        );
+        const regularOrderTotalPrice = validatedTotal;
 
         const regularOrderData = {
           orderItems: regularProducts.map((item) => ({
@@ -223,6 +249,7 @@ export default function CheckoutPage() {
           shippingAddress,
           paymentMethod: selectedPayment === "cod" ? "Cash on Delivery" : "Online Payment",
           totalPrice: regularOrderTotalPrice,
+          idempotencyKey: crypto.randomUUID(),
           // Don't send totalAmount - let backend calculate it
           // Don't send shippingFee - backend will recalculate based on weight
           shippingZone: selectedZone,

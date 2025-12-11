@@ -221,6 +221,9 @@ export async function placeOrder(orderData: any): Promise<OrderResponse> {
   return apiRequest<OrderResponse>("/order/create", {
     method: "POST",
     data: orderData,
+    headers: orderData?.idempotencyKey
+      ? { "Idempotency-Key": orderData.idempotencyKey as string }
+      : undefined,
   });
 }
 
@@ -228,6 +231,21 @@ export function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQu
   return apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
     method: "POST",
     data,
+  });
+}
+
+export async function validateCartApi(payload: {
+  orderItems: Array<{
+    product: string;
+    quantity: number;
+    variantId?: string;
+    name?: string;
+    price?: number;
+  }>;
+}): Promise<any> {
+  return apiRequest<any>("/order/validate", {
+    method: "POST",
+    data: payload,
   });
 }
 
