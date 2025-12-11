@@ -20,6 +20,22 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  const isFishProduct = useMemo(() => {
+    if (!product) return false;
+    return (product as any).isFishProduct === true ||
+      ((product as any).sizeCategories && Array.isArray((product as any).sizeCategories) && (product as any).sizeCategories.length > 0);
+  }, [product]);
+
+  const sizeCategories = useMemo(() => {
+    if (!product) return [];
+    return (product as any).sizeCategories || [];
+  }, [product]);
+
+  const selectedSizeCategory = useMemo(() => {
+    if (!isFishProduct || !variantId) return null;
+    return sizeCategories.find((sc: any) => sc._id === variantId) || null;
+  }, [isFishProduct, sizeCategories, variantId]);
+
   useEffect(() => {
     async function load() {
       try {
@@ -36,12 +52,15 @@ export default function ProductDetailPage() {
 
   const price = useMemo(() => {
     if (!product) return 0;
+    if (isFishProduct && selectedSizeCategory) {
+      return selectedSizeCategory.pricePerKg || product.price;
+    }
     if (product.hasVariants && variantId) {
       const variant = product.variants?.find((v) => v._id === variantId);
       return variant?.price ?? product.price;
     }
     return product.price;
-  }, [product, variantId]);
+  }, [product, variantId, isFishProduct, selectedSizeCategory]);
 
   const selectedVariant = useMemo(() => {
     if (!product) return null;
@@ -52,20 +71,23 @@ export default function ProductDetailPage() {
   }, [product, variantId]);
 
   const priceType =
+    (isFishProduct && 'PER_WEIGHT') ||
     selectedVariant?.priceType ||
     product?.priceType ||
     ((selectedVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
 
   const currentStock = useMemo(() => {
+    if (selectedSizeCategory) return selectedSizeCategory.stock || 0;
     if (selectedVariant) return selectedVariant.stock || 0;
     return product?.stock || 0;
-  }, [product, selectedVariant]);
+  }, [product, selectedVariant, selectedSizeCategory]);
 
   const inStock = currentStock > 0;
-  const unit = selectedVariant?.unit || product?.unit || "pcs";
+  const unit = selectedSizeCategory ? "kg" : selectedVariant?.unit || product?.unit || "pcs";
   const stockType =
-    selectedVariant?.stockType || product?.stockType || (unit === "pcs" ? "COUNT" : "WEIGHT");
+    selectedSizeCategory ? "WEIGHT" : selectedVariant?.stockType || product?.stockType || (unit === "pcs" ? "COUNT" : "WEIGHT");
   const step =
+    selectedSizeCategory?.measurementIncrement ??
     selectedVariant?.measurementIncrement ??
     product?.measurementIncrement ??
     (unit === "pcs" ? 1 : unit === "kg" || unit === "g" ? 0.01 : 1);
@@ -75,17 +97,6 @@ export default function ProductDetailPage() {
     return product.images && product.images.length > 0 
       ? product.images 
       : (product.image ? [product.image] : []);
-  }, [product]);
-
-  const isFishProduct = useMemo(() => {
-    if (!product) return false;
-    return (product as any).isFishProduct === true ||
-      ((product as any).sizeCategories && Array.isArray((product as any).sizeCategories) && (product as any).sizeCategories.length > 0);
-  }, [product]);
-
-  const sizeCategories = useMemo(() => {
-    if (!product) return [];
-    return (product as any).sizeCategories || [];
   }, [product]);
 
   const handleQuantityChange = (delta: number) => {

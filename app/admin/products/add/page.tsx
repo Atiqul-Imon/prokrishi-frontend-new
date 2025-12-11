@@ -547,6 +547,28 @@ export default function AddProductPage() {
                             className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
                           />
                         </div>
+                        <div>
+                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Price Type</label>
+                          <select
+                            value={variant.priceType || (variant.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT")}
+                            onChange={(e) => updateVariant(index, "priceType", e.target.value as any)}
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                          >
+                            <option value="PER_UNIT">Per Unit</option>
+                            <option value="PER_WEIGHT">Per Weight</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Stock Type</label>
+                          <select
+                            value={variant.stockType || (variant.unit === "pcs" ? "COUNT" : "WEIGHT")}
+                            onChange={(e) => updateVariant(index, "stockType", e.target.value as any)}
+                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                          >
+                            <option value="COUNT">Count</option>
+                            <option value="WEIGHT">Weight</option>
+                          </select>
+                        </div>
 
                         <div>
                           <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Status</label>

@@ -15,6 +15,7 @@ interface SizeCategory {
   minWeight?: string;
   maxWeight?: string;
   sku?: string;
+  measurementIncrement?: string;
   status: "active" | "inactive" | "out_of_stock";
   isDefault: boolean;
 }
@@ -73,6 +74,7 @@ export default function EditFishProductPage() {
               minWeight: cat.minWeight?.toString() || undefined,
               maxWeight: cat.maxWeight?.toString() || undefined,
               sku: cat.sku || undefined,
+              measurementIncrement: cat.measurementIncrement?.toString() || "0.25",
               status: cat.status || "active",
               isDefault: cat.isDefault || false,
             }))
@@ -176,7 +178,7 @@ export default function EditFishProductPage() {
       fd.append(
         "sizeCategories",
         JSON.stringify(
-          sizeCategories.map((cat) => ({
+            sizeCategories.map((cat) => ({
             _id: cat._id,
             label: cat.label.trim(),
             pricePerKg: parseFloat(cat.pricePerKg),
@@ -184,6 +186,12 @@ export default function EditFishProductPage() {
             minWeight: cat.minWeight ? parseFloat(cat.minWeight) : undefined,
             maxWeight: cat.maxWeight ? parseFloat(cat.maxWeight) : undefined,
             sku: cat.sku?.trim() || undefined,
+              measurementIncrement:
+                cat.measurementIncrement && parseFloat(cat.measurementIncrement) > 0
+                  ? parseFloat(cat.measurementIncrement)
+                  : cat.minWeight
+                  ? parseFloat(cat.minWeight)
+                  : 0.25,
             status: cat.status,
             isDefault: cat.isDefault || false,
           }))
@@ -403,7 +411,20 @@ export default function EditFishProductPage() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Min Increment (kg)</label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={category.measurementIncrement || "0.25"}
+                      onChange={(e) => updateSizeCategory(index, "measurementIncrement", e.target.value)}
+                      placeholder="e.g., 0.25"
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                    />
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Minimum sellable increment; default 0.25kg.</p>
+                  </div>
                     <div>
                       <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Min Weight (kg)</label>
                       <input
