@@ -7,7 +7,7 @@ import { Category } from "@/types/models";
 
 const CategoryCard = ({ category }: { category: Category }) => (
   <Link
-    href={`/products?category=${category._id}`}
+    href={`/products/category/${category._id}`}
     className="group block text-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105"
   >
     <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 overflow-hidden rounded-full border-2 border-gray-200 group-hover:border-[var(--primary-green)] transition-colors duration-300">
