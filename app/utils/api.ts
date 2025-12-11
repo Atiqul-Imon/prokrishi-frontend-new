@@ -155,34 +155,50 @@ export async function apiRequest<T = any>(
  * Register a new user.
  */
 export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {
-  const response = await apiRequest<RegisterResponse>("/user/register", {
+  const response = await apiRequest<any>("/user/register", {
     method: "POST",
     data,
   });
-  if (response.accessToken) {
-    localStorage.setItem("accessToken", response.accessToken);
+  // NestJS returns { success: true, data: { user, accessToken, refreshToken, message } }
+  const responseData = response.data || response;
+  if (responseData.accessToken) {
+    localStorage.setItem("accessToken", responseData.accessToken);
   }
-  if (response.refreshToken) {
-    localStorage.setItem("refreshToken", response.refreshToken);
+  if (responseData.refreshToken) {
+    localStorage.setItem("refreshToken", responseData.refreshToken);
   }
-  return response;
+  return {
+    success: response.success || true,
+    message: responseData.message,
+    user: responseData.user,
+    accessToken: responseData.accessToken,
+    refreshToken: responseData.refreshToken,
+  };
 }
 
 /**
  * Login user.
  */
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const response = await apiRequest<LoginResponse>("/user/login", {
+  const response = await apiRequest<any>("/user/login", {
     method: "POST",
     data,
   });
-  if (response.accessToken) {
-    localStorage.setItem("accessToken", response.accessToken);
+  // NestJS returns { success: true, data: { user, accessToken, refreshToken, message } }
+  const responseData = response.data || response;
+  if (responseData.accessToken) {
+    localStorage.setItem("accessToken", responseData.accessToken);
   }
-  if (response.refreshToken) {
-    localStorage.setItem("refreshToken", response.refreshToken);
+  if (responseData.refreshToken) {
+    localStorage.setItem("refreshToken", responseData.refreshToken);
   }
-  return response;
+  return {
+    success: response.success || true,
+    message: responseData.message,
+    user: responseData.user,
+    accessToken: responseData.accessToken,
+    refreshToken: responseData.refreshToken,
+  };
 }
 
 /**
@@ -196,10 +212,17 @@ export function logoutUser(): void {
 /**
  * Fetch current user profile (requires valid JWT).
  */
-export function fetchProfile(): Promise<UserProfileResponse> {
-  return apiRequest<UserProfileResponse>("/user/profile", {
+export async function fetchProfile(): Promise<UserProfileResponse> {
+  const response = await apiRequest<any>("/user/profile", {
     method: "GET",
   });
+  // NestJS returns { success: true, data: { message, user } }
+  const responseData = response.data || response;
+  return {
+    success: response.success || true,
+    message: responseData.message,
+    user: responseData.user || responseData,
+  };
 }
 
 export async function updateUserAddresses(addresses: Address[]): Promise<UserProfileResponse> {
@@ -477,15 +500,16 @@ export async function getAllProducts(params?: { page?: number; limit?: number; s
     if (params?.sort) queryParams.append('sort', params.sort);
     if (params?.order) queryParams.append('order', params.order);
     
-    const res = await apiRequest<any>(`/product?${queryParams.toString()}`);
+    const res = await api.get<any>(`/product?${queryParams.toString()}`);
     // NestJS returns { success: true, data: { products: [...], total, ... } }
-    // Extract the data field if it exists
+    // apiRequest extracts data, but for this endpoint we need to handle the nested structure
+    const responseData = res.data;
     return {
-      success: res.success || true,
-      products: res.data?.products || res.products || [],
-      total: res.data?.total || res.total,
-      currentPage: res.data?.currentPage || res.currentPage,
-      totalPages: res.data?.totalPages || res.totalPages,
+      success: responseData.success || true,
+      products: responseData.data?.products || responseData.products || [],
+      total: responseData.data?.total || responseData.total || 0,
+      currentPage: responseData.data?.currentPage || responseData.currentPage || 1,
+      totalPages: responseData.data?.totalPages || responseData.totalPages || 1,
     };
   } catch (err: any) {
     throw new Error(
