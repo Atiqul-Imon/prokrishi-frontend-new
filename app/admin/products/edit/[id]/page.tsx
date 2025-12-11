@@ -18,6 +18,8 @@ interface ProductVariant {
   unit: string;
   unitWeightKg?: string;
   measurementIncrement?: string;
+  priceType?: "PER_UNIT" | "PER_WEIGHT";
+  stockType?: "COUNT" | "WEIGHT";
   status: "active" | "inactive" | "out_of_stock";
   isDefault: boolean;
 }
@@ -52,6 +54,8 @@ export default function EditProductPage() {
     unit: "pcs",
     unitWeightKg: "",
     measurementIncrement: "0.01",
+    priceType: "PER_UNIT",
+    stockType: "COUNT",
     lowStockThreshold: "5",
     status: "active",
     description: "",
@@ -83,6 +87,8 @@ export default function EditProductPage() {
           unit: product.unit || "pcs",
           unitWeightKg: product.unitWeightKg?.toString() || "",
           measurementIncrement: product.measurementIncrement?.toString() || "0.01",
+          priceType: product.priceType || (product.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"),
+          stockType: product.stockType || (product.unit === "pcs" ? "COUNT" : "WEIGHT"),
           lowStockThreshold: product.lowStockThreshold?.toString() || "5",
           status: product.status || "active",
           description: product.description || "",
@@ -108,6 +114,8 @@ export default function EditProductPage() {
               unit: v.unit || "pcs",
               unitWeightKg: v.unitWeightKg?.toString() || undefined,
               measurementIncrement: v.measurementIncrement?.toString() || "0.01",
+              priceType: v.priceType || (v.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"),
+              stockType: v.stockType || (v.unit === "pcs" ? "COUNT" : "WEIGHT"),
               status: v.status || "active",
               isDefault: v.isDefault || false,
             }))
@@ -270,6 +278,8 @@ export default function EditProductPage() {
                   : v.unit === "pcs"
                   ? 1
                   : 0.01,
+              priceType: v.priceType || (v.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"),
+              stockType: v.stockType || (v.unit === "pcs" ? "COUNT" : "WEIGHT"),
               status: v.status,
               isDefault: v.isDefault || false,
             }))
@@ -295,6 +305,8 @@ export default function EditProductPage() {
         productData.append("unit", formData.unit);
         if (formData.unitWeightKg) productData.append("unitWeightKg", formData.unitWeightKg);
         productData.append("measurementIncrement", baseIncrement);
+        productData.append("priceType", formData.priceType || (formData.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"));
+        productData.append("stockType", formData.stockType || (formData.unit === "pcs" ? "COUNT" : "WEIGHT"));
         if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
       }
 

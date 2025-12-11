@@ -7,6 +7,8 @@ export interface VariantSnapshot {
   unit?: string;
   measurementIncrement?: number;
   unitWeightKg?: number;
+  priceType?: "PER_UNIT" | "PER_WEIGHT";
+  stockType?: "COUNT" | "WEIGHT";
   status?: string;
   isDefault?: boolean;
 }
@@ -20,6 +22,8 @@ export interface ProductVariant {
   unit: string;
   measurementIncrement?: number;
   unitWeightKg?: number;
+  priceType?: "PER_UNIT" | "PER_WEIGHT";
+  stockType?: "COUNT" | "WEIGHT";
   status?: string;
 }
 
@@ -40,6 +44,8 @@ export interface Product {
   measurement?: number;
   measurementIncrement?: number;
   unitWeightKg?: number;
+  priceType?: "PER_UNIT" | "PER_WEIGHT";
+  stockType?: "COUNT" | "WEIGHT";
   hasVariants?: boolean;
   variants?: ProductVariant[];
   variantId?: string;

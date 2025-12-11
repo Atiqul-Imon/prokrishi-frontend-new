@@ -51,6 +51,11 @@ export default function ProductDetailPage() {
     return null;
   }, [product, variantId]);
 
+  const priceType =
+    selectedVariant?.priceType ||
+    product?.priceType ||
+    ((selectedVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
+
   const currentStock = useMemo(() => {
     if (selectedVariant) return selectedVariant.stock || 0;
     return product?.stock || 0;
@@ -58,6 +63,12 @@ export default function ProductDetailPage() {
 
   const inStock = currentStock > 0;
   const unit = selectedVariant?.unit || product?.unit || "pcs";
+  const stockType =
+    selectedVariant?.stockType || product?.stockType || (unit === "pcs" ? "COUNT" : "WEIGHT");
+  const step =
+    selectedVariant?.measurementIncrement ??
+    product?.measurementIncrement ??
+    (unit === "pcs" ? 1 : unit === "kg" || unit === "g" ? 0.01 : 1);
 
   const productImages = useMemo(() => {
     if (!product) return [];
@@ -79,8 +90,16 @@ export default function ProductDetailPage() {
 
   const handleQuantityChange = (delta: number) => {
     const newQuantity = Math.max(1, quantity + delta);
-    if (inStock && newQuantity <= currentStock) {
-      setQuantity(newQuantity);
+    const requested = newQuantity * step;
+    if (!inStock) return;
+    if (stockType === "WEIGHT") {
+      if (requested <= currentStock) {
+        setQuantity(newQuantity);
+      }
+    } else {
+      if (newQuantity <= currentStock) {
+        setQuantity(newQuantity);
+      }
     }
   };
 
@@ -194,13 +213,16 @@ export default function ProductDetailPage() {
                   <div className="flex items-baseline gap-2">
                     <p className="text-sm text-gray-500">Price</p>
                     <p className="text-4xl font-bold text-gray-900">৳{price.toLocaleString()}</p>
-                    {unit !== "pcs" && (
+                    {priceType === "PER_WEIGHT" && (
+                      <p className="text-sm text-gray-500">/ {unit}</p>
+                    )}
+                    {priceType === "PER_UNIT" && unit !== "pcs" && (
                       <p className="text-sm text-gray-500">/ {unit}</p>
                     )}
                   </div>
                   {currentStock > 0 && (
                     <p className="text-sm text-gray-500 mt-2">
-                      Stock available: {currentStock} {unit}
+                      Stock available: {currentStock} {stockType === "WEIGHT" ? unit : priceType === "PER_UNIT" ? "pcs" : unit}
                     </p>
                   )}
                 </div>

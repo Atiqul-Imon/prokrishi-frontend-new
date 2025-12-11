@@ -18,6 +18,8 @@ interface ProductVariant {
   unit: string;
   unitWeightKg?: string;
   measurementIncrement?: string;
+  priceType?: "PER_UNIT" | "PER_WEIGHT";
+  stockType?: "COUNT" | "WEIGHT";
   status: "active" | "inactive" | "out_of_stock";
   isDefault: boolean;
 }
@@ -47,6 +49,8 @@ export default function AddProductPage() {
     unit: "pcs",
     unitWeightKg: "",
     measurementIncrement: "0.01",
+    priceType: "PER_UNIT",
+    stockType: "COUNT",
     lowStockThreshold: "5",
     status: "active",
     description: "",
@@ -191,6 +195,8 @@ export default function AddProductPage() {
                   : v.unit === "pcs"
                   ? 1
                   : 0.01,
+              priceType: v.priceType || (v.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"),
+              stockType: v.stockType || (v.unit === "pcs" ? "COUNT" : "WEIGHT"),
               status: v.status,
               isDefault: v.isDefault || false,
             }))
@@ -216,6 +222,8 @@ export default function AddProductPage() {
         productData.append("unit", formData.unit);
         if (formData.unitWeightKg) productData.append("unitWeightKg", formData.unitWeightKg);
         productData.append("measurementIncrement", baseIncrement);
+        productData.append("priceType", formData.priceType || (formData.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"));
+        productData.append("stockType", formData.stockType || (formData.unit === "pcs" ? "COUNT" : "WEIGHT"));
         if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
       }
 

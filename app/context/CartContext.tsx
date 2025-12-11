@@ -15,15 +15,23 @@ function getMeasurementInfo(product: Product | CartItem, variantId?: string) {
   if (product.hasVariants && variantId) {
     const variant = product.variants?.find((v) => v._id === variantId) || (product as CartItem).variantSnapshot;
     if (variant) {
+      const unit = variant.unit || product.unit;
+      const measurementIncrement =
+        variant.measurementIncrement ??
+        (unit === "pcs" ? 1 : product.measurementIncrement ?? (unit === "kg" || unit === "g" ? 0.01 : 1));
       return {
         measurement: normalizeMeasurement(variant.measurement),
-        unit: variant.unit || product.unit,
+        unit,
+        measurementIncrement,
       };
     }
   }
   return {
     measurement: normalizeMeasurement(product.measurement),
     unit: product.unit,
+    measurementIncrement:
+      product.measurementIncrement ??
+      (product.unit === "pcs" ? 1 : product.unit === "kg" || product.unit === "g" ? 0.01 : 1),
   };
 }
 
@@ -169,6 +177,7 @@ export function CartProvider({ children }: CartProviderProps) {
           quantity: qty,
           totalMeasurement: measurementInfo ? measurementInfo.measurement * qty : qty,
           unitWeightKg: product.unitWeightKg,
+          measurementIncrement: measurementInfo?.measurementIncrement,
           ...((product as any).isFishProduct !== undefined && { isFishProduct: (product as any).isFishProduct }),
           ...((product as any).sizeCategories !== undefined && { sizeCategories: (product as any).sizeCategories }),
         };
@@ -191,7 +200,7 @@ export function CartProvider({ children }: CartProviderProps) {
             newItem.stock = sizeCategory.stock || 0;
             newItem.measurement = 1;
             newItem.unit = "kg";
-            newItem.measurementIncrement = 0.5;
+            newItem.measurementIncrement = sizeCategory.measurementIncrement ?? 0.25;
           }
         } else if (product.hasVariants && variantId) {
           const variant = product.variants?.find((v) => v._id === variantId);
@@ -202,7 +211,9 @@ export function CartProvider({ children }: CartProviderProps) {
             newItem.stock = variant.stock;
             newItem.measurement = variant.measurement;
             newItem.unit = variant.unit;
-            newItem.measurementIncrement = variant.measurementIncrement;
+            newItem.measurementIncrement =
+              variant.measurementIncrement ??
+              (variant.unit === "pcs" ? 1 : variant.unit === "kg" || variant.unit === "g" ? 0.01 : 1);
             newItem.unitWeightKg = variant.unitWeightKg ?? product.unitWeightKg;
           }
         }
