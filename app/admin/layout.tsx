@@ -15,7 +15,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -26,22 +25,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, [user, isAdmin, loading, router, pathname]);
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
-
-  useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="relative">
-          <div className="w-12 h-12 border-4 border-gray-800 border-t-white rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-green-600 rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -52,18 +43,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div
-      className={`min-h-screen ${
-        isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"
-      } transition-colors duration-200 text-slate-900 dark:text-slate-100`}
-    >
+    <div className="min-h-screen bg-slate-50">
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div
-        className={`lg:pl-56 transition-all duration-200 ${
-          isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"
-        }`}
-      >
-        <AdminHeader onToggleSidebar={() => setSidebarOpen(true)} isDark={isDark} onThemeToggle={() => setIsDark(!isDark)} />
+      <div className="lg:pl-64 transition-all duration-200">
+        <AdminHeader onToggleSidebar={() => setSidebarOpen(true)} />
         <main className="p-6 lg:p-8">
           <div className="max-w-[1600px] mx-auto">{children}</div>
         </main>
