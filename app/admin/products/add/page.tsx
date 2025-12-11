@@ -165,6 +165,12 @@ export default function AddProductPage() {
             setLoading(false);
             return;
           }
+          const increment = v.measurementIncrement ? parseFloat(v.measurementIncrement) : v.unit === "pcs" ? 1 : 0.01;
+          if (!increment || increment <= 0) {
+            setError(`Variant ${i + 1} must have a measurement increment greater than 0`);
+            setLoading(false);
+            return;
+          }
         }
 
         productData.append(
@@ -179,7 +185,12 @@ export default function AddProductPage() {
               measurement: parseFloat(v.measurement) || 1,
               unit: v.unit,
               unitWeightKg: v.unitWeightKg ? parseFloat(v.unitWeightKg) : undefined,
-              measurementIncrement: v.measurementIncrement ? parseFloat(v.measurementIncrement) : 0.01,
+              measurementIncrement:
+                v.measurementIncrement && parseFloat(v.measurementIncrement) > 0
+                  ? parseFloat(v.measurementIncrement)
+                  : v.unit === "pcs"
+                  ? 1
+                  : 0.01,
               status: v.status,
               isDefault: v.isDefault || false,
             }))
@@ -192,13 +203,19 @@ export default function AddProductPage() {
           setLoading(false);
           return;
         }
+        const baseIncrement =
+          formData.measurementIncrement && parseFloat(formData.measurementIncrement) > 0
+            ? formData.measurementIncrement
+            : formData.unit === "pcs"
+            ? "1"
+            : "0.01";
         productData.append("price", formData.price);
         if (formData.salePrice) productData.append("salePrice", formData.salePrice);
         productData.append("stock", formData.stock || "0");
         productData.append("measurement", formData.measurement);
         productData.append("unit", formData.unit);
         if (formData.unitWeightKg) productData.append("unitWeightKg", formData.unitWeightKg);
-        if (formData.measurementIncrement) productData.append("measurementIncrement", formData.measurementIncrement);
+        productData.append("measurementIncrement", baseIncrement);
         if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
       }
 
