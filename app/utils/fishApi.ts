@@ -3,7 +3,7 @@ import { getApiBaseUrl } from "./env";
 
 const buildFishApiBase = () => {
   const base = getApiBaseUrl().replace(/\/$/, "");
-  return `${base}/fish`;
+  return `${base}/fish-product`; // NestJS uses /fish-product, not /fish
 };
 
 const fishApi = axios.create({
@@ -130,8 +130,13 @@ export const fishOrderApi = {
   },
 
   getById: async (id: string) => {
-    const response = await fishApi.get(`/orders/${id}`);
-    return response.data;
+    const response = await fishApi.get(`/${id}`); // NestJS endpoint: /api/fish-product/:id
+    // NestJS returns { success: true, data: { fishProduct: {...} } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      fishProduct: responseData?.fishProduct || responseData,
+    };
   },
 
   create: async (data: {
@@ -159,22 +164,50 @@ export const fishOrderApi = {
     };
     notes?: string;
   }) => {
-    const response = await fishApi.post("/orders", data);
-    return response.data;
+    // Fish orders use /fish-order endpoint, not /fish/orders
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.post(`${base}/fish-order`, data, {
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
+    // NestJS returns { success: true, data: { message, fishOrder: {...} } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      // Include _id at top level for backward compatibility
+      _id: responseData?.fishOrder?._id || responseData?._id,
+      fishOrder: responseData?.fishOrder || responseData,
+    };
   },
 
   updateStatus: async (id: string, data: { status?: string; paymentStatus?: string; notes?: string; cancellationReason?: string }) => {
-    const response = await fishApi.put(`/orders/${id}`, data);
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.put(`${base}/fish-order/${id}`, data, {
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
     return response.data;
   },
 
   delete: async (id: string) => {
-    const response = await fishApi.delete(`/orders/${id}`);
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.delete(`${base}/fish-order/${id}`, {
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
     return response.data;
   },
 
   getStats: async () => {
-    const response = await fishApi.get("/orders/stats");
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.get(`${base}/fish-order/stats`, {
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
     return response.data;
   },
 };
