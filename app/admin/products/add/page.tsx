@@ -138,10 +138,23 @@ export default function AddProductPage() {
     setLoading(true);
     setError(null);
 
+    // Validate required fields first
+    if (!formData.name || !formData.name.trim()) {
+      setError("Product name is required");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.category || !formData.category.trim()) {
+      setError("Category is required. Please select a category from the dropdown.");
+      setLoading(false);
+      return;
+    }
+
     try {
         const productData = new FormData();
         productData.append("name", formData.name.trim());
-        productData.append("category", formData.category);
+        productData.append("category", formData.category.trim());
         productData.append("status", formData.status);
       if (formData.description) productData.append("description", formData.description);
       if (formData.shortDescription) productData.append("shortDescription", formData.shortDescription);
@@ -238,10 +251,20 @@ export default function AddProductPage() {
         });
       }
 
+      // Debug: Log what we're sending
+      console.log("Submitting product:", {
+        name: formData.name,
+        category: formData.category,
+        hasVariants,
+        variantsCount: variants.length,
+      });
+
       await createProduct(productData);
       router.push("/admin/products");
     } catch (err: any) {
-      setError(err.message || "Failed to create product");
+      console.error("Product creation error:", err);
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create product";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

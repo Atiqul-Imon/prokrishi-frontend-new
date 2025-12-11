@@ -360,15 +360,22 @@ export async function getAllCategories(): Promise<CategoryResponse> {
  * Create product (with file/image upload).
  */
 export async function createProduct(productData: any): Promise<ProductResponse> {
-  const formData = new FormData();
-  for (const key in productData) {
-    const value = productData[key];
+  // If productData is already a FormData object, use it directly
+  let formData: FormData;
+  if (productData instanceof FormData) {
+    formData = productData;
+  } else {
+    // Otherwise, convert the object to FormData
+    formData = new FormData();
+    for (const key in productData) {
+      const value = productData[key];
 
-    if (value === null || value === undefined || value === "") {
-      continue;
+      if (value === null || value === undefined || value === "") {
+        continue;
+      }
+
+      appendFormDataValue(formData, key, value);
     }
-
-    appendFormDataValue(formData, key, value);
   }
 
   try {
@@ -389,23 +396,29 @@ export async function createProduct(productData: any): Promise<ProductResponse> 
  * Update product (with file/image upload).
  */
 export async function updateProduct(id: string, productData: any): Promise<ProductResponse> {
-  const formData = new FormData();
-  
-  // Only append fields that have values (optimize payload)
-  for (const key in productData) {
-    const value = productData[key];
-    
-    // Skip image if it's not a File object
-    if (key === "image" && !isFileLike(value)) {
-      continue;
-    }
-    
-    // Skip null, undefined, and empty strings
-    if (value === null || value === undefined || value === '') {
-      continue;
-    }
+  // If productData is already a FormData object, use it directly
+  let formData: FormData;
+  if (productData instanceof FormData) {
+    formData = productData;
+  } else {
+    // Otherwise, convert the object to FormData
+    formData = new FormData();
+    // Only append fields that have values (optimize payload)
+    for (const key in productData) {
+      const value = productData[key];
+      
+      // Skip image if it's not a File object
+      if (key === "image" && !isFileLike(value)) {
+        continue;
+      }
+      
+      // Skip null, undefined, and empty strings
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
 
-    appendFormDataValue(formData, key, value);
+      appendFormDataValue(formData, key, value);
+    }
   }
 
   try {
