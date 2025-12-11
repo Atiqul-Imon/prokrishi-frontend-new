@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ProKrishi • Arogga-inspired Commerce",
+  title: "ProKrishi • Modern Commerce Experience",
   description: "Fresh green/amber experience with robust checkout and invoicing.",
   manifest: "/manifest.json",
   icons: {
