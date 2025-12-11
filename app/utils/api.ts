@@ -477,8 +477,16 @@ export async function getAllProducts(params?: { page?: number; limit?: number; s
     if (params?.sort) queryParams.append('sort', params.sort);
     if (params?.order) queryParams.append('order', params.order);
     
-    const res = await api.get<ProductsResponse>(`/product?${queryParams.toString()}`);
-    return res.data;
+    const res = await apiRequest<any>(`/product?${queryParams.toString()}`);
+    // NestJS returns { success: true, data: { products: [...], total, ... } }
+    // Extract the data field if it exists
+    return {
+      success: res.success || true,
+      products: res.data?.products || res.products || [],
+      total: res.data?.total || res.total,
+      currentPage: res.data?.currentPage || res.currentPage,
+      totalPages: res.data?.totalPages || res.totalPages,
+    };
   } catch (err: any) {
     throw new Error(
       err.response?.data?.message || err.message || "Failed to get products",
