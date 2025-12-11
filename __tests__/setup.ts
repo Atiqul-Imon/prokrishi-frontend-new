@@ -1,7 +1,7 @@
 // Global test setup and utilities
 
 // Mock API base URL for tests
-process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:3500/api'
+process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:3501/api'
 
 // Suppress console errors in tests (optional)
 // const originalError = console.error

@@ -43,7 +43,7 @@ Modern Next.js frontend for Prokrishi e-commerce platform.
    
    Edit `.env.local` and set your API URL:
    ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:3500/api
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:3501/api
    ```
 
 4. **Run development server**
@@ -106,7 +106,7 @@ npm start
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:3500/api` |
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:3501/api` |
 
 ### Project Structure
 

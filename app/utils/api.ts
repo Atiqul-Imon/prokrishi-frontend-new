@@ -218,7 +218,7 @@ export async function updateUserAddresses(addresses: Address[]): Promise<UserPro
 }
 
 export async function placeOrder(orderData: any): Promise<OrderResponse> {
-  return apiRequest<OrderResponse>("/order/create", {
+  return apiRequest<OrderResponse>("/order", {
     method: "POST",
     data: orderData,
     headers: orderData?.idempotencyKey
@@ -227,7 +227,9 @@ export async function placeOrder(orderData: any): Promise<OrderResponse> {
   });
 }
 
+// Note: Shipping quote endpoint not yet migrated - using cart validate for now
 export function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQuoteResponse> {
+  // TODO: Implement shipping quote endpoint in NestJS
   return apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
     method: "POST",
     data,
@@ -243,7 +245,8 @@ export async function validateCartApi(payload: {
     price?: number;
   }>;
 }): Promise<any> {
-  return apiRequest<any>("/order/validate", {
+  // NestJS uses /cart/validate instead of /order/validate
+  return apiRequest<any>("/cart/validate", {
     method: "POST",
     data: payload,
   });
@@ -333,10 +336,16 @@ export function getUserById(id: string): Promise<UserProfileResponse> {
   return apiRequest<UserProfileResponse>(`/user/${id}`);
 }
 
-export function getProductById(id: string): Promise<ProductResponse> {
+export async function getProductById(id: string): Promise<ProductResponse> {
   // Add cache busting parameter to ensure fresh data
   const timestamp = Date.now();
-  return apiRequest<ProductResponse>(`/product/${id}?t=${timestamp}`);
+  const response = await apiRequest<any>(`/product/${id}?t=${timestamp}`);
+  // NestJS returns { success: true, message, product: {...} }
+  // Return in format expected by frontend: { product: {...} }
+  return {
+    success: response.success || true,
+    product: response.product || response.data?.product || null,
+  };
 }
 
 /**
@@ -347,11 +356,24 @@ export async function getRelatedProducts(productId: string, limit: number = 6): 
 }
 
 export async function getCategoryById(id: string): Promise<CategoryResponse> {
-  return apiRequest<CategoryResponse>(`/category/id/${id}`);
+  // NestJS uses GET /category/:id instead of /category/id/:id
+  const response = await apiRequest<any>(`/category/${id}`);
+  // NestJS returns { success: true, message, category: {...} }
+  // Return in format expected by frontend: { category: {...} }
+  return {
+    success: response.success || true,
+    category: response.category || response.data?.category || null,
+  };
 }
 
-export async function getAllCategories(): Promise<CategoryResponse> {
-  return apiRequest<CategoryResponse>("/category");
+export async function getAllCategories(): Promise<any> {
+  const response = await apiRequest<any>("/category");
+  // NestJS returns { success: true, data: { message, categories } }
+  // Return in format expected by frontend: { categories: [...] }
+  return {
+    success: response.success || true,
+    categories: response.data?.categories || response.categories || [],
+  };
 }
 
 // ========== PRODUCT-SPECIFIC (for file/image upload) ==========
@@ -379,7 +401,8 @@ export async function createProduct(productData: any): Promise<ProductResponse> 
   }
 
   try {
-    const res = await api.post<ProductResponse>("/product/create", formData, {
+    // NestJS uses POST /product instead of /product/create
+    const res = await api.post<ProductResponse>("/product", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -540,7 +563,8 @@ export async function createCategory(category: any): Promise<CategoryResponse> {
   }
 
   try {
-    const res = await api.post<CategoryResponse>("/category/create", formData, {
+    // NestJS uses POST /category instead of /category/create
+    const res = await api.post<CategoryResponse>("/category", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
@@ -559,9 +583,10 @@ export async function updateCategory(id: string, category: any): Promise<Categor
   );
 
   if (hasOnlySimpleFields) {
-    // Use JSON for simple updates (like featured toggle) - use PATCH
+    // Use JSON for simple updates (like featured toggle) - use PUT
     try {
-      const res = await api.patch<CategoryResponse>(`/category/update/${id}`, category, {
+      // NestJS uses PUT /category/:id instead of /category/update/:id
+      const res = await api.put<CategoryResponse>(`/category/${id}`, category, {
         headers: { "Content-Type": "application/json" },
       });
       return res.data;
@@ -585,7 +610,8 @@ export async function updateCategory(id: string, category: any): Promise<Categor
     }
 
     try {
-      const res = await api.put<CategoryResponse>(`/category/update/${id}`, formData, {
+      // NestJS uses PUT /category/:id instead of /category/update/:id
+      const res = await api.put<CategoryResponse>(`/category/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       return res.data;
@@ -598,18 +624,25 @@ export async function updateCategory(id: string, category: any): Promise<Categor
 }
 
 export async function deleteCategory(id: string): Promise<ApiResponse> {
-  return deleteResource<ApiResponse>("category/delete", id);
+  // NestJS uses DELETE /category/:id instead of /category/delete/:id
+  return deleteResource<ApiResponse>("category", id);
 }
 
 export async function getFeaturedCategories(): Promise<any> {
-  // Add cache-busting timestamp to ensure fresh data
+  // NestJS uses GET /category?featured=true instead of /category/featured
   const timestamp = Date.now();
-  return apiRequest(`/category/featured?t=${timestamp}`);
+  const response = await apiRequest(`/category?featured=true&t=${timestamp}`);
+  // NestJS returns { success: true, data: { message, categories } }
+  // Return in format expected by frontend: { categories: [...] }
+  return {
+    categories: response.data?.categories || response.categories || [],
+  };
 }
 
 // Address Management
 export async function addAddress(addressData: Address): Promise<UserProfileResponse> {
-  return apiRequest<UserProfileResponse>("/user/profile/addresses", {
+  // NestJS uses POST /user/address instead of /user/profile/addresses
+  return apiRequest<UserProfileResponse>("/user/address", {
     method: "POST",
     data: addressData,
   });
@@ -724,14 +757,16 @@ export async function deleteAdminOrder(id: string): Promise<ApiResponse> {
 }
 
 export async function updateAddress(addressId: string, addressData: Address): Promise<UserProfileResponse> {
-  return apiRequest<UserProfileResponse>(`/user/profile/addresses/${addressId}`, {
+  // NestJS uses PUT /user/address/:addressId instead of /user/profile/addresses/:addressId
+  return apiRequest<UserProfileResponse>(`/user/address/${addressId}`, {
     method: "PUT",
     data: addressData,
   });
 }
 
 export async function deleteAddress(addressId: string): Promise<UserProfileResponse> {
-  return apiRequest<UserProfileResponse>(`/user/profile/addresses/${addressId}`, {
+  // NestJS uses DELETE /user/address/:addressId instead of /user/profile/addresses/:addressId
+  return apiRequest<UserProfileResponse>(`/user/address/${addressId}`, {
     method: "DELETE",
   });
 }
@@ -739,7 +774,16 @@ export async function deleteAddress(addressId: string): Promise<UserProfileRespo
 // ========== PAYMENT FUNCTIONS ==========
 
 export async function createPaymentSession(data: { orderId: string; paymentMethod: string }): Promise<PaymentInitResponse> {
-  return apiRequest<PaymentInitResponse>("/payment/create-session", {
+  // NestJS uses POST /payment/session or POST /payment/cod/process for COD
+  // For COD, use the cod/process endpoint
+  if (data.paymentMethod === 'Cash on Delivery' || data.paymentMethod === 'COD') {
+    return apiRequest<PaymentInitResponse>("/payment/cod/process", {
+      method: "POST",
+      data: { orderId: data.orderId },
+    });
+  }
+  // Fallback to session endpoint for backward compatibility
+  return apiRequest<PaymentInitResponse>("/payment/session", {
     method: "POST",
     data,
   });
@@ -752,6 +796,17 @@ export async function getPaymentStatus(orderId: string): Promise<ApiResponse> {
 }
 
 export async function handlePaymentSuccess(paymentData: any): Promise<ApiResponse> {
+  // For COD, use PUT /payment/cod/confirm instead of POST /payment/success
+  if (paymentData.paymentMethod === 'Cash on Delivery' || paymentData.paymentMethod === 'COD') {
+    return apiRequest<ApiResponse>("/payment/cod/confirm", {
+      method: "PUT",
+      data: {
+        orderId: paymentData.orderId,
+        transactionId: paymentData.transactionId,
+      },
+    });
+  }
+  // Fallback to success endpoint for backward compatibility
   return apiRequest<ApiResponse>("/payment/success", {
     method: "POST",
     data: paymentData,
@@ -794,7 +849,8 @@ export async function getOrderDetails(orderId: string): Promise<OrderResponse> {
 
 // Get user orders
 export async function getUserOrders(): Promise<{ success: boolean; orders: any[] }> {
-  return apiRequest<{ success: boolean; orders: any[] }>("/order/user");
+  // NestJS uses GET /order instead of /order/user (user context from JWT)
+  return apiRequest<{ success: boolean; orders: any[] }>("/order");
 }
 
 // Get fish orders for user
@@ -805,7 +861,21 @@ export async function getUserFishOrders(): Promise<{ success: boolean; orders: a
 // Get featured products
 export async function getFeaturedProducts(): Promise<ProductsResponse> {
   const timestamp = Date.now();
-  return apiRequest<ProductsResponse>(`/product/featured?t=${timestamp}`);
+  const response = await apiRequest<any>(`/product/featured?t=${timestamp}`);
+  // NestJS returns { success: true, data: { message, products } }
+  // Return in format expected by frontend: { products: [...] }
+  return {
+    success: response.success || true,
+    products: response.data?.products || response.products || [],
+    pagination: response.pagination || {
+      currentPage: 1,
+      totalPages: 1,
+      totalProducts: response.data?.products?.length || 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      limit: response.data?.products?.length || 0,
+    },
+  };
 }
 
 // ================== PASSWORD RESET ==================
@@ -818,15 +888,17 @@ export function requestPasswordReset(identifier: string): Promise<ApiResponse> {
 }
 
 export function resetPasswordWithToken(token: string, password: string): Promise<ApiResponse> {
+  // NestJS uses PUT instead of POST for password reset
   return apiRequest<ApiResponse>(`/user/reset-password-email/${token}`, {
-    method: "POST",
+    method: "PUT",
     data: { password },
   });
 }
 
 export function resetPasswordWithOTP(phone: string, otp: string, password: string): Promise<ApiResponse> {
+  // NestJS uses PUT instead of POST for password reset
   return apiRequest<ApiResponse>("/user/reset-password-phone", {
-    method: "POST",
+    method: "PUT",
     data: { phone, otp, password },
   });
 }
@@ -894,7 +966,8 @@ export async function getCart(): Promise<CartResponse> {
  * Add item to cart
  */
 export async function addToCart(productId: string, quantity: number = 1, variantId?: string): Promise<CartResponse> {
-  return apiRequest<CartResponse>("/cart/add", {
+  // NestJS uses POST /cart instead of /cart/add
+  return apiRequest<CartResponse>("/cart", {
     method: "POST",
     data: { productId, quantity, variantId },
   });
