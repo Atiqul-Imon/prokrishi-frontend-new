@@ -86,8 +86,14 @@ export const fishProductApi = {
   },
 
   getById: async (id: string) => {
-    const response = await fishApi.get(`/products/${id}`);
-    return response.data;
+    // NestJS endpoint: /api/fish-product/:id (base is already /fish-product)
+    const response = await fishApi.get(`/${id}`);
+    // NestJS returns { success: true, data: { message, fishProduct: {...} } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      fishProduct: responseData?.fishProduct || responseData,
+    };
   },
 
   create: async (data: FormData) => {
