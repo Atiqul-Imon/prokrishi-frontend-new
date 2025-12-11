@@ -67,12 +67,10 @@ export default function ProductDetailPage() {
                   measurement: 1,
                   category: fishProduct.category,
                   description: fishProduct.description,
-                  shortDescription: fishProduct.shortDescription,
                   isFishProduct: true,
                   priceRange: fishProduct.priceRange,
                   sizeCategories: fishProduct.sizeCategories || [],
-                  createdAt: fishProduct.createdAt,
-                };
+                } as Product;
                 setProduct(transformedProduct);
                 return;
               }
