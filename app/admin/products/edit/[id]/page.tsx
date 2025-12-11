@@ -221,10 +221,10 @@ export default function EditProductPage() {
     setError(null);
 
     try {
-      const productData = new FormData();
-      productData.append("name", formData.name);
-      productData.append("category", formData.category);
-      productData.append("status", formData.status);
+        const productData = new FormData();
+        productData.append("name", formData.name.trim());
+        productData.append("category", formData.category);
+        productData.append("status", formData.status);
       if (formData.description) productData.append("description", formData.description);
       if (formData.shortDescription) productData.append("shortDescription", formData.shortDescription);
       if (formData.metaTitle) productData.append("metaTitle", formData.metaTitle);

@@ -139,10 +139,10 @@ export default function AddProductPage() {
     setError(null);
 
     try {
-      const productData = new FormData();
-      productData.append("name", formData.name);
-      productData.append("category", formData.category);
-      productData.append("status", formData.status);
+        const productData = new FormData();
+        productData.append("name", formData.name.trim());
+        productData.append("category", formData.category);
+        productData.append("status", formData.status);
       if (formData.description) productData.append("description", formData.description);
       if (formData.shortDescription) productData.append("shortDescription", formData.shortDescription);
       if (formData.metaTitle) productData.append("metaTitle", formData.metaTitle);
@@ -155,7 +155,7 @@ export default function AddProductPage() {
       }
       productData.append("isFeatured", formData.isFeatured.toString());
 
-      if (hasVariants && variants.length > 0) {
+        if (hasVariants && variants.length > 0) {
         // Validate variants
         for (let i = 0; i < variants.length; i++) {
           const v = variants[i];
@@ -202,7 +202,7 @@ export default function AddProductPage() {
             }))
           )
         );
-      } else {
+        } else {
         // No variants - use basic pricing
         if (!formData.price || parseFloat(formData.price) <= 0) {
           setError("Price is required");
@@ -215,16 +215,16 @@ export default function AddProductPage() {
             : formData.unit === "pcs"
             ? "1"
             : "0.01";
-        productData.append("price", formData.price);
-        if (formData.salePrice) productData.append("salePrice", formData.salePrice);
-        productData.append("stock", formData.stock || "0");
-        productData.append("measurement", formData.measurement);
-        productData.append("unit", formData.unit);
-        if (formData.unitWeightKg) productData.append("unitWeightKg", formData.unitWeightKg);
-        productData.append("measurementIncrement", baseIncrement);
-        productData.append("priceType", formData.priceType || (formData.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"));
-        productData.append("stockType", formData.stockType || (formData.unit === "pcs" ? "COUNT" : "WEIGHT"));
-        if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
+          productData.append("price", formData.price);
+          if (formData.salePrice) productData.append("salePrice", formData.salePrice);
+          productData.append("stock", formData.stock || "0");
+          productData.append("measurement", formData.measurement);
+          productData.append("unit", formData.unit);
+          if (formData.unitWeightKg) productData.append("unitWeightKg", formData.unitWeightKg);
+          productData.append("measurementIncrement", baseIncrement);
+          productData.append("priceType", formData.priceType || (formData.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT"));
+          productData.append("stockType", formData.stockType || (formData.unit === "pcs" ? "COUNT" : "WEIGHT"));
+          if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
       }
 
       // Handle images
