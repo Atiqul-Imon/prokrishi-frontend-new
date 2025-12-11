@@ -75,12 +75,12 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                 className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                   isActive
                     ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
                 <item.icon 
                   size={18} 
-                  className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}
+                  className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}
                 />
                 <span>{item.label}</span>
                 {isActive && (
@@ -108,12 +108,12 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                   className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                     isActive
                       ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   <item.icon 
                     size={18} 
-                    className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}
+                    className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}
                   />
                   <span>{item.label}</span>
                   {isActive && (
@@ -139,12 +139,12 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
               className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100"
               }`}
             >
               <item.icon 
                 size={18} 
-                className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-500"}
+                className={isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}
               />
               <span>{item.label}</span>
               {isActive && (
@@ -155,9 +155,9 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         })}
         <Link
           href="/"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-150 mt-2"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-150 mt-2"
         >
-          <Home size={18} className="text-slate-500 dark:text-slate-500" />
+          <Home size={18} className="text-slate-500 dark:text-slate-400" />
           <span>Back to Site</span>
         </Link>
       </div>

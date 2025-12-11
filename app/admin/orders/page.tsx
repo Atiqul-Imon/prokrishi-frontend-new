@@ -178,80 +178,80 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Enhanced Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Orders</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Manage customer orders</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Orders</h1>
+          <p className="text-base text-slate-600 dark:text-slate-400">Manage customer orders</p>
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Enhanced Statistics Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+          <div className="bg-white dark:bg-slate-900 border-2 border-cyan-200 dark:border-cyan-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Orders</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Orders</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">
                   {stats.totalOrders?.toLocaleString() || "0"}
                 </p>
               </div>
-              <div className="p-3 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                <ShoppingCart className="text-cyan-600 dark:text-cyan-400" size={24} />
+              <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
+                <ShoppingCart className="text-white" size={24} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+          <div className="bg-white dark:bg-slate-900 border-2 border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Total Revenue</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Revenue</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">
                   ৳{(stats.totalRevenue || 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
                   Last 30 days: ৳{(stats.periodRevenue || 0).toLocaleString()}
                 </p>
               </div>
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                <DollarSign className="text-emerald-600 dark:text-emerald-400" size={24} />
+              <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+                <DollarSign className="text-white" size={24} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+          <div className="bg-white dark:bg-slate-900 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Pending Orders</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Pending Orders</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">
                   {stats.statusBreakdown?.pending || 0}
                 </p>
               </div>
-              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Clock className="text-amber-600 dark:text-amber-400" size={24} />
+              <div className="p-4 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg">
+                <Clock className="text-white" size={24} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+          <div className="bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Delivered Orders</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Delivered Orders</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">
                   {stats.statusBreakdown?.delivered || 0}
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <CheckCircle className="text-purple-600 dark:text-purple-400" size={24} />
+              <div className="p-4 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl shadow-lg">
+                <CheckCircle className="text-white" size={24} />
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Search and Filters */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+      {/* Enhanced Search and Filters */}
+      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -260,14 +260,14 @@ export default function AdminOrdersPage() {
               placeholder="Search orders..."
               value={filters.search || ""}
               onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
             />
           </div>
           <div className="flex gap-2">
             <select
               value={filters.status || "all"}
               onChange={(e) => handleFilterChange("status", e.target.value === "all" ? undefined : e.target.value)}
-              className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all font-medium"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -282,7 +282,7 @@ export default function AdminOrdersPage() {
               onChange={(e) =>
                 handleFilterChange("paymentStatus", e.target.value === "all" ? undefined : e.target.value)
               }
-              className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all font-medium"
             >
               <option value="all">All Payment</option>
               <option value="pending">Pending</option>
@@ -292,7 +292,7 @@ export default function AdminOrdersPage() {
             </select>
             <button
               onClick={fetchOrders}
-              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:from-slate-200 hover:to-slate-300 dark:hover:from-slate-700 dark:hover:to-slate-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
             >
               <RefreshCw size={18} />
               Refresh
@@ -428,8 +428,8 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      {/* Orders Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+      {/* Enhanced Orders Table */}
+      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         {loading ? (
           <div className="p-12 text-center">
             <div className="inline-block w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
@@ -444,9 +444,9 @@ export default function AdminOrdersPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b-2 border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th className="px-6 py-3 text-left">
+                    <th className="px-6 py-4 text-left">
                       <input
                         type="checkbox"
                         checked={allSelected}
@@ -454,28 +454,28 @@ export default function AdminOrdersPage() {
                           if (input) input.indeterminate = someSelected && !allSelected;
                         }}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-slate-600 rounded focus:ring-slate-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Order ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Customer
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Payment
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -484,14 +484,14 @@ export default function AdminOrdersPage() {
                   {orders.map((order) => (
                     <tr
                       key={order._id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+                      className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/10 dark:hover:to-indigo-900/10 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400"
                     >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(order._id)}
                           onChange={(e) => handleSelect(order._id, e.target.checked)}
-                          className="w-4 h-4 text-slate-600 rounded focus:ring-slate-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
                       <td className="px-6 py-4">
@@ -521,7 +521,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
                             statusColors[order.status] || statusColors.pending
                           }`}
                         >
@@ -530,7 +530,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
                             paymentStatusColors[order.paymentStatus] || paymentStatusColors.pending
                           }`}
                         >
@@ -541,14 +541,14 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/orders/${order._id}`}
-                            className="p-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm hover:shadow-md"
                             title="View"
                           >
                             <Eye size={18} />
                           </Link>
                           <button
                             onClick={() => handleDeleteOrder(order._id)}
-                            className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm hover:shadow-md"
                             title="Delete"
                           >
                             <Trash2 size={18} />
