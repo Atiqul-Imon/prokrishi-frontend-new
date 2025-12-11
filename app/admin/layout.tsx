@@ -52,9 +52,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"} transition-colors duration-200`}>
+    <div
+      className={`min-h-screen ${
+        isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"
+      } transition-colors duration-200 text-slate-900 dark:text-slate-100`}
+    >
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className={`lg:pl-56 transition-all duration-200 ${isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"}`}>
+      <div
+        className={`lg:pl-56 transition-all duration-200 ${
+          isDark ? "bg-slate-50 dark:bg-slate-950" : "bg-slate-50"
+        }`}
+      >
         <AdminHeader onToggleSidebar={() => setSidebarOpen(true)} isDark={isDark} onThemeToggle={() => setIsDark(!isDark)} />
         <main className="p-6 lg:p-8">
           <div className="max-w-[1600px] mx-auto">{children}</div>
