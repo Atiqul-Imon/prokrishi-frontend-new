@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getProductById } from "../../utils/api";
+import { fishProductApi } from "../../utils/fishApi";
 import { useCart } from "../../context/CartContext";
 import type { Product } from "@/types/models";
 import { Card } from "@/components/ui/Card";
@@ -39,8 +40,51 @@ export default function ProductDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await getProductById(id);
-        setProduct(res.product);
+        setLoading(true);
+        // Try regular product first
+        try {
+          const res = await getProductById(id);
+          if (res.product) {
+            setProduct(res.product);
+            return;
+          }
+        } catch (regularErr: any) {
+          // If 404, try fish product endpoint
+          if (regularErr.status === 404 || regularErr.message?.includes('not found')) {
+            try {
+              const fishRes = await fishProductApi.getById(id);
+              // Transform fish product to match Product type
+              const fishProduct = fishRes.data?.fishProduct || fishRes.fishProduct;
+              if (fishProduct) {
+                const transformedProduct: Product = {
+                  _id: fishProduct._id,
+                  name: fishProduct.name,
+                  price: fishProduct.priceRange?.min || 0,
+                  stock: fishProduct.availableStock || 0,
+                  image: fishProduct.image,
+                  images: fishProduct.images || [fishProduct.image].filter(Boolean),
+                  unit: 'kg',
+                  measurement: 1,
+                  category: fishProduct.category,
+                  description: fishProduct.description,
+                  shortDescription: fishProduct.shortDescription,
+                  isFishProduct: true,
+                  priceRange: fishProduct.priceRange,
+                  sizeCategories: fishProduct.sizeCategories || [],
+                  createdAt: fishProduct.createdAt,
+                };
+                setProduct(transformedProduct);
+                return;
+              }
+            } catch (fishErr: any) {
+              // Both failed, show error
+              setError("Product not found - it may have been deleted");
+              return;
+            }
+          }
+          // Re-throw if not a 404
+          throw regularErr;
+        }
       } catch (err: any) {
         setError(err?.message || "Failed to load product");
       } finally {
