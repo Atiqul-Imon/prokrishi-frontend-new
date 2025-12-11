@@ -280,11 +280,6 @@ export default function ProductDetailPage() {
                       <p className="text-sm text-gray-500">/ {unit}</p>
                     )}
                   </div>
-                  {currentStock > 0 && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Stock available: {currentStock} {stockType === "WEIGHT" ? unit : priceType === "PER_UNIT" ? "pcs" : unit}
-                    </p>
-                  )}
                 </div>
               </div>
             </Card>
