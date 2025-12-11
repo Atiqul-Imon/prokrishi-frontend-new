@@ -40,12 +40,28 @@ export default function CheckoutPage() {
   const fishProducts = useMemo(() => cart.filter((i) => isFish(i)), [cart]);
   const regularProducts = useMemo(() => cart.filter((i) => !isFish(i)), [cart]);
 
+  // Auto-select Inside Dhaka if fish products are in cart
+  useEffect(() => {
+    if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
+      setSelectedZone("inside_dhaka");
+      setMessage(null); // Clear any previous messages
+    }
+  }, [fishProducts.length, selectedZone]);
+
   // Fetch shipping quote when zone is selected and cart has items
   useEffect(() => {
     const fetchShippingQuote = async () => {
       if (!selectedZone || cart.length === 0) {
         setShippingFee(0);
         return;
+      }
+      
+      // If fish products are in cart, force Inside Dhaka
+      if (fishProducts.length > 0) {
+        if (selectedZone !== "inside_dhaka") {
+          setSelectedZone("inside_dhaka");
+          return; // Will re-trigger this effect with correct zone
+        }
       }
 
       // Need at least a basic address for shipping quote
@@ -147,6 +163,13 @@ export default function CheckoutPage() {
       setMessage("Select delivery zone (Inside Dhaka or Outside Dhaka).");
       return;
     }
+    
+    // Fish products can only be ordered to Inside Dhaka
+    if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
+      setMessage("Fish products can only be delivered to Inside Dhaka. Please select 'Inside Dhaka' or remove fish products from your cart.");
+      return;
+    }
+    
     // Validate required fields
     if (!address.name || !address.phone || !address.address) {
       setMessage("Please fill name, phone, and address.");
@@ -181,6 +204,13 @@ export default function CheckoutPage() {
               district: address.district,
               upazila: address.upazila,
             };
+
+      // Final validation: Fish products require Inside Dhaka
+      if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
+        setMessage("Fish products can only be delivered to Inside Dhaka. Please select 'Inside Dhaka' as your delivery zone.");
+        setIsSubmitting(false);
+        return;
+      }
 
       // Get final shipping quote before placing order
       let finalShippingFee = shippingFee;
@@ -232,11 +262,25 @@ export default function CheckoutPage() {
         setValidationChanges(msg);
       }
 
+      // Calculate totals separately for regular and fish products
+      const regularProductsTotal = regularProducts.reduce(
+        (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
+        0
+      );
+      const fishProductsTotal = fishProducts.reduce(
+        (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
+        0
+      );
+
+      // Use validated total if available, otherwise use calculated totals
       const validatedTotal =
         typeof validation?.totalPrice === "number" ? validation.totalPrice : cartTotal;
+      
+      // Adjust validated total proportionally if validation changed prices
+      const validationAdjustment = validatedTotal !== cartTotal ? validatedTotal / cartTotal : 1;
 
       if (regularProducts.length > 0) {
-        const regularOrderTotalPrice = validatedTotal;
+        const regularOrderTotalPrice = regularProductsTotal * validationAdjustment;
 
         const regularOrderData = {
           orderItems: regularProducts.map((item) => ({
@@ -285,10 +329,8 @@ export default function CheckoutPage() {
           };
         });
 
-        const fishOrderTotalPrice = fishProducts.reduce(
-          (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
-          0
-        );
+        // Use the pre-calculated fish products total, adjusted by validation if needed
+        const fishOrderTotalPrice = fishProductsTotal * validationAdjustment;
 
         // For fish orders, shipping is flat rate based on zone
         const fishShippingFee = selectedZone === "inside_dhaka" ? 80 : 150;
@@ -316,14 +358,23 @@ export default function CheckoutPage() {
         fishOrderId = fishRes?._id || fishRes?.fishOrder?._id || fishRes?.data?.fishOrder?._id || null;
       }
 
+      // Handle multiple orders - show both order IDs if both were created
+      const orderIds: string[] = [];
+      if (regularOrderId) orderIds.push(regularOrderId);
+      if (fishOrderId) orderIds.push(fishOrderId);
+      
       const primaryOrderId = regularOrderId || fishOrderId;
 
       // Only COD is available, so proceed directly to success
 
       clearCart();
       setMessage("Order placed successfully.");
-      if (primaryOrderId) {
-        window.location.href = `/order/success?orderId=${primaryOrderId}`;
+      
+      if (orderIds.length > 0) {
+        // If both orders were created, pass both IDs (comma-separated)
+        // The success page can handle showing both orders
+        const orderIdsParam = orderIds.join(',');
+        window.location.href = `/order/success?orderId=${orderIdsParam}`;
       }
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || err?.message || "Failed to place order.";
@@ -372,6 +423,13 @@ export default function CheckoutPage() {
                   <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
                   <h2 className="text-xl font-bold text-gray-900">Delivery Zone</h2>
                 </div>
+                {fishProducts.length > 0 && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800 font-medium">
+                      ⚠️ Fish products can only be delivered to Inside Dhaka
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button
                     onClick={() => setSelectedZone("inside_dhaka")}
@@ -387,9 +445,18 @@ export default function CheckoutPage() {
                     </div>
                   </button>
                   <button
-                    onClick={() => setSelectedZone("outside_dhaka")}
+                    onClick={() => {
+                      if (fishProducts.length > 0) {
+                        setMessage("Fish products can only be delivered to Inside Dhaka. Please remove fish products to order to Outside Dhaka.");
+                        return;
+                      }
+                      setSelectedZone("outside_dhaka");
+                    }}
+                    disabled={fishProducts.length > 0}
                     className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm ${
-                      selectedZone === "outside_dhaka"
+                      fishProducts.length > 0
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+                        : selectedZone === "outside_dhaka"
                         ? "bg-green-50 text-green-800 ring-2 ring-green-500 ring-offset-2"
                         : "hover:bg-green-50/50 bg-white hover:shadow-md"
                     }`}
@@ -398,10 +465,15 @@ export default function CheckoutPage() {
                     <div className="text-sm font-normal text-gray-600 mt-1">
                       {shippingLoading && selectedZone === "outside_dhaka" ? "Calculating..." : "From ৳150"}
                     </div>
+                    {fishProducts.length > 0 && (
+                      <div className="text-xs text-red-600 mt-1 font-normal">Not available for fish</div>
+                    )}
                   </button>
                 </div>
                 <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-                  Shipping calculated based on product weight. Fish and regular items are handled automatically.
+                  {fishProducts.length > 0 
+                    ? "Fish products require Inside Dhaka delivery. Regular products can be delivered anywhere."
+                    : "Shipping calculated based on product weight. Fish and regular items are handled automatically."}
                 </p>
               </Card>
 
