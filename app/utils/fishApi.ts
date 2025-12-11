@@ -51,8 +51,38 @@ export const fishProductApi = {
     sort?: string;
     order?: "asc" | "desc";
   }) => {
-    const response = await fishApi.get("/products", { params });
+    // NestJS endpoint is /api/fish-product (not /api/fish/products)
+    // Use the base API URL directly
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const timestamp = Date.now();
+    const queryParams = { ...params, t: timestamp };
+    const response = await axios.get(`${base}/fish-product`, {
+      params: queryParams,
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
+    // NestJS returns { success: true, data: { fishProducts: [...], pagination: {...} } }
     return response.data;
+  },
+
+  getFeatured: async (limit?: number) => {
+    const timestamp = Date.now();
+    const params = limit ? { limit, t: timestamp } : { t: timestamp };
+    // NestJS endpoint is /api/fish-product/featured (not /fish/product/featured)
+    // Use the base API URL directly, not the fishApi base
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.get(`${base}/fish-product/featured`, { 
+      params,
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
+    // NestJS returns { success: true, data: { message, fishProducts } }
+    return {
+      success: response.data.success || true,
+      fishProducts: response.data.data?.fishProducts || response.data.fishProducts || [],
+    };
   },
 
   getById: async (id: string) => {
