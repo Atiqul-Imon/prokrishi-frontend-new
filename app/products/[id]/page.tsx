@@ -119,10 +119,17 @@ export default function ProductDetailPage() {
     ((selectedVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
 
   const currentStock = useMemo(() => {
-    if (selectedSizeCategory) return selectedSizeCategory.stock || 0;
+    if (isFishProduct && selectedSizeCategory) {
+      return selectedSizeCategory.stock || 0;
+    }
+    if (isFishProduct && !selectedSizeCategory) {
+      // If no size category selected, use total available stock from all active categories
+      const activeCategories = sizeCategories.filter((sc: any) => sc.status === 'active');
+      return activeCategories.reduce((sum: number, cat: any) => sum + (cat.stock || 0), 0);
+    }
     if (selectedVariant) return selectedVariant.stock || 0;
     return product?.stock || 0;
-  }, [product, selectedVariant, selectedSizeCategory]);
+  }, [product, selectedVariant, selectedSizeCategory, isFishProduct, sizeCategories]);
 
   const inStock = currentStock > 0;
   const unit = selectedSizeCategory ? "kg" : selectedVariant?.unit || product?.unit || "pcs";
