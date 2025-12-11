@@ -365,7 +365,7 @@ export default function Header() {
               >
                 <ShoppingCart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-br from-[var(--primary-amber)] to-amber-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
                     {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}
