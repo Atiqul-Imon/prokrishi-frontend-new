@@ -264,7 +264,8 @@ export default function CheckoutPage() {
             : {}),
         };
         const regularRes: any = await placeOrder(regularOrderData);
-        regularOrderId = regularRes._id || regularRes.order?._id || regularRes.data?._id || null;
+        // Extract order ID from nested response
+        regularOrderId = regularRes._id || regularRes.order?._id || regularRes.data?.order?._id || null;
       }
 
       if (fishProducts.length > 0) {
@@ -311,7 +312,8 @@ export default function CheckoutPage() {
             : {}),
         };
         const fishRes: any = await fishOrderApi.create(fishOrderData);
-        fishOrderId = fishRes?.fishOrder?._id || fishRes?._id || null;
+        // Extract order ID from nested response
+        fishOrderId = fishRes?._id || fishRes?.fishOrder?._id || fishRes?.data?.fishOrder?._id || null;
       }
 
       const primaryOrderId = regularOrderId || fishOrderId;

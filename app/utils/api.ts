@@ -241,22 +241,38 @@ export async function updateUserAddresses(addresses: Address[]): Promise<UserPro
 }
 
 export async function placeOrder(orderData: any): Promise<OrderResponse> {
-  return apiRequest<OrderResponse>("/order", {
+  const response = await apiRequest<any>("/order", {
     method: "POST",
     data: orderData,
     headers: orderData?.idempotencyKey
       ? { "Idempotency-Key": orderData.idempotencyKey as string }
       : undefined,
   });
+  // NestJS returns { success: true, data: { message, order: {...} } }
+  const responseData = response.data || response;
+  return {
+    success: response.success || true,
+    message: responseData.message,
+    order: responseData.order || responseData,
+    // Also include _id at top level for backward compatibility
+    _id: responseData.order?._id || responseData._id,
+  };
 }
 
 // Note: Shipping quote endpoint not yet migrated - using cart validate for now
-export function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQuoteResponse> {
-  // TODO: Implement shipping quote endpoint in NestJS
-  return apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
+export async function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQuoteResponse> {
+  const response = await apiRequest<any>("/order/shipping-quote", {
     method: "POST",
     data,
   });
+  // NestJS returns { success: true, data: { shippingFee, totalWeightKg, zone, breakdown } }
+  const responseData = response.data || response;
+  return {
+    shippingFee: responseData.shippingFee || 0,
+    totalWeightKg: responseData.totalWeightKg || 0,
+    zone: responseData.zone || data.shippingZone,
+    breakdown: responseData.breakdown,
+  };
 }
 
 export async function validateCartApi(payload: {
@@ -269,10 +285,18 @@ export async function validateCartApi(payload: {
   }>;
 }): Promise<any> {
   // NestJS uses /cart/validate instead of /order/validate
-  return apiRequest<any>("/cart/validate", {
+  const response = await apiRequest<any>("/cart/validate", {
     method: "POST",
     data: payload,
   });
+  // NestJS returns { success: true, data: { hasChanges, items, totalPrice, ... } }
+  const responseData = response.data || response;
+  return {
+    hasChanges: responseData.hasChanges || false,
+    items: responseData.items || [],
+    totalPrice: responseData.totalPrice,
+    ...responseData,
+  };
 }
 
 // ========== INVOICE FUNCTIONS ==========
