@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import type { Order, Product } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatDate } from "@/app/utils";
 
 interface DashboardStats {
   stats?: {
@@ -248,7 +249,7 @@ export default function AdminDashboard() {
                       ৳{order.totalPrice?.toLocaleString() || 0}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {order.createdAt ? formatDate(order.createdAt) : "N/A"}
                     </p>
                   </div>
                 </Link>

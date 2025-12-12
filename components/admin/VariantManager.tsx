@@ -160,7 +160,7 @@ export function VariantManager({
                   min="0"
                   step="0.01"
                   value={variant.salePrice || ""}
-                  onChange={(e) => onUpdate(index, "salePrice", e.target.value || undefined)}
+                  onChange={(e) => onUpdate(index, "salePrice", e.target.value || "")}
                   placeholder="Optional"
                   containerClassName=""
                   className="text-sm"
@@ -205,7 +205,7 @@ export function VariantManager({
                   min="0"
                   step="0.001"
                   value={variant.unitWeightKg || ""}
-                  onChange={(e) => onUpdate(index, "unitWeightKg", e.target.value || undefined)}
+                  onChange={(e) => onUpdate(index, "unitWeightKg", e.target.value || "")}
                   placeholder="Optional"
                   containerClassName=""
                   className="text-sm"

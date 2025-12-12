@@ -73,8 +73,8 @@ export default function Orders() {
           ...(regularOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: false })),
           ...(fishOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: true })),
         ].sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.date).getTime();
-          const dateB = new Date(b.createdAt || b.date).getTime();
+          const dateA = new Date(a.createdAt || new Date().toISOString()).getTime();
+          const dateB = new Date(b.createdAt || new Date().toISOString()).getTime();
           return dateB - dateA;
         });
 
@@ -154,7 +154,7 @@ export default function Orders() {
                         Order #{order.invoiceNumber || orderId.slice(-8)}
                       </h4>
                       <p className="text-sm text-gray-600">
-                        {formatDate(order.createdAt || order.date || new Date().toISOString())}
+                        {formatDate(order.createdAt || new Date().toISOString())}
                       </p>
                     </div>
                   </div>

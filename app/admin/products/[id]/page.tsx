@@ -109,12 +109,9 @@ export default function ProductDetailsPage() {
           )}
 
           {/* Description */}
-          {(product.description || product.shortDescription) && (
+          {product.description && (
             <div className="bg-white">
               <h2 className="text-sm font-semibold text-slate-900">Description</h2>
-              {product.shortDescription && (
-                <p className="text-sm text-slate-700">{product.shortDescription}</p>
-              )}
               {product.description && (
                 <p className="text-sm text-slate-600">{product.description}</p>
               )}
@@ -135,7 +132,7 @@ export default function ProductDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">Category</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {product.category?.name || "Uncategorized"}
+                    {typeof product.category === 'object' && product.category?.name ? product.category.name : (typeof product.category === 'string' ? product.category : "Uncategorized")}
                   </p>
                 </div>
               </div>
@@ -176,12 +173,12 @@ export default function ProductDetailsPage() {
                   <p className="text-xs text-slate-500">Status</p>
                   <span
                     className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${
-                      product.status === "active"
+                      (product as any).status === "active"
                         ? "bg-emerald-100"
                         : "bg-slate-100"
                     }`}
                   >
-                    {product.status || "inactive"}
+                    {(product as any).status || "inactive"}
                   </span>
                 </div>
               </div>
@@ -200,7 +197,7 @@ export default function ProductDetailsPage() {
                 </div>
               )}
 
-              {product.sku && (
+              {(product as any).sku && (
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-slate-100">
                     <Package className="text-slate-600" size={16} />
@@ -208,7 +205,7 @@ export default function ProductDetailsPage() {
                   <div>
                     <p className="text-xs text-slate-500">SKU</p>
                     <p className="text-sm font-medium text-slate-900">
-                      {product.sku}
+                      {(product as any).sku}
                     </p>
                   </div>
                 </div>

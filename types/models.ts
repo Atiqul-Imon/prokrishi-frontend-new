@@ -17,6 +17,7 @@ export interface ProductVariant {
   _id: string;
   label: string;
   price: number;
+  salePrice?: number;
   stock: number;
   measurement: number;
   unit: string;
@@ -25,6 +26,8 @@ export interface ProductVariant {
   priceType?: "PER_UNIT" | "PER_WEIGHT";
   stockType?: "COUNT" | "WEIGHT";
   status?: string;
+  sku?: string;
+  isDefault?: boolean;
 }
 
 export interface Category {
@@ -42,6 +45,9 @@ export interface SizeCategory {
   status?: string;
   isDefault?: boolean;
   measurementIncrement?: number;
+  minWeight?: number;
+  maxWeight?: number;
+  sku?: string;
 }
 
 export interface Product {
@@ -66,6 +72,9 @@ export interface Product {
   category?: Category | string;
   isFishProduct?: boolean;
   sizeCategories?: SizeCategory[];
+  status?: string;
+  sku?: string;
+  isFeatured?: boolean;
 }
 
 export interface FishProduct extends Omit<Product, 'price' | 'stock' | 'variants' | 'hasVariants'> {
@@ -112,6 +121,25 @@ export interface Order {
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  user?: {
+    _id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  shippingAddress?: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    division?: string;
+    district?: string;
+    upazila?: string;
+  };
+  guestInfo?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
 export interface User {
@@ -121,5 +149,7 @@ export interface User {
   phone?: string;
   role?: string;
   addresses?: Address[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 

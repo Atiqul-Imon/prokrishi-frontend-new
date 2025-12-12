@@ -125,7 +125,7 @@ export default function AdminCategoriesPage() {
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                   <span className="text-sm text-slate-500">
-                    {category?.productCount || 0} products
+                    {(category as any)?.productCount || 0} products
                   </span>
                   <div className="flex gap-2">
                     {category?._id && (

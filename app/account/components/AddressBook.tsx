@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { addAddress, updateAddress, deleteAddress, fetchProfile } from "@/app/utils/api";
+import { handleApiError } from "@/app/utils/errorHandler";
 import { Address } from "@/types/models";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";

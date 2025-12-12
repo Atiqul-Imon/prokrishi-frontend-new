@@ -72,7 +72,9 @@ export default function OrderDetailsPage() {
     setUpdating(true);
     try {
       await updateAdminOrderStatus(orderId, newStatus, notes);
-      setOrder({ ...order, status: newStatus });
+      if (order) {
+        setOrder({ ...order, status: newStatus } as Order);
+      }
       setEditingStatus(false);
       setNotes("");
     } catch (err) {
@@ -86,7 +88,9 @@ export default function OrderDetailsPage() {
     setUpdating(true);
     try {
       await updateAdminPaymentStatus(orderId, newPaymentStatus, transactionId, notes);
-      setOrder({ ...order, paymentStatus: newPaymentStatus, transactionId });
+      if (order) {
+        setOrder({ ...order, paymentStatus: newPaymentStatus, transactionId } as Order);
+      }
       setEditingPayment(false);
       setNotes("");
     } catch (err) {
@@ -170,14 +174,14 @@ export default function OrderDetailsPage() {
         <div className="flex items-center gap-3">
           <span
             className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              statusColors[order.status] || statusColors.pending
+              statusColors[order.status || 'pending'] || statusColors.pending
             }`}
           >
             {order.status || "pending"}
           </span>
           <span
             className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-              paymentStatusColors[order.paymentStatus] || paymentStatusColors.pending
+              paymentStatusColors[order.paymentStatus || 'pending'] || paymentStatusColors.pending
             }`}
           >
             {order.paymentStatus || "pending"}
@@ -197,9 +201,9 @@ export default function OrderDetailsPage() {
                   key={index}
                   className="flex items-center gap-4 p-3 rounded-lg bg-slate-50"
                 >
-                  {item.variant?.image || item.product?.image ? (
+                  {(item as any).variant?.image || (item as any).product?.image ? (
                     <img
-                      src={item.variant?.image || item.product?.image}
+                      src={(item as any).variant?.image || (item as any).product?.image}
                       alt={item.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
@@ -210,9 +214,9 @@ export default function OrderDetailsPage() {
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                    {item.variant?.label && (
+                    {(item as any).variant?.label && (
                       <p className="text-xs text-slate-500">
-                        Variant: {item.variant.label}
+                        Variant: {(item as any).variant.label}
                       </p>
                     )}
                     <p className="text-xs text-slate-500">
@@ -283,7 +287,7 @@ export default function OrderDetailsPage() {
                   <button
                     onClick={() => {
                       setEditingStatus(false);
-                      setNewStatus(order.status);
+                      setNewStatus(order.status || 'pending');
                       setNotes("");
                     }}
                     className="flex items-center gap-2 px-4 py-2 bg-slate-100"
@@ -298,14 +302,14 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-3">
                   <span
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                      statusColors[order.status] || statusColors.pending
+                      statusColors[order.status || 'pending'] || statusColors.pending
                     }`}
                   >
                     {order.status || "pending"}
                   </span>
-                  {order.isDelivered && order.deliveredAt && (
+                  {((order as any).isDelivered || order.status === 'delivered') && (order as any).deliveredAt && (
                     <span className="text-sm text-slate-500">
-                      Delivered on {formatDate(order.deliveredAt)}
+                      Delivered on {formatDate((order as any).deliveredAt)}
                     </span>
                   )}
                 </div>
@@ -376,7 +380,7 @@ export default function OrderDetailsPage() {
                   <button
                     onClick={() => {
                       setEditingPayment(false);
-                      setNewPaymentStatus(order.paymentStatus);
+                      setNewPaymentStatus(order.paymentStatus || 'pending');
                       setTransactionId(order.transactionId || "");
                       setNotes("");
                     }}
@@ -392,14 +396,14 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-3">
                   <span
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                      paymentStatusColors[order.paymentStatus] || paymentStatusColors.pending
+                      paymentStatusColors[order.paymentStatus || 'pending'] || paymentStatusColors.pending
                     }`}
                   >
                     {order.paymentStatus || "pending"}
                   </span>
-                  {order.isPaid && order.paidAt && (
+                  {((order as any).isPaid || order.paymentStatus === 'completed') && (order as any).paidAt && (
                     <span className="text-sm text-slate-500">
-                      Paid on {formatDate(order.paidAt)}
+                      Paid on {formatDate((order as any).paidAt)}
                     </span>
                   )}
                   {order.transactionId && (

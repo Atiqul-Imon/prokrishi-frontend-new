@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAllProducts, getFeaturedCategories } from "../utils/api";
 import { logger } from "../utils/logger";
+import { handleApiError } from "../utils/errorHandler";
 import type { Product, Category } from "@/types/models";
 import ProductCard from "@/components/ProductCard";
 import { Card } from "@/components/ui/Card";

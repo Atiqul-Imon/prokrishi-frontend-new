@@ -155,7 +155,7 @@ export function SizeCategoryManager({
                   min="0"
                   step="0.01"
                   value={category.minWeight || ""}
-                  onChange={(e) => onUpdate(index, "minWeight", e.target.value || undefined)}
+                  onChange={(e) => onUpdate(index, "minWeight", e.target.value || "")}
                   placeholder="Optional"
                   containerClassName=""
                   className="text-sm"
@@ -167,7 +167,7 @@ export function SizeCategoryManager({
                   min="0"
                   step="0.01"
                   value={category.maxWeight || ""}
-                  onChange={(e) => onUpdate(index, "maxWeight", e.target.value || undefined)}
+                  onChange={(e) => onUpdate(index, "maxWeight", e.target.value || "")}
                   placeholder="Optional"
                   containerClassName=""
                   className="text-sm"

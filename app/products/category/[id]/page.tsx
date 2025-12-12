@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getCategoryById, getAllProducts } from "@/app/utils/api";
 import { logger } from "@/app/utils/logger";
+import { handleApiError } from "@/app/utils/errorHandler";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";

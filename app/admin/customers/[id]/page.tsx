@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getUserById } from "../../../utils/api";
-import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, Package, AlertCircle } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, MapPin, Calendar, Package, AlertCircle } from "lucide-react";
 import type { User, Address } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatDate } from "@/app/utils";
 
 export default function CustomerDetailsPage() {
   const params = useParams();
@@ -91,7 +92,7 @@ export default function CustomerDetailsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-slate-100">
-                  <User className="text-slate-600" size={16} />
+                  <UserIcon className="text-slate-600" size={16} />
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">Name</p>
@@ -132,7 +133,7 @@ export default function CustomerDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">Member Since</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {new Date(customer.createdAt).toLocaleDateString()}
+                    {customer.createdAt ? formatDate(customer.createdAt) : "N/A"}
                   </p>
                 </div>
               </div>

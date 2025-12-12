@@ -27,7 +27,7 @@ interface ValidationItem {
 interface OrderResponse {
   _id?: string;
   order?: { _id?: string };
-  data?: { order?: { _id?: string } };
+  data?: { order?: { _id?: string }; fishOrder?: { _id?: string } };
   fishOrder?: { _id?: string };
   [key: string]: unknown;
 }
@@ -53,8 +53,8 @@ export default function CheckoutPage() {
   const [validationChanges, setValidationChanges] = useState<string | null>(null);
 
   const isFish = (item: CartItem): boolean =>
-    item?.isFishProduct === true ||
-    (item?.sizeCategories && Array.isArray(item.sizeCategories) && item.sizeCategories.length > 0);
+    Boolean(item?.isFishProduct === true ||
+    (item?.sizeCategories && Array.isArray(item.sizeCategories) && item.sizeCategories.length > 0));
 
   const fishProducts = useMemo(() => cart.filter((i) => isFish(i)), [cart]);
   const regularProducts = useMemo(() => cart.filter((i) => !isFish(i)), [cart]);

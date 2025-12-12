@@ -188,7 +188,6 @@ export default function AddFishProductPage() {
           value={formData.shortDescription}
           onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
           placeholder="Brief description (max 100 characters)"
-          showCharCount
           helperText={`${formData.shortDescription.length}/100 characters`}
         />
 
@@ -259,7 +258,6 @@ export default function AddFishProductPage() {
           value={formData.metaDescription}
           onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
           placeholder="SEO meta description"
-          showCharCount
           helperText={`${formData.metaDescription.length}/160 characters`}
         />
       </FormSection>

@@ -124,7 +124,7 @@ export default function AdminOrdersPage() {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: key !== "page" ? 1 : value,
+      page: key !== "page" ? 1 : (typeof value === 'number' ? value : parseInt(String(value || '1'), 10)),
     }));
   }, []);
 

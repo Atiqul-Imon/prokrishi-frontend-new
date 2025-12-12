@@ -29,7 +29,7 @@ const BASE_URL = getApiBaseUrl();
 // Type definitions for better type safety
 type FormDataValue = string | number | boolean | File | Blob | null | undefined | FormDataValue[] | Record<string, unknown>;
 type ProductFormData = FormData | Record<string, FormDataValue>;
-type CategoryFormData = { name: string; description?: string; image?: File };
+export type CategoryFormData = { name: string; description?: string; image?: File };
 type OrderData = {
   orderItems: Array<{
     product: string;

@@ -6,18 +6,36 @@ import { fishOrderApi } from "../../../utils/fishApi";
 import { Search, Eye, RefreshCw, Fish, Package } from "lucide-react";
 import type { Order } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatCurrency, formatDate } from "@/app/utils";
 
-interface FishOrder extends Order {
+interface FishOrder extends Omit<Order, 'orderItems'> {
+  orderItems?: Array<{
+    product: string;
+    name: string;
+    quantity: number;
+    price: number;
+    variantId?: string;
+  }> | unknown[];
   orderNumber?: string;
+  user?: {
+    _id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
   shippingAddress?: {
     name?: string;
     phone?: string;
+    address?: string;
+    division?: string;
+    district?: string;
+    upazila?: string;
   };
   guestInfo?: {
     name?: string;
     phone?: string;
+    email?: string;
   };
-  orderItems?: unknown[];
 }
 
 export default function AdminFishOrdersPage() {
@@ -165,13 +183,13 @@ export default function AdminFishOrdersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-medium text-gray-900">
-                        ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
+                        {formatCurrency(order.totalAmount || order.totalPrice || 0)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          statusColors[order.status] || statusColors.pending
+                          statusColors[order.status || 'pending'] || statusColors.pending
                         }`}
                       >
                         {order.status || "pending"}
@@ -179,7 +197,7 @@ export default function AdminFishOrdersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-900">
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {order.createdAt ? formatDate(order.createdAt) : "N/A"}
                       </span>
                     </td>
                     <td className="px-6 py-4">

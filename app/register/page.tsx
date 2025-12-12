@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerUser } from "@/app/utils/api";
+import { handleApiError } from "@/app/utils/errorHandler";
 import Link from "next/link";
 import { User, Mail, Phone, Lock, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -77,9 +78,9 @@ export default function RegisterPage() {
         setError("Registration failed");
       }
     } catch (err) {
-      const errorMessage = handleApiError(err, "registering user");
+      let errorMessage = handleApiError(err, "registering user");
 
-      if (err.message) {
+      if (err instanceof Error && err.message) {
         if (err.message.includes("already exists")) {
           errorMessage = "An account with this phone number already exists";
         } else if (err.message.includes("email")) {

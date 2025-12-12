@@ -124,12 +124,9 @@ export default function FishProductDetailsPage() {
           )}
 
           {/* Description */}
-          {(product.description || product.shortDescription) && (
+          {product.description && (
             <div className="bg-white">
               <h2 className="text-sm font-semibold text-slate-900">Description</h2>
-              {product.shortDescription && (
-                <p className="text-sm text-slate-700">{product.shortDescription}</p>
-              )}
               {product.description && (
                 <p className="text-sm text-slate-600">{product.description}</p>
               )}
@@ -217,7 +214,7 @@ export default function FishProductDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">Category</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {product.category?.name || "মাছ"}
+                    {typeof product.category === 'object' && product.category?.name ? product.category.name : (typeof product.category === 'string' ? product.category : "মাছ")}
                   </p>
                 </div>
               </div>
@@ -268,7 +265,7 @@ export default function FishProductDetailsPage() {
                 </div>
               </div>
 
-              {product.sku && (
+               {(product as any).sku && (
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-slate-100">
                     <PackageCheck className="text-slate-600" size={16} />
@@ -276,7 +273,7 @@ export default function FishProductDetailsPage() {
                   <div>
                     <p className="text-xs text-slate-500">SKU</p>
                     <p className="text-sm font-medium text-slate-900">
-                      {product.sku}
+                      {(product as any).sku}
                     </p>
                   </div>
                 </div>

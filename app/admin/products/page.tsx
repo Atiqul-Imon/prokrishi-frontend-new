@@ -219,7 +219,7 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-sm font-medium text-slate-900">
-                    {product.category?.name || "Uncategorized"}
+                    {typeof product.category === 'object' && product.category?.name ? product.category.name : (typeof product.category === 'string' ? product.category : "Uncategorized")}
                   </span>
                 </td>
                 <td className="px-6 py-4">

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { requestPasswordReset } from "@/app/utils/api";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

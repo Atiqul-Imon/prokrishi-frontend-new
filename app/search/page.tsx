@@ -51,6 +51,7 @@ function SearchPageContent() {
     sortBy: sortBy,
     sortOrder: sortOrder,
     status: status,
+    page: page,
   });
 
   useEffect(() => {
@@ -91,8 +92,9 @@ function SearchPageContent() {
     // Update URL with new filters
     const params = new URLSearchParams();
     Object.keys(updatedFilters).forEach((key) => {
-      if (updatedFilters[key] !== undefined && updatedFilters[key] !== "") {
-        params.append(key, updatedFilters[key]);
+      const value = updatedFilters[key as keyof typeof updatedFilters];
+      if (value !== undefined && value !== "") {
+        params.append(key, value);
       }
     });
 
@@ -108,6 +110,7 @@ function SearchPageContent() {
       sortBy: "name",
       sortOrder: "asc",
       status: "active",
+      page: "1",
     });
     router.push("/search");
   };

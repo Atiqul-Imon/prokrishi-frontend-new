@@ -52,16 +52,16 @@ export default function Home() {
         const transformedFishProducts: Product[] = fishProductsList.map((fp: FishProduct) => ({
           _id: fp._id,
           name: fp.name,
-          price: fp.priceRange?.min || 0, // Use min price from range
-          stock: fp.availableStock || 0,
+          price: (fp as any).priceRange?.min || 0, // Use min price from range
+          stock: (fp as any).availableStock || 0,
           image: fp.image,
           unit: 'kg', // Fish products are sold by weight
           measurement: 1,
           category: fp.category,
           isFishProduct: true, // Mark as fish product
-          priceRange: fp.priceRange, // Keep price range for fish products
+          priceRange: (fp as any).priceRange, // Keep price range for fish products
           sizeCategories: fp.sizeCategories, // Keep size categories
-          createdAt: fp.createdAt, // Keep creation date for sorting
+          createdAt: (fp as any).createdAt, // Keep creation date for sorting
         }));
 
         // Sort by creation date (newest first)
