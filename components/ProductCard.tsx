@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/app/context/CartContext";
 import { Product } from "@/types/models";
 import { formatCurrency } from "@/app/utils";
@@ -14,15 +15,15 @@ interface ProductCardProps {
   className?: string;
 }
 
-export default function ProductCard({ product, showBadges = true, className = "" }: ProductCardProps) {
+function ProductCard({ product, showBadges = true, className = "" }: ProductCardProps) {
   const { addToCart } = useCart();
   const { _id, name, price, stock, image, images, unit, measurement, isFishProduct, priceRange, sizeCategories } = product;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart({ ...product, id: _id }, 1);
-  };
+  }, [product, _id, addToCart]);
 
   // Calculate display price
   const displayPrice = useMemo(() => {
@@ -63,11 +64,13 @@ export default function ProductCard({ product, showBadges = true, className = ""
       <Link href={`/products/${_id}`} className="block flex-shrink-0" aria-label={`View details for ${name}`}>
         <div className="relative overflow-hidden aspect-square w-full bg-gray-100">
           {primaryImage ? (
-            <img
+            <Image
               src={primaryImage}
               alt={name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
-              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -145,4 +148,6 @@ export default function ProductCard({ product, showBadges = true, className = ""
     </article>
   );
 }
+
+export default React.memo(ProductCard);
 

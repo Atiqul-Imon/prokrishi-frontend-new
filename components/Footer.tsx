@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube, ArrowRight } from "lucide-react";
 
 export default function Footer() {
@@ -37,11 +38,15 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-4 group">
-              <img
-                src="/logo/prokrishihublogo.png"
-                alt="ProKrishi Logo"
-                className="h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
+              <div className="relative h-12 md:h-14 w-auto">
+                <Image
+                  src="/logo/prokrishihublogo.png"
+                  alt="ProKrishi Logo"
+                  width={200}
+                  height={56}
+                  className="h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md">
               Your trusted source for fresh, quality agricultural products. We bring the best from farm to your doorstep with care and commitment.

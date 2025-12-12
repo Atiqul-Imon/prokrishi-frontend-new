@@ -14,7 +14,7 @@ interface OrderItemProps {
 /**
  * Reusable component for displaying a single order item
  */
-export default function OrderItem({
+function OrderItem({
   name,
   quantity,
   price,
@@ -52,4 +52,6 @@ export default function OrderItem({
     </div>
   );
 }
+
+export default React.memo(OrderItem);
 

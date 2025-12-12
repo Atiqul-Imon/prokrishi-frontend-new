@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import Image from "next/image";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 interface GalleryImage {
@@ -85,11 +86,13 @@ export function GalleryUpload({
         {allImages.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {allImages.map((image, index) => (
-              <div key={index} className="relative group">
-                <img
+              <div key={index} className="relative group aspect-[4/3]">
+                <Image
                   src={image.preview}
                   alt={`Gallery ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-xl border-2 border-slate-200 shadow-sm"
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover rounded-xl border-2 border-slate-200 shadow-sm"
                 />
                 <button
                   type="button"

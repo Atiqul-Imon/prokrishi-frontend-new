@@ -3,9 +3,18 @@
 import { useAuth } from "../context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, ReactNode, useState } from "react";
+import dynamic from "next/dynamic";
 import AdminSidebar from "./components/Sidebar";
 import AdminHeader from "../admin/components/Header";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+
+// Lazy load admin header for code splitting
+const AdminHeaderLazy = dynamic(() => import("../admin/components/Header"), {
+  ssr: true,
+  loading: () => (
+    <div className="h-16 bg-white border-b border-slate-200 animate-pulse" />
+  ),
+});
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -48,7 +57,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="min-h-screen bg-slate-50">
         <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="lg:pl-64 transition-all duration-200">
-          <AdminHeader onToggleSidebar={() => setSidebarOpen(true)} />
+          <AdminHeaderLazy onToggleSidebar={() => setSidebarOpen(true)} />
           <main className="p-4 lg:p-6">
             <div className="max-w-[1600px] mx-auto">{children}</div>
           </main>

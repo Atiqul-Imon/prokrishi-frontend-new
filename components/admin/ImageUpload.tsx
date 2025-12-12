@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import Image from "next/image";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 interface ImageUploadProps {
@@ -59,11 +60,13 @@ export function ImageUpload({
       )}
 
       {displayImage ? (
-        <div className="relative inline-block">
-          <img
+        <div className="relative inline-block w-40 h-40">
+          <Image
             src={displayImage}
             alt="Preview"
-            className="w-40 h-40 object-cover rounded-xl border-2 border-slate-200 shadow-sm"
+            fill
+            sizes="160px"
+            className="object-cover rounded-xl border-2 border-slate-200 shadow-sm"
           />
           <button
             type="button"

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { Search, ShoppingCart, User, Menu, X, Settings, ChevronDown, Package, LogOut } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
@@ -49,6 +50,7 @@ export default function Header() {
       }
     }, 300);
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
   // Close dropdown on outside click
@@ -86,7 +88,7 @@ export default function Header() {
     };
   }, [showMobileMenu]);
 
-  const performSearch = async () => {
+  const performSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
     setLoading(true);
     try {
@@ -103,26 +105,32 @@ export default function Header() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-      setShowDropdown(false);
-      setIsSearchFocused(false);
-    }
-  };
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+        setSearchQuery("");
+        setShowDropdown(false);
+        setIsSearchFocused(false);
+      }
+    },
+    [searchQuery, router]
+  );
 
-  const handleResultClick = (product: Product) => {
-    if (product?._id) {
-      router.push(`/products/${product._id}`);
-      setSearchQuery("");
-      setShowDropdown(false);
-      setIsSearchFocused(false);
-    }
-  };
+  const handleResultClick = useCallback(
+    (product: Product) => {
+      if (product?._id) {
+        router.push(`/products/${product._id}`);
+        setSearchQuery("");
+        setShowDropdown(false);
+        setIsSearchFocused(false);
+      }
+    },
+    [router]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showDropdown) return;
@@ -152,12 +160,15 @@ export default function Header() {
     }
   };
 
-  const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/products", label: "Products" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
-  ];
+  const navLinks = useMemo(
+    () => [
+      { href: "/", label: "Home" },
+      { href: "/products", label: "Products" },
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+    ],
+    []
+  );
 
   return (
     <>
@@ -174,11 +185,14 @@ export default function Header() {
           <div className="flex items-center justify-between h-16 gap-2">
             {/* Left: Logo */}
             <Link href="/" className="flex items-center flex-shrink-0 group">
-              <div className="relative">
-                <img
+              <div className="relative h-14 md:h-16 w-auto">
+                <Image
                   src="/logo/prokrishihublogo.png"
                   alt="ProKrishi Logo"
+                  width={200}
+                  height={64}
                   className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  priority
                 />
               </div>
             </Link>
@@ -308,12 +322,14 @@ export default function Header() {
                                 }`}
                               >
                                 <div className="flex items-center gap-4">
-                                  <div className="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                                  <div className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
                                     {product.image ? (
-                                      <img
+                                      <Image
                                         src={product.image}
                                         alt={product.name}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        sizes="64px"
+                                        className="object-cover"
                                       />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center">

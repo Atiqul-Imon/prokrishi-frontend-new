@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -74,7 +74,7 @@ function getStatusConfig(status: string) {
   );
 }
 
-export default function OrderCard({
+function OrderCard({
   order,
   showDetails = true,
   showInvoice = true,
@@ -87,6 +87,10 @@ export default function OrderCard({
   const orderItems = order.orderItems || [];
   const status = getStatusConfig(order.status || "processing");
   const StatusIcon = status.icon;
+
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
   return (
     <Card
@@ -169,7 +173,7 @@ export default function OrderCard({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={handleToggleExpand}
               className="shadow-sm"
               aria-expanded={isExpanded}
               aria-controls={`order-details-${orderId}`}
@@ -254,4 +258,6 @@ export default function OrderCard({
     </Card>
   );
 }
+
+export default React.memo(OrderCard);
 

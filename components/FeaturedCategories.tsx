@@ -1,22 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getFeaturedCategories } from "@/app/utils/api";
 import { Category } from "@/types/models";
 
-const CategoryCard = ({ category }: { category: Category }) => (
+const CategoryCard = memo(({ category }: { category: Category }) => (
   <Link
     href={`/products/category/${category._id}`}
     className="group block text-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105"
   >
     <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 overflow-hidden rounded-full border-2 border-gray-200 group-hover:border-[var(--primary-green)] transition-colors duration-300">
       {category.image ? (
-        <img
+        <Image
           src={category.image}
           alt={category.name}
+          fill
+          sizes="(max-width: 640px) 80px, 96px"
+          className="object-cover group-hover:scale-110 transition-transform duration-300"
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
@@ -28,7 +31,7 @@ const CategoryCard = ({ category }: { category: Category }) => (
       {category.name}
     </h3>
   </Link>
-);
+));
 
 export default function FeaturedCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
