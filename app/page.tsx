@@ -115,7 +115,7 @@ export default function Home() {
           ) : featuredProducts.length > 0 ? (
             <ProductGrid
               products={featuredProducts}
-              columns={{ mobile: 2, tablet: 2, desktop: 3, wide: 5 }}
+              columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
               gap="md"
               showBadges={true}
               emptyMessage="No featured products available at the moment."
@@ -156,7 +156,7 @@ export default function Home() {
             <>
               <ProductGrid
                 products={fishProducts}
-                columns={{ mobile: 2, tablet: 2, desktop: 3, wide: 5 }}
+                columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
                 gap="md"
                 showBadges={true}
                 emptyMessage="No fish products available at the moment."

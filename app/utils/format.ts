@@ -4,6 +4,7 @@
 
 /**
  * Format currency (Bangladeshi Taka)
+ * Removes .00 for whole numbers (e.g., 120 instead of 120.00)
  */
 export function formatCurrency(amount: number | string | undefined | null): string {
   if (amount === null || amount === undefined || amount === "") {
@@ -13,6 +14,13 @@ export function formatCurrency(amount: number | string | undefined | null): stri
   if (isNaN(num)) {
     return "৳0";
   }
+  // Check if the number is a whole number (no decimal part)
+  const isWholeNumber = num % 1 === 0;
+  if (isWholeNumber) {
+    // Format without decimal places
+    return `৳${num.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  }
+  // Format with decimal places
   return `৳${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
