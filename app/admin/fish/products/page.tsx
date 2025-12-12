@@ -23,8 +23,7 @@ export default function AdminFishProductsPage() {
       const params: any = { page: currentPage, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       const result = await fishProductApi.getAll(params);
-      const productsList = result.fishProducts || result.products || result.data || [];
-      setProducts(Array.isArray(productsList) ? productsList : []);
+      setProducts(result.fishProducts || []);
       setTotalPages(result.pagination?.totalPages || 1);
     } catch (err: any) {
       setError(err.message || "Failed to load fish products");
