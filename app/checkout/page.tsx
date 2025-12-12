@@ -13,6 +13,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import type { CartItem, SizeCategory } from "@/types/models";
 
 type Zone = "inside_dhaka" | "outside_dhaka" | null;
@@ -32,7 +34,7 @@ interface OrderResponse {
   [key: string]: unknown;
 }
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const { cart, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
 
@@ -483,7 +485,14 @@ export default function CheckoutPage() {
                   >
                     <div className="text-lg font-bold">Outside Dhaka</div>
                     <div className="text-sm font-normal text-gray-600 mt-1">
-                      {shippingLoading && selectedZone === "outside_dhaka" ? "Calculating..." : "From ৳150"}
+                      {shippingLoading && selectedZone === "outside_dhaka" ? (
+                        <span className="flex items-center gap-1">
+                          <LoadingSpinner size="sm" />
+                          Calculating...
+                        </span>
+                      ) : (
+                        "From ৳150"
+                      )}
                     </div>
                     {fishProducts.length > 0 && (
                       <div className="text-xs text-red-600 mt-1 font-normal">Not available for fish</div>
@@ -628,7 +637,10 @@ export default function CheckoutPage() {
                     <p className="text-base text-gray-600">Shipping</p>
                     <p className="text-lg font-bold text-gray-900">
                       {shippingLoading ? (
-                        <span className="text-gray-400">Calculating...</span>
+                        <span className="flex items-center gap-2 text-gray-400">
+                          <LoadingSpinner size="sm" />
+                          Calculating...
+                        </span>
                       ) : selectedZone ? (
                         formatCurrency(shippingFee)
                       ) : (
@@ -641,7 +653,10 @@ export default function CheckoutPage() {
                       <p>Total</p>
                       <p className="text-green-600">
                         {shippingLoading ? (
-                          <span className="text-gray-400">Calculating...</span>
+                          <span className="flex items-center gap-2 text-gray-400">
+                            <LoadingSpinner size="sm" />
+                            Calculating...
+                          </span>
                         ) : (
                           formatCurrency(total)
                         )}
@@ -677,5 +692,13 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <ErrorBoundary>
+      <CheckoutContent />
+    </ErrorBoundary>
   );
 }

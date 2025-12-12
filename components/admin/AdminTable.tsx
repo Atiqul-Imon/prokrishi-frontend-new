@@ -2,6 +2,7 @@
 
 import React, { type ReactNode } from "react";
 import { AdminPagination } from "./AdminPagination";
+import { TableSkeleton } from "@/components/ui/SkeletonLoader";
 
 interface AdminTableProps {
   children: ReactNode;
@@ -35,9 +36,8 @@ export function AdminTable({
   return (
     <div className={`bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm ${className}`}>
       {loading ? (
-        <div className="p-12 text-center">
-          <div className="inline-block w-6 h-6 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
-          <p className="text-sm text-slate-500 mt-3">Loading...</p>
+        <div className="p-6">
+          <TableSkeleton rows={5} columns={7} />
         </div>
       ) : empty ? (
         <div className="p-12 text-center">

@@ -23,6 +23,7 @@ import {
 import { Address, Product, Category, Order } from "@/types/models";
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import { logger } from "./logger";
+import { retry, retryOnCondition, isNetworkError, isServerError } from "./retry";
 
 const BASE_URL = getApiBaseUrl();
 
@@ -270,38 +271,66 @@ export async function updateUserAddresses(addresses: Address[]): Promise<UserPro
 }
 
 export async function placeOrder(orderData: OrderData): Promise<OrderResponse> {
-  const response = await apiRequest<OrderResponse>("/order", {
-    method: "POST",
-    data: orderData,
-    headers: orderData?.idempotencyKey
-      ? { "Idempotency-Key": orderData.idempotencyKey as string }
-      : undefined,
-  });
-  // NestJS returns { success: true, data: { message, order: {...} } }
-  const responseData = response.data || response;
-  return {
-    success: response.success || true,
-    message: responseData.message,
-    order: responseData.order || responseData,
-    // Also include _id at top level for backward compatibility
-    _id: responseData.order?._id || responseData._id,
-  };
+  // Retry critical order placement with exponential backoff
+  return retryOnCondition(
+    async () => {
+      const response = await apiRequest<OrderResponse>("/order", {
+        method: "POST",
+        data: orderData,
+        headers: orderData?.idempotencyKey
+          ? { "Idempotency-Key": orderData.idempotencyKey as string }
+          : undefined,
+      });
+      // NestJS returns { success: true, data: { message, order: {...} } }
+      const responseData = response.data || response;
+      return {
+        success: response.success || true,
+        message: responseData.message,
+        order: responseData.order || responseData,
+        // Also include _id at top level for backward compatibility
+        _id: responseData.order?._id || responseData._id,
+      };
+    },
+    (error) => isNetworkError(error) || isServerError(error),
+    {
+      maxAttempts: 3,
+      delay: 1000,
+      backoff: "exponential",
+      onRetry: (attempt, error) => {
+        logger.warn(`Order placement retry attempt ${attempt}:`, error);
+      },
+    }
+  );
 }
 
 // Note: Shipping quote endpoint not yet migrated - using cart validate for now
 export async function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQuoteResponse> {
-  const response = await apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
-    method: "POST",
-    data,
-  });
-  // NestJS returns { success: true, data: { shippingFee, totalWeightKg, zone, breakdown } }
-  const responseData = (response as unknown as { data?: ShippingQuoteResponse; [key: string]: unknown }).data || response;
-  return {
-    shippingFee: responseData.shippingFee || 0,
-    totalWeightKg: responseData.totalWeightKg || 0,
-    zone: responseData.zone || data.shippingZone,
-    breakdown: responseData.breakdown,
-  };
+  // Retry shipping quote calculation with exponential backoff
+  return retryOnCondition(
+    async () => {
+      const response = await apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
+        method: "POST",
+        data,
+      });
+      // NestJS returns { success: true, data: { shippingFee, totalWeightKg, zone, breakdown } }
+      const responseData = (response as unknown as { data?: ShippingQuoteResponse; [key: string]: unknown }).data || response;
+      return {
+        shippingFee: responseData.shippingFee || 0,
+        totalWeightKg: responseData.totalWeightKg || 0,
+        zone: responseData.zone || data.shippingZone,
+        breakdown: responseData.breakdown,
+      };
+    },
+    (error) => isNetworkError(error) || isServerError(error),
+    {
+      maxAttempts: 3,
+      delay: 500,
+      backoff: "exponential",
+      onRetry: (attempt, error) => {
+        logger.warn(`Shipping quote retry attempt ${attempt}:`, error);
+      },
+    }
+  );
 }
 
 export async function validateCartApi(payload: {
@@ -313,20 +342,34 @@ export async function validateCartApi(payload: {
     price?: number;
   }>;
 }): Promise<{ hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }> {
-  // Use public endpoint /cart/validate-items that accepts payload
-  const response = await apiRequest<{ hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }>("/cart/validate-items", {
-    method: "POST",
-    data: payload,
-  });
-  // NestJS returns { success: true, data: { hasChanges, items, totalPrice, ... } }
-  const responseData = (response as { data?: { hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }; [key: string]: unknown }).data || response;
-  const typedData = responseData as { hasChanges?: boolean; items?: unknown[]; totalPrice?: number; [key: string]: unknown };
-  return {
-    ...typedData,
-    hasChanges: typedData.hasChanges ?? false,
-    items: typedData.items || [],
-    totalPrice: typedData.totalPrice ?? 0,
-  };
+  // Retry cart validation with exponential backoff
+  return retryOnCondition(
+    async () => {
+      // Use public endpoint /cart/validate-items that accepts payload
+      const response = await apiRequest<{ hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }>("/cart/validate-items", {
+        method: "POST",
+        data: payload,
+      });
+      // NestJS returns { success: true, data: { hasChanges, items, totalPrice, ... } }
+      const responseData = (response as { data?: { hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }; [key: string]: unknown }).data || response;
+      const typedData = responseData as { hasChanges?: boolean; items?: unknown[]; totalPrice?: number; [key: string]: unknown };
+      return {
+        ...typedData,
+        hasChanges: typedData.hasChanges ?? false,
+        items: typedData.items || [],
+        totalPrice: typedData.totalPrice ?? 0,
+      };
+    },
+    (error) => isNetworkError(error) || isServerError(error),
+    {
+      maxAttempts: 3,
+      delay: 500,
+      backoff: "exponential",
+      onRetry: (attempt, error) => {
+        logger.warn(`Cart validation retry attempt ${attempt}:`, error);
+      },
+    }
+  );
 }
 
 // ========== INVOICE FUNCTIONS ==========
@@ -924,19 +967,33 @@ export async function deleteAddress(addressId: string): Promise<UserProfileRespo
 // ========== PAYMENT FUNCTIONS ==========
 
 export async function createPaymentSession(data: { orderId: string; paymentMethod: string }): Promise<PaymentInitResponse> {
-  // NestJS uses POST /payment/session or POST /payment/cod/process for COD
-  // For COD, use the cod/process endpoint
-  if (data.paymentMethod === 'Cash on Delivery' || data.paymentMethod === 'COD') {
-    return apiRequest<PaymentInitResponse>("/payment/cod/process", {
-      method: "POST",
-      data: { orderId: data.orderId },
-    });
-  }
-  // Fallback to session endpoint for backward compatibility
-  return apiRequest<PaymentInitResponse>("/payment/session", {
-    method: "POST",
-    data,
-  });
+  // Retry payment session creation with exponential backoff
+  return retryOnCondition(
+    async () => {
+      // NestJS uses POST /payment/session or POST /payment/cod/process for COD
+      // For COD, use the cod/process endpoint
+      if (data.paymentMethod === 'Cash on Delivery' || data.paymentMethod === 'COD') {
+        return apiRequest<PaymentInitResponse>("/payment/cod/process", {
+          method: "POST",
+          data: { orderId: data.orderId },
+        });
+      }
+      // Fallback to session endpoint for backward compatibility
+      return apiRequest<PaymentInitResponse>("/payment/session", {
+        method: "POST",
+        data,
+      });
+    },
+    (error) => isNetworkError(error) || isServerError(error),
+    {
+      maxAttempts: 3,
+      delay: 1000,
+      backoff: "exponential",
+      onRetry: (attempt, error) => {
+        logger.warn(`Payment session creation retry attempt ${attempt}:`, error);
+      },
+    }
+  );
 }
 
 export async function getPaymentStatus(orderId: string): Promise<ApiResponse> {

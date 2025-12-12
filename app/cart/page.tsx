@@ -6,10 +6,11 @@ import { useCart } from "../context/CartContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { formatCurrency } from "@/app/utils";
 
-export default function CartPage() {
+function CartContent() {
   const { cart, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
 
   const hasItems = cart.length > 0;
@@ -168,5 +169,13 @@ export default function CartPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <ErrorBoundary>
+      <CartContent />
+    </ErrorBoundary>
   );
 }
