@@ -60,7 +60,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
           </div>
           <div className="flex flex-col">
             <span className="text-base font-bold text-white tracking-tight">Prokrishi</span>
-            <span className="text-xs text-slate-300 font-medium">Admin Panel</span>
+            <span className="text-xs text-white/80 font-medium">Admin Panel</span>
           </div>
         </Link>
       </div>
@@ -80,7 +80,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                 className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   isActive
                     ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
-                    : "text-slate-200 hover:bg-slate-800/70 hover:text-white hover:scale-[1.01]"
+                    : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
                 }`}
               >
                 <item.icon 
@@ -88,10 +88,10 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                   className={`transition-all duration-300 ${
                     isActive 
                       ? "text-white scale-110" 
-                      : "text-slate-300 group-hover:text-white group-hover:scale-110"
+                      : "text-white/90 group-hover:text-white group-hover:scale-110"
                   }`}
                 />
-                <span className="flex-1">{item.label}</span>
+                <span className="flex-1 font-medium">{item.label}</span>
                 {isActive && (
                   <>
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -107,17 +107,17 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         <div className="mt-6 pt-6 border-t border-slate-700/50">
           <button
             onClick={() => setFishSectionOpen(!fishSectionOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 mb-3 rounded-xl text-xs font-bold text-slate-300 uppercase tracking-wider hover:bg-slate-800/50 hover:text-white transition-all duration-200 group"
+            className="w-full flex items-center justify-between px-4 py-3 mb-3 rounded-xl text-xs font-bold text-white uppercase tracking-wider hover:bg-slate-800/80 hover:bg-opacity-80 transition-all duration-200 group"
             title="Toggle Fish Section"
           >
             <span className="flex items-center gap-2">
-              <Fish size={16} className="text-teal-400 group-hover:text-teal-300 transition-colors" />
+              <Fish size={16} className="text-teal-300 group-hover:text-teal-200 transition-colors" />
               <span>Fish</span>
             </span>
             {fishSectionOpen ? (
-              <ChevronUp size={16} className="text-slate-400 group-hover:text-white transition-all duration-200" />
+              <ChevronUp size={16} className="text-white/80 group-hover:text-white transition-all duration-200" />
             ) : (
-              <ChevronDown size={16} className="text-slate-400 group-hover:text-white transition-all duration-200" />
+              <ChevronDown size={16} className="text-white/80 group-hover:text-white transition-all duration-200" />
             )}
           </button>
           {fishSectionOpen && (
@@ -134,7 +134,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                     className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg shadow-teal-500/30 scale-[1.02]"
-                        : "text-slate-200 hover:bg-slate-800/70 hover:text-white hover:scale-[1.01]"
+                        : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
                     }`}
                   >
                     <item.icon 
@@ -142,10 +142,10 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                       className={`transition-all duration-300 ${
                         isActive 
                           ? "text-white scale-110" 
-                          : "text-slate-300 group-hover:text-white group-hover:scale-110"
+                          : "text-white/90 group-hover:text-white group-hover:scale-110"
                       }`}
                     />
-                    <span className="flex-1">{item.label}</span>
+                    <span className="flex-1 font-medium">{item.label}</span>
                     {isActive && (
                       <>
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -174,7 +174,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
               className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 isActive
                   ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30 scale-[1.02]"
-                  : "text-slate-200 hover:bg-slate-800/70 hover:text-white hover:scale-[1.01]"
+                  : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
               }`}
             >
               <item.icon 
@@ -182,10 +182,10 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                 className={`transition-all duration-300 ${
                   isActive 
                     ? "text-white scale-110" 
-                    : "text-slate-300 group-hover:text-white group-hover:scale-110"
+                    : "text-white/90 group-hover:text-white group-hover:scale-110"
                 }`}
               />
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1 font-medium">{item.label}</span>
               {isActive && (
                 <>
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -198,10 +198,10 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         <Link
           href="/"
           title="Back to Site"
-          className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-slate-800/70 hover:text-white transition-all duration-300 hover:scale-[1.01] mt-2"
+          className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-white hover:bg-slate-800/80 hover:bg-opacity-80 transition-all duration-300 hover:scale-[1.01] mt-2"
         >
-          <Home size={20} className="text-slate-300 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
-          <span>Back to Site</span>
+          <Home size={20} className="text-white/90 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
+          <span className="font-medium">Back to Site</span>
         </Link>
       </div>
     </>
