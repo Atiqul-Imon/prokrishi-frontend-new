@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import ConditionalLayout from "./ConditionalLayout";
+import { ErrorBoundaryWrapper } from "./components/ErrorBoundaryWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,11 +45,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[var(--background)] text-[var(--foreground)]">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <CartProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
-          </CartProvider>
-        </AuthProvider>
+        <ErrorBoundaryWrapper>
+          <AuthProvider>
+            <CartProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </CartProvider>
+          </AuthProvider>
+        </ErrorBoundaryWrapper>
       </body>
     </html>
   );

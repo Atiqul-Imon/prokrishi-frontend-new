@@ -55,7 +55,16 @@ export interface Product {
   images?: string[];
   category?: Category | string;
   isFishProduct?: boolean;
-  sizeCategories?: any[];
+  sizeCategories?: Array<{
+    _id: string;
+    label: string;
+    pricePerKg: number;
+    stock?: number;
+    status?: string;
+    isDefault?: boolean;
+    measurementIncrement?: number;
+    [key: string]: unknown;
+  }>;
 }
 
 export interface CartItem extends Product {
@@ -91,7 +100,11 @@ export interface Order {
   shippingZone?: string;
   paymentMethod?: string;
   status?: string;
+  paymentStatus?: string;
+  transactionId?: string;
+  notes?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface User {

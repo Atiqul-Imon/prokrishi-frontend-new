@@ -50,8 +50,8 @@ export default function OrderDetailsPage() {
         setError(null);
         const response = await getAdminOrderById(orderId);
         setOrder(response.order);
-        setNewStatus(response.order.status);
-        setNewPaymentStatus(response.order.paymentStatus);
+        setNewStatus(response.order.status || "");
+        setNewPaymentStatus(response.order.paymentStatus || "");
         setTransactionId(response.order.transactionId || "");
       } catch (err: any) {
         setError(err.message || "Failed to load order");

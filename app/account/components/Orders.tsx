@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getUserOrders, getUserFishOrders } from "@/app/utils/api";
+import { logger } from "@/app/utils/logger";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -73,7 +74,7 @@ export default function Orders() {
 
         setOrders(allOrders);
       } catch (error) {
-        console.error("Failed to fetch orders:", error);
+        logger.error("Failed to fetch orders:", error);
       } finally {
         setLoading(false);
       }

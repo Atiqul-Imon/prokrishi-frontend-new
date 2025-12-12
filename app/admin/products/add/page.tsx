@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProduct, getAllCategories } from "../../../utils/api";
+import { logger } from "../../../utils/logger";
 import { ArrowLeft, Save, X, Plus, Trash2, Package, Image as ImageIcon, Tag, Settings, DollarSign, BarChart3, Upload, AlertCircle } from "lucide-react";
 
 interface ProductVariant {
@@ -66,7 +67,7 @@ export default function AddProductPage() {
         const result = await getAllCategories();
         setCategories(result.categories || []);
       } catch (err: any) {
-        console.error("Failed to load categories:", err);
+        logger.error("Failed to load categories:", err);
       }
     };
     fetchCategories();
@@ -249,7 +250,7 @@ export default function AddProductPage() {
       await createProduct(productData);
       router.push("/admin/products");
     } catch (err: any) {
-      console.error("Product creation error:", err);
+      logger.error("Product creation error:", err);
       const errorMessage = err.response?.data?.message || err.message || "Failed to create product";
       setError(errorMessage);
     } finally {

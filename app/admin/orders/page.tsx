@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { logger } from "@/app/utils/logger";
 import {
   getAdminOrders,
   getAdminOrderStats,
@@ -50,7 +51,7 @@ export default function AdminOrdersPage() {
       const response = await getAdminOrderStats(30);
       setStats(response.stats);
     } catch (err) {
-      console.error("Failed to fetch stats:", err);
+      logger.error("Failed to fetch stats:", err);
     } finally {
       setStatsLoading(false);
     }

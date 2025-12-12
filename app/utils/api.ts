@@ -21,10 +21,38 @@ import {
   ShippingQuoteResponse,
 } from "@/types/api";
 import { Address, Product, Category, Order } from "@/types/models";
+import type { AxiosError, AxiosRequestConfig } from "axios";
+import { logger } from "./logger";
 
 const BASE_URL = getApiBaseUrl();
 
-const isFileLike = (value: any): value is File | Blob => {
+// Type definitions for better type safety
+type FormDataValue = string | number | boolean | File | Blob | null | undefined | FormDataValue[] | Record<string, unknown>;
+type ProductFormData = FormData | Record<string, FormDataValue>;
+type CategoryFormData = { name: string; description?: string; image?: File };
+type OrderData = {
+  orderItems: Array<{
+    product: string;
+    quantity: number;
+    variantId?: string;
+    name?: string;
+    price?: number;
+  }>;
+  shippingAddress: Address;
+  paymentMethod: string;
+  idempotencyKey?: string;
+  [key: string]: unknown;
+};
+type PaymentData = {
+  orderId: string;
+  paymentMethod: string;
+  transactionId?: string;
+  [key: string]: unknown;
+};
+type ApiRequestOptions = Omit<AxiosRequestConfig, 'url'>;
+type AxiosErrorResponse = AxiosError<{ message?: string }>;
+
+const isFileLike = (value: unknown): value is File | Blob => {
   if (typeof File !== "undefined" && value instanceof File) {
     return true;
   }
@@ -34,7 +62,7 @@ const isFileLike = (value: any): value is File | Blob => {
   return false;
 };
 
-const appendFormDataValue = (formData: FormData, key: string, value: any) => {
+const appendFormDataValue = (formData: FormData, key: string, value: FormDataValue) => {
   if (isFileLike(value)) {
     formData.append(key, value);
     return;
@@ -67,7 +95,7 @@ const appendFormDataValue = (formData: FormData, key: string, value: any) => {
     return;
   }
 
-  formData.append(key, value);
+  formData.append(key, String(value));
 };
 
 // Create an axios instance
@@ -96,7 +124,7 @@ api.interceptors.request.use(
 // Response interceptor: Handle 401/403, auto-logout (optional), extract tokens, etc.
 api.interceptors.response.use(
   (response) => response,
-  (error: any) => {
+  (error: AxiosErrorResponse) => {
     if (
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
@@ -115,9 +143,9 @@ api.interceptors.response.use(
 /**
  * Universal axios wrapper for API requests.
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   path: string,
-  options: any = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
   try {
     const res = await api({
@@ -126,26 +154,27 @@ export async function apiRequest<T = any>(
     });
     return res.data as T;
   } catch (err: any) {
-    let msg = err.response?.data?.message || err.message || "API Error";
+    const axiosError = err as AxiosErrorResponse;
+    let msg = axiosError.response?.data?.message || axiosError.message || "API Error";
     
     // Handle timeout errors specifically
-    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+    if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
       msg = "Request timeout - please try again";
     }
     
     // Handle network errors
-    if (err.code === 'ERR_NETWORK' || !err.response) {
+    if (axiosError.code === 'ERR_NETWORK' || !axiosError.response) {
       msg = "Network error - please check your connection";
     }
     
     // Handle 404 errors specifically
-    if (err.response?.status === 404) {
+    if (axiosError.response?.status === 404) {
       msg = "Product not found - it may have been deleted";
     }
     
     const apiError = new Error(msg) as Error & { status?: number };
-    if (err.response?.status) {
-      apiError.status = err.response.status;
+    if (axiosError.response?.status) {
+      apiError.status = axiosError.response.status;
     }
     throw apiError;
   }
@@ -155,7 +184,7 @@ export async function apiRequest<T = any>(
  * Register a new user.
  */
 export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {
-  const response = await apiRequest<any>("/user/register", {
+  const response = await apiRequest<RegisterResponse>("/user/register", {
     method: "POST",
     data,
   });
@@ -180,7 +209,7 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
  * Login user.
  */
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const response = await apiRequest<any>("/user/login", {
+  const response = await apiRequest<LoginResponse>("/user/login", {
     method: "POST",
     data,
   });
@@ -213,7 +242,7 @@ export function logoutUser(): void {
  * Fetch current user profile (requires valid JWT).
  */
 export async function fetchProfile(): Promise<UserProfileResponse> {
-  const response = await apiRequest<any>("/user/profile", {
+  const response = await apiRequest<UserProfileResponse>("/user/profile", {
     method: "GET",
   });
   // NestJS returns { success: true, data: { message, user } }
@@ -226,22 +255,22 @@ export async function fetchProfile(): Promise<UserProfileResponse> {
 }
 
 export async function updateUserAddresses(addresses: Address[]): Promise<UserProfileResponse> {
-  console.log("API: updateUserAddresses called with:", addresses);
+  logger.debug("API: updateUserAddresses called with:", addresses);
   try {
     const result = await apiRequest<UserProfileResponse>("/user/profile", {
       method: "PUT",
       data: { addresses },
     });
-    console.log("API: updateUserAddresses successful response:", result);
+    logger.debug("API: updateUserAddresses successful response:", result);
     return result;
   } catch (error) {
-    console.error("API: updateUserAddresses error:", error);
+    logger.error("API: updateUserAddresses error:", error);
     throw error;
   }
 }
 
-export async function placeOrder(orderData: any): Promise<OrderResponse> {
-  const response = await apiRequest<any>("/order", {
+export async function placeOrder(orderData: OrderData): Promise<OrderResponse> {
+  const response = await apiRequest<OrderResponse>("/order", {
     method: "POST",
     data: orderData,
     headers: orderData?.idempotencyKey
@@ -261,12 +290,12 @@ export async function placeOrder(orderData: any): Promise<OrderResponse> {
 
 // Note: Shipping quote endpoint not yet migrated - using cart validate for now
 export async function getShippingQuote(data: ShippingQuoteRequest): Promise<ShippingQuoteResponse> {
-  const response = await apiRequest<any>("/order/shipping-quote", {
+  const response = await apiRequest<ShippingQuoteResponse>("/order/shipping-quote", {
     method: "POST",
     data,
   });
   // NestJS returns { success: true, data: { shippingFee, totalWeightKg, zone, breakdown } }
-  const responseData = response.data?.data || response.data || response;
+  const responseData = (response as unknown as { data?: ShippingQuoteResponse; [key: string]: unknown }).data || response;
   return {
     shippingFee: responseData.shippingFee || 0,
     totalWeightKg: responseData.totalWeightKg || 0,
@@ -283,19 +312,20 @@ export async function validateCartApi(payload: {
     name?: string;
     price?: number;
   }>;
-}): Promise<any> {
+}): Promise<{ hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }> {
   // Use public endpoint /cart/validate-items that accepts payload
-  const response = await apiRequest<any>("/cart/validate-items", {
+  const response = await apiRequest<{ hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }>("/cart/validate-items", {
     method: "POST",
     data: payload,
   });
   // NestJS returns { success: true, data: { hasChanges, items, totalPrice, ... } }
-  const responseData = response.data?.data || response.data || response;
+  const responseData = (response as { data?: { hasChanges: boolean; items: unknown[]; totalPrice: number; [key: string]: unknown }; [key: string]: unknown }).data || response;
+  const typedData = responseData as { hasChanges?: boolean; items?: unknown[]; totalPrice?: number; [key: string]: unknown };
   return {
-    hasChanges: responseData.hasChanges || false,
-    items: responseData.items || [],
-    totalPrice: responseData.totalPrice,
-    ...responseData,
+    ...typedData,
+    hasChanges: typedData.hasChanges ?? false,
+    items: typedData.items || [],
+    totalPrice: typedData.totalPrice ?? 0,
   };
 }
 
@@ -333,8 +363,9 @@ export async function downloadInvoice(orderId: string, type: 'regular' | 'fish' 
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Failed to download invoice');
+  } catch (error) {
+    const axiosError = error as AxiosErrorResponse;
+    throw new Error(axiosError.response?.data?.message || 'Failed to download invoice');
   }
 }
 
@@ -357,7 +388,7 @@ export function getResourceList<T = any>(resource: string, query = ""): Promise<
 }
 
 // Generic POST (for JSON data)
-export function createResource<T = any>(resource: string, payload: any): Promise<T> {
+export function createResource<T = unknown>(resource: string, payload: unknown): Promise<T> {
   return apiRequest<T>(`/${resource}`, {
     method: "POST",
     data: payload,
@@ -365,7 +396,7 @@ export function createResource<T = any>(resource: string, payload: any): Promise
 }
 
 // Generic PUT (for JSON data)
-export function updateResource<T = any>(resource: string, id: string, payload: any): Promise<T> {
+export function updateResource<T = unknown>(resource: string, id: string, payload: unknown): Promise<T> {
   return apiRequest<T>(`/${resource}/${id}`, {
     method: "PUT",
     data: payload,
@@ -373,7 +404,7 @@ export function updateResource<T = any>(resource: string, id: string, payload: a
 }
 
 // Generic DELETE
-export function deleteResource<T = any>(resource: string, id: string): Promise<T> {
+export function deleteResource<T = unknown>(resource: string, id: string): Promise<T> {
   return apiRequest<T>(`/${resource}/${id}`, {
     method: "DELETE",
   });
@@ -386,7 +417,7 @@ export function getUserById(id: string): Promise<UserProfileResponse> {
 export async function getProductById(id: string): Promise<ProductResponse> {
   // Add cache busting parameter to ensure fresh data
   const timestamp = Date.now();
-  const response = await apiRequest<any>(`/product/${id}?t=${timestamp}`);
+  const response = await apiRequest<ProductResponse>(`/product/${id}?t=${timestamp}`);
   // NestJS returns { success: true, message, product: {...} }
   // Return in format expected by frontend: { product: {...} }
   return {
@@ -404,7 +435,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6): 
 
 export async function getCategoryById(id: string): Promise<CategoryResponse> {
   // NestJS uses GET /category/:id instead of /category/id/:id
-  const response = await apiRequest<any>(`/category/${id}`);
+  const response = await apiRequest<CategoryResponse>(`/category/${id}`);
   // NestJS returns { success: true, message, category: {...} }
   // Return in format expected by frontend: { category: {...} }
   return {
@@ -413,13 +444,14 @@ export async function getCategoryById(id: string): Promise<CategoryResponse> {
   };
 }
 
-export async function getAllCategories(): Promise<any> {
-  const response = await apiRequest<any>("/category");
+export async function getAllCategories(): Promise<{ success: boolean; categories: Category[] }> {
+  const response = await apiRequest<{ success: boolean; categories: Category[] }>("/category");
   // NestJS returns { success: true, data: { message, categories } }
   // Return in format expected by frontend: { categories: [...] }
+  const typedResponse = response as { success?: boolean; data?: { categories: Category[] }; categories?: Category[] };
   return {
-    success: response.success || true,
-    categories: response.data?.categories || response.categories || [],
+    success: typedResponse.success ?? true,
+    categories: typedResponse.data?.categories || typedResponse.categories || [],
   };
 }
 
@@ -428,7 +460,7 @@ export async function getAllCategories(): Promise<any> {
 /**
  * Create product (with file/image upload).
  */
-export async function createProduct(productData: any): Promise<ProductResponse> {
+export async function createProduct(productData: ProductFormData): Promise<ProductResponse> {
   // If productData is already a FormData object, use it directly
   let formData: FormData;
   if (productData instanceof FormData) {
@@ -455,9 +487,10 @@ export async function createProduct(productData: any): Promise<ProductResponse> 
       },
     });
     return res.data;
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     const msg =
-      err.response?.data?.message || err.message || "Failed to create product";
+      axiosError.response?.data?.message || axiosError.message || "Failed to create product";
     throw new Error(msg);
   }
 }
@@ -465,7 +498,7 @@ export async function createProduct(productData: any): Promise<ProductResponse> 
 /**
  * Update product (with file/image upload).
  */
-export async function updateProduct(id: string, productData: any): Promise<ProductResponse> {
+export async function updateProduct(id: string, productData: ProductFormData): Promise<ProductResponse> {
   // If productData is already a FormData object, use it directly
   let formData: FormData;
   if (productData instanceof FormData) {
@@ -498,9 +531,10 @@ export async function updateProduct(id: string, productData: any): Promise<Produ
       },
     });
     return res.data;
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     const msg =
-      err.response?.data?.message || err.message || "Failed to update product";
+      axiosError.response?.data?.message || axiosError.message || "Failed to update product";
     throw new Error(msg);
   }
 }
@@ -524,7 +558,7 @@ export async function getAllProducts(params?: { page?: number; limit?: number; s
     if (params?.sort) queryParams.append('sort', params.sort);
     if (params?.order) queryParams.append('order', params.order);
     
-    const res = await api.get<any>(`/product?${queryParams.toString()}`);
+    const res = await api.get<ProductsResponse>(`/product?${queryParams.toString()}`);
     // NestJS returns { success: true, data: { products: [...], total, ... } }
     // apiRequest extracts data, but for this endpoint we need to handle the nested structure
     const responseData = res.data;
@@ -558,7 +592,7 @@ export async function getAdminProducts(params?: { page?: number; limit?: number;
     if (params?.sort) queryParams.append('sort', params.sort);
     if (params?.order) queryParams.append('order', params.order);
     
-    const res = await api.get<any>(`/product/admin?${queryParams.toString()}`);
+    const res = await api.get<ProductsResponse>(`/product/admin?${queryParams.toString()}`);
     // NestJS returns { message, success, products, pagination, total }
     const data = res.data?.data || res.data;
     return {
@@ -567,9 +601,10 @@ export async function getAdminProducts(params?: { page?: number; limit?: number;
       pagination: data.pagination || {},
       total: data.total || data.products?.length || 0,
     };
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     throw new Error(
-      err.response?.data?.message || err.message || "Failed to get products",
+      axiosError.response?.data?.message || axiosError.message || "Failed to get products",
     );
   }
 }
@@ -590,9 +625,10 @@ export async function searchProducts(params: PaginationParams = {}): Promise<Pro
 
     const res = await api.get<ProductsResponse>(`/product/search?${queryParams.toString()}`);
     return res.data;
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     throw new Error(
-      err.response?.data?.message || err.message || "Failed to search products",
+      axiosError.response?.data?.message || axiosError.message || "Failed to search products",
     );
   }
 }
@@ -615,7 +651,7 @@ export async function toggleProductFeatured(productId: string): Promise<ApiRespo
 
 // ========== CATEGORY-SPECIFIC (for file/image upload) ==========
 
-export async function createCategory(category: any): Promise<CategoryResponse> {
+export async function createCategory(category: CategoryFormData): Promise<CategoryResponse> {
   const formData = new FormData();
   formData.append("name", category.name);
   if (category.description) {
@@ -631,18 +667,20 @@ export async function createCategory(category: any): Promise<CategoryResponse> {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data;
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     const msg =
-      err.response?.data?.message || err.message || "Failed to create category";
+      axiosError.response?.data?.message || axiosError.message || "Failed to create category";
     throw new Error(msg);
   }
 }
 
-export async function updateCategory(id: string, category: any): Promise<CategoryResponse> {
+export async function updateCategory(id: string, category: CategoryFormData | Partial<Category>): Promise<CategoryResponse> {
   // Check if we're doing a simple update (no file upload)
-  const hasFile = category.image && category.image instanceof File;
-  const hasOnlySimpleFields = !hasFile && Object.keys(category).every(key => 
-    typeof category[key] !== 'object' || category[key] === null
+  const hasFile = 'image' in category && category.image && category.image instanceof File;
+  const categoryRecord = category as Record<string, unknown>;
+  const hasOnlySimpleFields = !hasFile && Object.keys(categoryRecord).every(key => 
+    typeof categoryRecord[key] !== 'object' || categoryRecord[key] === null
   );
 
   if (hasOnlySimpleFields) {
@@ -653,9 +691,10 @@ export async function updateCategory(id: string, category: any): Promise<Categor
         headers: { "Content-Type": "application/json" },
       });
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
+      const axiosError = err as AxiosErrorResponse;
       const msg =
-        err.response?.data?.message || err.message || "Failed to update category";
+        axiosError.response?.data?.message || axiosError.message || "Failed to update category";
       throw new Error(msg);
     }
   } else {
@@ -664,7 +703,10 @@ export async function updateCategory(id: string, category: any): Promise<Categor
 
     Object.keys(category).forEach((key) => {
       if (key !== "image") {
-        formData.append(key, category[key]);
+        const value = (category as Record<string, unknown>)[key];
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
       }
     });
 
@@ -678,9 +720,10 @@ export async function updateCategory(id: string, category: any): Promise<Categor
         headers: { "Content-Type": "multipart/form-data" },
       });
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
+      const axiosError = err as AxiosErrorResponse;
       const msg =
-        err.response?.data?.message || err.message || "Failed to update category";
+        axiosError.response?.data?.message || axiosError.message || "Failed to update category";
       throw new Error(msg);
     }
   }
@@ -691,10 +734,10 @@ export async function deleteCategory(id: string): Promise<ApiResponse> {
   return deleteResource<ApiResponse>("category", id);
 }
 
-export async function getFeaturedCategories(): Promise<any> {
+export async function getFeaturedCategories(): Promise<{ categories: Category[] }> {
   // NestJS uses GET /category?featured=true instead of /category/featured
   const timestamp = Date.now();
-  const response = await apiRequest(`/category?featured=true&t=${timestamp}`);
+  const response = await apiRequest<{ success?: boolean; data?: { categories: Category[] }; categories?: Category[] }>(`/category?featured=true&t=${timestamp}`);
   // NestJS returns { success: true, data: { message, categories } }
   // Return in format expected by frontend: { categories: [...] }
   return {
@@ -736,13 +779,13 @@ export interface AdminOrderStats {
     delivered: number;
     cancelled: number;
   };
-  recentOrders: any[];
-  dailySales: any[];
+  recentOrders: Order[];
+  dailySales: Array<{ date: string; revenue: number; orders: number }>;
 }
 
 export interface AdminOrderResponse {
   success: boolean;
-  orders: any[];
+  orders: Order[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -773,13 +816,21 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
   const queryString = params.toString();
   const url = `/admin/orders${queryString ? `?${queryString}` : ''}`;
   
-  const response = await apiRequest<any>(url);
+  const response = await apiRequest<{ success?: boolean; data?: AdminOrderResponse; orders?: Order[]; pagination?: unknown }>(url);
   // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, orders, pagination } }
   const responseData = response.data || response;
+  const typedResponse = responseData as { success?: boolean; orders?: Order[]; pagination?: AdminOrderResponse['pagination'] };
   return {
-    success: responseData.success ?? true,
-    orders: responseData.orders || [],
-    pagination: responseData.pagination || {},
+    success: typedResponse.success ?? true,
+    orders: typedResponse.orders || [],
+    pagination: typedResponse.pagination || {
+      currentPage: 1,
+      totalPages: 1,
+      totalOrders: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      limit: 10,
+    },
   };
 }
 
@@ -787,25 +838,41 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
  * Get order statistics (Admin)
  */
 export async function getAdminOrderStats(period: number = 30): Promise<AdminOrderStatsResponse> {
-  const response = await apiRequest<any>(`/admin/orders/stats?period=${period}`);
+  const response = await apiRequest<{ success?: boolean; data?: AdminOrderStatsResponse; stats?: AdminOrderStats }>(`/admin/orders/stats?period=${period}`);
   // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, stats } }
   const responseData = response.data || response;
+  const typedResponse = responseData as { success?: boolean; stats?: AdminOrderStats };
   return {
-    success: responseData.success ?? true,
-    stats: responseData.stats || {},
+    success: typedResponse.success ?? true,
+    stats: typedResponse.stats || {
+      totalOrders: 0,
+      totalRevenue: 0,
+      periodRevenue: 0,
+      statusBreakdown: {
+        pending: 0,
+        processing: 0,
+        shipped: 0,
+        delivered: 0,
+        cancelled: 0,
+      },
+      recentOrders: [],
+      dailySales: [],
+    },
   };
 }
 
 /**
  * Get single order details (Admin)
  */
-export async function getAdminOrderById(id: string): Promise<{ success: boolean; order: any }> {
-  const response = await apiRequest<any>(`/admin/orders/${id}`);
+export async function getAdminOrderById(id: string): Promise<{ success: boolean; order: Order }> {
+  const response = await apiRequest<{ success?: boolean; data?: { success: boolean; order: Order }; order?: Order }>(`/admin/orders/${id}`);
   // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, order } }
   const responseData = response.data || response;
+  const typedResponse = responseData as { success?: boolean; order?: Order };
+  const order = typedResponse.order || (responseData as Order);
   return {
-    success: responseData.success ?? true,
-    order: responseData.order || responseData,
+    success: typedResponse.success ?? true,
+    order: order as Order,
   };
 }
 
@@ -877,7 +944,7 @@ export async function getPaymentStatus(orderId: string): Promise<ApiResponse> {
   });
 }
 
-export async function handlePaymentSuccess(paymentData: any): Promise<ApiResponse> {
+export async function handlePaymentSuccess(paymentData: PaymentData): Promise<ApiResponse> {
   // For COD, use PUT /payment/cod/confirm instead of POST /payment/success
   if (paymentData.paymentMethod === 'Cash on Delivery' || paymentData.paymentMethod === 'COD') {
     return apiRequest<ApiResponse>("/payment/cod/confirm", {
@@ -895,14 +962,14 @@ export async function handlePaymentSuccess(paymentData: any): Promise<ApiRespons
   });
 }
 
-export async function handlePaymentFail(paymentData: any): Promise<ApiResponse> {
+export async function handlePaymentFail(paymentData: PaymentData): Promise<ApiResponse> {
   return apiRequest<ApiResponse>("/payment/fail", {
     method: "POST",
     data: paymentData,
   });
 }
 
-export async function handlePaymentCancel(paymentData: any): Promise<ApiResponse> {
+export async function handlePaymentCancel(paymentData: PaymentData): Promise<ApiResponse> {
   return apiRequest<ApiResponse>("/payment/cancel", {
     method: "POST",
     data: paymentData,
@@ -930,20 +997,20 @@ export async function getOrderDetails(orderId: string): Promise<OrderResponse> {
 }
 
 // Get user orders
-export async function getUserOrders(): Promise<{ success: boolean; orders: any[] }> {
+export async function getUserOrders(): Promise<{ success: boolean; orders: Order[] }> {
   // NestJS uses GET /order instead of /order/user (user context from JWT)
-  return apiRequest<{ success: boolean; orders: any[] }>("/order");
+  return apiRequest<{ success: boolean; orders: Order[] }>("/order");
 }
 
 // Get fish orders for user
-export async function getUserFishOrders(): Promise<{ success: boolean; orders: any[] }> {
-  return apiRequest<{ success: boolean; orders: any[] }>("/fish/orders/user");
+export async function getUserFishOrders(): Promise<{ success: boolean; orders: Order[] }> {
+  return apiRequest<{ success: boolean; orders: Order[] }>("/fish/orders/user");
 }
 
 // Get featured products
 export async function getFeaturedProducts(): Promise<ProductsResponse> {
   const timestamp = Date.now();
-  const response = await apiRequest<any>(`/product/featured?t=${timestamp}`);
+  const response = await apiRequest<ProductsResponse>(`/product/featured?t=${timestamp}`);
   // NestJS returns { success: true, data: { message, products } }
   // Return in format expected by frontend: { products: [...] }
   return {
@@ -992,7 +1059,7 @@ export function resetPasswordWithOTP(phone: string, otp: string, password: strin
  */
 export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   try {
-    const res = await api.get<any>("/dashboard/stats");
+    const res = await api.get<DashboardStatsResponse>("/dashboard/stats");
     // NestJS returns { message, success, data: { stats, recentOrders, lowStockProducts } }
     const responseData = res.data?.data || res.data;
     return {
@@ -1002,9 +1069,10 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
       recentOrders: responseData?.recentOrders,
       lowStockProducts: responseData?.lowStockProducts,
     };
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     throw new Error(
-      err.response?.data?.message || err.message || "Failed to get dashboard statistics",
+      axiosError.response?.data?.message || axiosError.message || "Failed to get dashboard statistics",
     );
   }
 }
@@ -1033,10 +1101,10 @@ export interface CartResponse {
     user: string;
     items: Array<{
       _id: string;
-      product: any;
+      product: Product | string;
       quantity: number;
       price: number;
-      variant?: any;
+      variant?: { _id: string; label?: string; [key: string]: unknown };
     }>;
     createdAt: string;
     updatedAt: string;

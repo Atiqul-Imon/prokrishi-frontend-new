@@ -7,6 +7,7 @@ import FeaturedCategories from "@/components/FeaturedCategories";
 import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts } from "@/app/utils/api";
 import { fishProductApi } from "@/app/utils/fishApi";
+import { logger } from "@/app/utils/logger";
 import { Product } from "@/types/models";
 import { Card } from "@/components/ui/Card";
 
@@ -26,7 +27,7 @@ export default function Home() {
         const data = await getFeaturedProducts();
         setFeaturedProducts(data.products || []);
       } catch (err: any) {
-        console.error("Error loading featured products:", err);
+        logger.error("Error loading featured products:", err);
         setError("Failed to load featured products");
       } finally {
         setLoading(false);
@@ -72,7 +73,7 @@ export default function Home() {
 
         setFishProducts(transformedFishProducts);
       } catch (err: any) {
-        console.error("Error loading fish products:", err);
+        logger.error("Error loading fish products:", err);
         setFishError("Failed to load fish products");
       } finally {
         setFishLoading(false);

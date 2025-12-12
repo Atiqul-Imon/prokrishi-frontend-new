@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getProductById, updateProduct, getAllCategories } from "../../../../utils/api";
+import { logger } from "../../../../utils/logger";
 import { ArrowLeft, Save, X, Plus, Trash2, Package, Image as ImageIcon, Tag, Settings, DollarSign, BarChart3, Upload, AlertCircle } from "lucide-react";
 
 interface ProductVariant {
@@ -335,7 +336,7 @@ export default function EditProductPage() {
       await updateProduct(productId, productData);
       router.push(`/admin/products/${productId}`);
     } catch (err: any) {
-      console.error("Product update error:", err);
+      logger.error("Product update error:", err);
       const errorMessage = err.response?.data?.message || err.message || "Failed to update product";
       setError(errorMessage);
     } finally {

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getCategoryById, getAllProducts } from "@/app/utils/api";
+import { logger } from "@/app/utils/logger";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
@@ -42,7 +43,7 @@ export default function ProductsByCategoryPage() {
         }
       } catch (err: any) {
         setError(err.message || "Failed to load products");
-        console.error("Error fetching data for category page:", err);
+        logger.error("Error fetching data for category page:", err);
       } finally {
         setLoading(false);
       }

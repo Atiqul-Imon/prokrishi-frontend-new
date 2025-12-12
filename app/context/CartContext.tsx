@@ -5,6 +5,22 @@ import type { CartContextType } from "@/types/context";
 import type { CartItem, Product } from "@/types/models";
 import { useAuth } from "./AuthContext";
 import { getCart, addToCart as addToCartAPI, updateCartItem as updateCartItemAPI, removeCartItem as removeCartItemAPI, clearCartBackend } from "../utils/api";
+import { logger } from "../utils/logger";
+
+// Type for backend cart item response (matches CartResponse from api.ts)
+interface BackendCartItem {
+  _id: string;
+  product: Product | string;
+  quantity: number;
+  price: number;
+  variant?: {
+    variantId?: string | { _id: string };
+    _id?: string;
+    label?: string;
+    price?: number;
+    [key: string]: unknown;
+  };
+}
 
 function normalizeMeasurement(value?: number): number {
   if (typeof value !== "number" || Number.isNaN(value)) return 1;
@@ -58,22 +74,28 @@ export function CartProvider({ children }: CartProviderProps) {
             const response = await getCart();
             if (response.cart && response.cart.items) {
               // Convert backend cart items to frontend format
-              const convertedCart: CartItem[] = response.cart.items.map((item: any) => {
-                const product = item.product;
+              const convertedCart: CartItem[] = response.cart.items.map((item) => {
+                const backendItem = item as BackendCartItem;
+                const product = typeof backendItem.product === 'string' 
+                  ? { _id: backendItem.product } as Product
+                  : backendItem.product;
+                const variantId = typeof backendItem.variant?.variantId === 'object' 
+                  ? backendItem.variant.variantId._id 
+                  : backendItem.variant?.variantId || backendItem.variant?._id;
                 return {
                   ...product,
                   id: product._id || product.id,
                   _id: product._id,
-                  quantity: item.quantity,
-                  price: item.price || product.price,
-                  variantId: item.variant?.variantId?._id || item.variant?.variantId,
-                  variantSnapshot: item.variant,
+                  quantity: backendItem.quantity,
+                  price: backendItem.price || product.price,
+                  variantId,
+                  variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
                 } as CartItem;
               });
               setCart(convertedCart);
             }
           } catch (error) {
-            console.error("Error loading cart from backend:", error);
+            logger.error("Error loading cart from backend:", error);
             // Fallback to localStorage if backend fails
             const stored = typeof window !== "undefined" ? localStorage.getItem("cart") : null;
             if (stored) setCart(JSON.parse(stored) as CartItem[]);
@@ -84,7 +106,7 @@ export function CartProvider({ children }: CartProviderProps) {
           if (stored) setCart(JSON.parse(stored) as CartItem[]);
         }
       } catch (error) {
-        console.error("Error loading cart:", error);
+        logger.error("Error loading cart:", error);
       } finally {
         setLoading(false);
       }
@@ -92,30 +114,21 @@ export function CartProvider({ children }: CartProviderProps) {
     loadCart();
   }, [user]);
 
-  // Save cart to backend if user is logged in, otherwise to localStorage
+  // Save cart to localStorage for guest users (don't sync to backend here to avoid too many API calls)
   useEffect(() => {
-    if (!loading && user) {
-      // Sync with backend when cart changes (debounced)
-      const timeoutId = setTimeout(async () => {
-        try {
-          // For now, we'll sync on add/update/remove operations instead of here
-          // to avoid too many API calls
-        } catch (error) {
-          console.error("Error syncing cart to backend:", error);
-        }
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    } else if (!loading && !user) {
+    if (!loading && !user) {
       // Save to localStorage for guest users
       try {
         localStorage.setItem("cart", JSON.stringify(cart));
       } catch (error) {
-        console.error("Error saving cart to localStorage:", error);
+        logger.error("Error saving cart to localStorage:", error);
       }
     }
+    // Note: Backend sync happens in addToCart, updateQuantity, removeFromCart functions
+    // to avoid too many API calls
   }, [cart, loading, user]);
 
-  async function addToCart(product: Product, qty = 1, variantId?: string) {
+  const addToCart = useCallback(async (product: Product, qty = 1, variantId?: string) => {
     try {
       const id = product.id || product._id;
       
@@ -126,22 +139,28 @@ export function CartProvider({ children }: CartProviderProps) {
           // Reload cart from backend
           const response = await getCart();
           if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item: any) => {
-              const prod = item.product;
+            const convertedCart: CartItem[] = response.cart.items.map((item) => {
+              const backendItem = item as BackendCartItem;
+              const prod = typeof backendItem.product === 'string' 
+                ? { _id: backendItem.product } as Product
+                : backendItem.product;
+              const variantId = typeof backendItem.variant?.variantId === 'object' 
+                ? backendItem.variant.variantId._id 
+                : backendItem.variant?.variantId || backendItem.variant?._id;
               return {
                 ...prod,
                 id: prod._id || prod.id,
                 _id: prod._id,
-                quantity: item.quantity,
-                price: item.price || prod.price,
-                variantId: item.variant?.variantId?._id || item.variant?.variantId,
-                variantSnapshot: item.variant,
+                quantity: backendItem.quantity,
+                price: backendItem.price || prod.price,
+                variantId,
+                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
               } as CartItem;
             });
             setCart(convertedCart);
           }
         } catch (error) {
-          console.error("Error adding to cart via API:", error);
+          logger.error("Error adding to cart via API:", error);
           // Fallback to local state update
         }
       }
@@ -150,8 +169,8 @@ export function CartProvider({ children }: CartProviderProps) {
       setCart((prev) => {
         const measurementInfo = getMeasurementInfo(product, variantId);
         const isFishProduct =
-          (product as any).isFishProduct === true ||
-          ((product as any).sizeCategories && Array.isArray((product as any).sizeCategories) && (product as any).sizeCategories.length > 0);
+          product.isFishProduct === true ||
+          (product.sizeCategories && Array.isArray(product.sizeCategories) && product.sizeCategories.length > 0);
 
         const idx = prev.findIndex((item) => {
           const itemId = item.id || item._id;
@@ -178,12 +197,12 @@ export function CartProvider({ children }: CartProviderProps) {
           totalMeasurement: measurementInfo ? measurementInfo.measurement * qty : qty,
           unitWeightKg: product.unitWeightKg,
           measurementIncrement: measurementInfo?.measurementIncrement,
-          ...((product as any).isFishProduct !== undefined && { isFishProduct: (product as any).isFishProduct }),
-          ...((product as any).sizeCategories !== undefined && { sizeCategories: (product as any).sizeCategories }),
+          ...(product.isFishProduct !== undefined && { isFishProduct: product.isFishProduct }),
+          ...(product.sizeCategories !== undefined && { sizeCategories: product.sizeCategories }),
         };
 
-        if (isFishProduct && variantId) {
-          const sizeCategory = (product as any).sizeCategories?.find((sc: any) => sc._id === variantId);
+        if (isFishProduct && variantId && product.sizeCategories) {
+          const sizeCategory = product.sizeCategories.find((sc) => sc._id === variantId);
           if (sizeCategory) {
             newItem.variantId = variantId;
             newItem.variantSnapshot = {
@@ -195,7 +214,7 @@ export function CartProvider({ children }: CartProviderProps) {
               unit: "kg",
               status: sizeCategory.status,
               isDefault: sizeCategory.isDefault,
-            } as any;
+            };
             newItem.price = sizeCategory.pricePerKg;
             newItem.stock = sizeCategory.stock || 0;
             newItem.measurement = 1;
@@ -222,11 +241,11 @@ export function CartProvider({ children }: CartProviderProps) {
       });
       setIsSidebarOpen(true);
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      logger.error("Error adding to cart:", error);
     }
-  }
+  }, [user]);
 
-  async function updateQuantity(id: string, quantity: number, variantId?: string) {
+  const updateQuantity = useCallback(async (id: string, quantity: number, variantId?: string) => {
     try {
       if (quantity < 1) {
         await removeFromCart(id, variantId);
@@ -240,23 +259,29 @@ export function CartProvider({ children }: CartProviderProps) {
           // Reload cart from backend
           const response = await getCart();
           if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item: any) => {
-              const prod = item.product;
+            const convertedCart: CartItem[] = response.cart.items.map((item) => {
+              const backendItem = item as BackendCartItem;
+              const prod = typeof backendItem.product === 'string' 
+                ? { _id: backendItem.product } as Product
+                : backendItem.product;
+              const variantId = typeof backendItem.variant?.variantId === 'object' 
+                ? backendItem.variant.variantId._id 
+                : backendItem.variant?.variantId || backendItem.variant?._id;
               return {
                 ...prod,
                 id: prod._id || prod.id,
                 _id: prod._id,
-                quantity: item.quantity,
-                price: item.price || prod.price,
-                variantId: item.variant?.variantId?._id || item.variant?.variantId,
-                variantSnapshot: item.variant,
+                quantity: backendItem.quantity,
+                price: backendItem.price || prod.price,
+                variantId,
+                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
               } as CartItem;
             });
             setCart(convertedCart);
             return;
           }
         } catch (error) {
-          console.error("Error updating cart via API:", error);
+          logger.error("Error updating cart via API:", error);
           // Fallback to local state update
         }
       }
@@ -278,11 +303,11 @@ export function CartProvider({ children }: CartProviderProps) {
         }),
       );
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      logger.error("Error updating quantity:", error);
     }
-  }
+  }, [user]);
 
-  async function removeFromCart(id: string, variantId?: string) {
+  const removeFromCart = useCallback(async (id: string, variantId?: string) => {
     try {
       // If user is logged in, sync with backend
       if (user) {
@@ -291,23 +316,29 @@ export function CartProvider({ children }: CartProviderProps) {
           // Reload cart from backend
           const response = await getCart();
           if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item: any) => {
-              const prod = item.product;
+            const convertedCart: CartItem[] = response.cart.items.map((item) => {
+              const backendItem = item as BackendCartItem;
+              const prod = typeof backendItem.product === 'string' 
+                ? { _id: backendItem.product } as Product
+                : backendItem.product;
+              const variantId = typeof backendItem.variant?.variantId === 'object' 
+                ? backendItem.variant.variantId._id 
+                : backendItem.variant?.variantId || backendItem.variant?._id;
               return {
                 ...prod,
                 id: prod._id || prod.id,
                 _id: prod._id,
-                quantity: item.quantity,
-                price: item.price || prod.price,
-                variantId: item.variant?.variantId?._id || item.variant?.variantId,
-                variantSnapshot: item.variant,
+                quantity: backendItem.quantity,
+                price: backendItem.price || prod.price,
+                variantId,
+                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
               } as CartItem;
             });
             setCart(convertedCart);
             return;
           }
         } catch (error) {
-          console.error("Error removing from cart via API:", error);
+          logger.error("Error removing from cart via API:", error);
           // Fallback to local state update
         }
       }
@@ -322,25 +353,25 @@ export function CartProvider({ children }: CartProviderProps) {
         }),
       );
     } catch (error) {
-      console.error("Error removing from cart:", error);
+      logger.error("Error removing from cart:", error);
     }
-  }
+  }, [user]);
 
-  async function clearCart() {
+  const clearCart = useCallback(async () => {
     try {
       // If user is logged in, sync with backend
       if (user) {
         try {
           await clearCartBackend();
         } catch (error) {
-          console.error("Error clearing cart via API:", error);
+          logger.error("Error clearing cart via API:", error);
         }
       }
       setCart([]);
     } catch (error) {
-      console.error("Error clearing cart:", error);
+      logger.error("Error clearing cart:", error);
     }
-  }
+  }, [user]);
 
   const cartTotal = useMemo(() => cart.reduce((sum, item) => (sum + (item.variantSnapshot?.price || item.price) * item.quantity), 0), [cart]);
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
@@ -356,6 +387,9 @@ export function CartProvider({ children }: CartProviderProps) {
     };
   }, []);
 
+  const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+
   const contextValue = useMemo(
     () => ({
       cart,
@@ -368,10 +402,10 @@ export function CartProvider({ children }: CartProviderProps) {
       cartCount,
       getItemDisplayQuantity,
       isSidebarOpen,
-      openSidebar: () => setIsSidebarOpen(true),
-      closeSidebar: () => setIsSidebarOpen(false),
+      openSidebar,
+      closeSidebar,
     }),
-    [cart, loading, cartTotal, cartCount, isSidebarOpen, getItemDisplayQuantity],
+    [cart, loading, cartTotal, cartCount, isSidebarOpen, getItemDisplayQuantity, addToCart, updateQuantity, removeFromCart, clearCart, openSidebar, closeSidebar],
   );
 
   return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;

@@ -18,7 +18,7 @@ export default function AdminCategoriesPage() {
     setError(null);
     try {
       const result = await getAllCategories();
-      let filtered = result.categories || (result.category ? [result.category] : []) || [];
+      let filtered = result.categories || [];
       if (searchQuery) {
         filtered = filtered.filter((cat: any) =>
           cat?.name?.toLowerCase().includes(searchQuery.toLowerCase())

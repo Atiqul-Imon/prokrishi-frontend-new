@@ -6,6 +6,8 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { placeOrder, createPaymentSession, getShippingQuote, validateCartApi } from "../utils/api";
 import { fishOrderApi } from "../utils/fishApi";
+import { logger } from "../utils/logger";
+import { handleApiError, retryWithBackoff } from "../utils/errorHandler";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -46,7 +48,7 @@ export default function CheckoutPage() {
       setSelectedZone("inside_dhaka");
       setMessage(null); // Clear any previous messages
     }
-  }, [fishProducts.length, selectedZone]);
+  }, [fishProducts.length, selectedZone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch shipping quote when zone is selected and cart has items
   useEffect(() => {
@@ -95,8 +97,8 @@ export default function CheckoutPage() {
             shippingZone: selectedZone,
           });
           setShippingFee(quote.shippingFee || 0);
-        } catch (err: any) {
-          console.error("Failed to get shipping quote:", err);
+        } catch (err) {
+          logger.warn("Failed to get shipping quote, using fallback rates:", err);
           // Fallback to flat rates if quote fails
           setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
         } finally {
@@ -141,8 +143,8 @@ export default function CheckoutPage() {
             shippingZone: selectedZone,
           });
           setShippingFee(quote.shippingFee || 0);
-        } catch (err: any) {
-          console.error("Failed to get shipping quote:", err);
+        } catch (err) {
+          logger.warn("Failed to get shipping quote, using fallback rates:", err);
           // Fallback to flat rates if quote fails
           setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
         } finally {
@@ -235,7 +237,7 @@ export default function CheckoutPage() {
         });
         finalShippingFee = finalQuote.shippingFee || shippingFee;
       } catch (err) {
-        console.error("Failed to get final shipping quote, using cached value:", err);
+        logger.warn("Failed to get final shipping quote, using cached value:", err);
       }
 
       // Pre-validate cart server-side
@@ -376,8 +378,8 @@ export default function CheckoutPage() {
         const orderIdsParam = orderIds.join(',');
         window.location.href = `/order/success?orderId=${orderIdsParam}`;
       }
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || "Failed to place order.";
+    } catch (err) {
+      const errorMessage = handleApiError(err, "Checkout");
       setMessage(errorMessage);
       // If price mismatch error, show helpful message
       if (errorMessage.includes("Price mismatch") || errorMessage.includes("price")) {
