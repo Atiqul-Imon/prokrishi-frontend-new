@@ -131,8 +131,21 @@ export const fishOrderApi = {
     sort?: string;
     order?: "asc" | "desc";
   }) => {
-    const response = await fishApi.get("/orders", { params });
-    return response.data;
+    // NestJS endpoint: /api/fish-order/all (for admin)
+    const base = getApiBaseUrl().replace(/\/$/, "");
+    const response = await axios.get(`${base}/fish-order/all`, {
+      params,
+      headers: {
+        Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
+      },
+    });
+    // NestJS returns { message, success, fishOrders, pagination }
+    return {
+      success: response.data.success ?? true,
+      message: response.data.message || 'Fish orders fetched successfully',
+      fishOrders: response.data.fishOrders || [],
+      pagination: response.data.pagination || {},
+    };
   },
 
   getById: async (id: string) => {
@@ -207,14 +220,20 @@ export const fishOrderApi = {
     return response.data;
   },
 
-  getStats: async () => {
+  getStats: async (period: number = 30) => {
     const base = getApiBaseUrl().replace(/\/$/, "");
     const response = await axios.get(`${base}/fish-order/stats`, {
+      params: { period },
       headers: {
         Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
       },
     });
-    return response.data;
+    // NestJS returns { message, success, stats }
+    return {
+      success: response.data.success ?? true,
+      message: response.data.message || 'Fish order statistics fetched successfully',
+      stats: response.data.stats || {},
+    };
   },
 };
 

@@ -558,8 +558,15 @@ export async function getAdminProducts(params?: { page?: number; limit?: number;
     if (params?.sort) queryParams.append('sort', params.sort);
     if (params?.order) queryParams.append('order', params.order);
     
-    const res = await api.get<ProductsResponse>(`/product/admin?${queryParams.toString()}`);
-    return res.data;
+    const res = await api.get<any>(`/product/admin?${queryParams.toString()}`);
+    // NestJS returns { message, success, products, pagination, total }
+    const data = res.data?.data || res.data;
+    return {
+      success: data.success ?? true,
+      products: data.products || [],
+      pagination: data.pagination || {},
+      total: data.total || data.products?.length || 0,
+    };
   } catch (err: any) {
     throw new Error(
       err.response?.data?.message || err.message || "Failed to get products",
@@ -766,21 +773,39 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
   const queryString = params.toString();
   const url = `/admin/orders${queryString ? `?${queryString}` : ''}`;
   
-  return apiRequest<AdminOrderResponse>(url);
+  const response = await apiRequest<any>(url);
+  // NestJS returns { message, success, orders, pagination }
+  return {
+    success: response.success ?? true,
+    message: response.message || 'Orders fetched successfully',
+    orders: response.orders || [],
+    pagination: response.pagination || {},
+  };
 }
 
 /**
  * Get order statistics (Admin)
  */
 export async function getAdminOrderStats(period: number = 30): Promise<AdminOrderStatsResponse> {
-  return apiRequest<AdminOrderStatsResponse>(`/admin/orders/stats?period=${period}`);
+  const response = await apiRequest<any>(`/admin/orders/stats?period=${period}`);
+  // NestJS returns { message, success, stats }
+  return {
+    success: response.success ?? true,
+    message: response.message || 'Order statistics fetched successfully',
+    stats: response.stats || {},
+  };
 }
 
 /**
  * Get single order details (Admin)
  */
 export async function getAdminOrderById(id: string): Promise<{ success: boolean; order: any }> {
-  return apiRequest<{ success: boolean; order: any }>(`/admin/orders/${id}`);
+  const response = await apiRequest<any>(`/admin/orders/${id}`);
+  // NestJS returns { message, success, order }
+  return {
+    success: response.success ?? true,
+    order: response.order || response,
+  };
 }
 
 /**
