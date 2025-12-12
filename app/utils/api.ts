@@ -284,13 +284,13 @@ export async function validateCartApi(payload: {
     price?: number;
   }>;
 }): Promise<any> {
-  // NestJS uses /cart/validate instead of /order/validate
-  const response = await apiRequest<any>("/cart/validate", {
+  // Use public endpoint /cart/validate-items that accepts payload
+  const response = await apiRequest<any>("/cart/validate-items", {
     method: "POST",
     data: payload,
   });
   // NestJS returns { success: true, data: { hasChanges, items, totalPrice, ... } }
-  const responseData = response.data || response;
+  const responseData = response.data?.data || response.data || response;
   return {
     hasChanges: responseData.hasChanges || false,
     items: responseData.items || [],
