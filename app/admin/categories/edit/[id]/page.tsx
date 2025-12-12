@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { getCategoryById, updateCategory } from "../../../../utils/api";
-import { ArrowLeft, Save, X, Plus } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import type { CategoryFormData } from "@/app/utils/api";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { Tag, Image as ImageIcon } from "lucide-react";
+import {
+  AdminFormPageLayout,
+  FormSection,
+  FormInput,
+  FormTextarea,
+  ImageUpload,
+} from "@/components/admin";
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -49,11 +54,16 @@ export default function EditCategoryPage() {
     }
   }, [categoryId]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageChange = (file: File | null) => {
+    setImage(file);
     if (file) {
-      setImage(file);
       setImagePreview(URL.createObjectURL(file));
+    } else {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(null);
+      setExistingImage(null);
     }
   };
 
@@ -83,129 +93,53 @@ export default function EditCategoryPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="inline-block w-6 h-6 border-2 border-slate-200"></div>
-          <p className="text-sm text-slate-500">Loading category...</p>
+          <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+          <p className="text-slate-500 mt-4">Loading category...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/admin/categories">
-          <button className="p-2 rounded-lg text-slate-600">
-            <ArrowLeft size={18} />
-          </button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Edit Category</h1>
-          <p className="text-sm text-slate-500">Update category information</p>
-        </div>
-      </div>
+    <AdminFormPageLayout
+      title="Edit Category"
+      description="Update category information"
+      backHref="/admin/categories"
+      error={error}
+      onErrorDismiss={() => setError(null)}
+      onSubmit={handleSubmit}
+      loading={loading}
+      submitLabel="Save Changes"
+    >
+      <FormSection title="Basic Information" description="Category details" icon={Tag}>
+        <FormInput
+          label="Category Name"
+          required
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Enter category name"
+        />
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50">
-          <p className="text-sm text-red-800">{error}</p>
-        </div>
-      )}
+        <FormTextarea
+          label="Description"
+          rows={4}
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Category description"
+        />
+      </FormSection>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-white">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Category Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 bg-slate-50"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Description
-            </label>
-            <textarea
-              rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 bg-slate-50"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Category Image
-            </label>
-            <label className="block">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              <div className="px-4 py-3 border-2 border-dashed border-slate-300">
-                <Plus className="mx-auto mb-2 text-slate-400" size={24} />
-                <span className="text-sm text-slate-600">Click to upload image</span>
-              </div>
-            </label>
-
-            {imagePreview ? (
-              <div className="mt-4 relative inline-block">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : existingImage ? (
-              <div className="mt-4 relative inline-block">
-                <img
-                  src={existingImage}
-                  alt="Current"
-                  className="w-32 h-32 object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={() => setExistingImage(null)}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/categories">
-            <Button variant="outline" type="button">Cancel</Button>
-          </Link>
-          <Button variant="primary" type="submit" disabled={loading} isLoading={loading}>
-            <Save size={16} />
-            Save Changes
-          </Button>
-        </div>
-      </form>
-    </div>
+      <FormSection title="Category Image" description="Upload category image" icon={ImageIcon}>
+        <ImageUpload
+          label="Category Image"
+          value={image}
+          preview={imagePreview}
+          existingImage={existingImage}
+          onChange={handleImageChange}
+          helperText="Recommended: 400x400px or larger"
+        />
+      </FormSection>
+    </AdminFormPageLayout>
   );
 }
-

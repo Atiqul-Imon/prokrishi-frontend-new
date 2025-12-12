@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import type { Order } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatCurrency, formatDate } from "@/app/utils";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -162,7 +163,7 @@ export default function OrderDetailsPage() {
               Order #{order.invoiceNumber || order._id?.slice(-8)}
             </h1>
             <p className="text-sm text-slate-500">
-              Placed on {new Date(order.createdAt).toLocaleDateString()}
+              Placed on {formatDate(order.createdAt)}
             </p>
           </div>
         </div>
@@ -215,12 +216,12 @@ export default function OrderDetailsPage() {
                       </p>
                     )}
                     <p className="text-xs text-slate-500">
-                      Quantity: {item.quantity} × ৳{item.price?.toLocaleString()}
+                      Quantity: {item.quantity} × {formatCurrency(item.price || 0)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-slate-900">
-                      ৳{((item.price || 0) * (item.quantity || 0)).toLocaleString()}
+                      {formatCurrency((item.price || 0) * (item.quantity || 0))}
                     </p>
                   </div>
                 </div>
@@ -230,7 +231,7 @@ export default function OrderDetailsPage() {
               <div className="flex justify-between items-center text-lg font-semibold">
                 <span className="text-slate-900">Total Amount:</span>
                 <span className="text-emerald-600">
-                  ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
+                  {formatCurrency(order.totalAmount || order.totalPrice || 0)}
                 </span>
               </div>
             </div>
@@ -304,7 +305,7 @@ export default function OrderDetailsPage() {
                   </span>
                   {order.isDelivered && order.deliveredAt && (
                     <span className="text-sm text-slate-500">
-                      Delivered on {new Date(order.deliveredAt).toLocaleDateString()}
+                      Delivered on {formatDate(order.deliveredAt)}
                     </span>
                   )}
                 </div>
@@ -398,7 +399,7 @@ export default function OrderDetailsPage() {
                   </span>
                   {order.isPaid && order.paidAt && (
                     <span className="text-sm text-slate-500">
-                      Paid on {new Date(order.paidAt).toLocaleDateString()}
+                      Paid on {formatDate(order.paidAt)}
                     </span>
                   )}
                   {order.transactionId && (
@@ -432,7 +433,7 @@ export default function OrderDetailsPage() {
                 <div className="flex-1">
                   <p className="text-xs text-slate-500">Subtotal</p>
                   <p className="text-sm font-medium text-slate-900">
-                    ৳{order.totalPrice?.toLocaleString() || 0}
+                    {formatCurrency(order.totalPrice || 0)}
                   </p>
                 </div>
               </div>
@@ -444,7 +445,7 @@ export default function OrderDetailsPage() {
                 <div className="flex-1">
                   <p className="text-xs text-slate-500">Shipping</p>
                   <p className="text-sm font-medium text-slate-900">
-                    ৳{order.shippingFee?.toLocaleString() || 0}
+                    {formatCurrency(order.shippingFee || 0)}
                   </p>
                 </div>
               </div>
@@ -453,7 +454,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-900">Total</p>
                   <p className="text-lg font-bold text-slate-900">
-                    ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
+                    {formatCurrency(order.totalAmount || order.totalPrice || 0)}
                   </p>
                 </div>
               </div>
@@ -533,7 +534,7 @@ export default function OrderDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">Date</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {formatDate(order.createdAt)}
                   </p>
                 </div>
               </div>

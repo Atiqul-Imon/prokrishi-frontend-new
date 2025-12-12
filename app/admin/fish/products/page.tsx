@@ -3,10 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { fishProductApi } from "../../../utils/fishApi";
-import { Plus, Search, Edit, Trash2, Eye, Fish, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Plus, Edit, Trash2, Eye, Fish } from "lucide-react";
 import type { FishProduct, SizeCategory } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatCurrency } from "@/app/utils";
+import {
+  AdminListPageLayout,
+  AdminTableHeader,
+  AdminTableRow,
+  ConfirmDialog,
+  type TableColumn,
+} from "@/components/admin";
 
 export default function AdminFishProductsPage() {
   const [products, setProducts] = useState<FishProduct[]>([]);
@@ -17,6 +24,7 @@ export default function AdminFishProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -43,8 +51,26 @@ export default function AdminFishProductsPage() {
       await fishProductApi.delete(id);
       setProducts(products.filter((p) => p._id !== id));
       setDeleteConfirm(null);
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     } catch (err) {
       setError(handleApiError(err, "deleting fish product"));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const deletePromises = Array.from(selectedIds).map((id) => fishProductApi.delete(id));
+      await Promise.all(deletePromises);
+      setProducts(products.filter((p) => !selectedIds.has(p._id || "")));
+      setSelectedIds(new Set());
+      setBulkDeleteConfirm(false);
+    } catch (err) {
+      setError(handleApiError(err, "deleting fish products"));
+      setBulkDeleteConfirm(false);
     }
   };
 
@@ -61,10 +87,10 @@ export default function AdminFishProductsPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === products.length) {
+    if (selectedIds.size === products.length && products.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(products.map((p) => p._id)));
+      setSelectedIds(new Set(products.map((p) => p._id || "").filter(Boolean)));
     }
   };
 
@@ -79,9 +105,9 @@ export default function AdminFishProductsPage() {
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     if (min === max) {
-      return `৳${min.toLocaleString()}/kg`;
+      return `${formatCurrency(min)}/kg`;
     }
-    return `৳${min.toLocaleString()} - ৳${max.toLocaleString()}/kg`;
+    return `${formatCurrency(min)} - ${formatCurrency(max)}/kg`;
   };
 
   const getTotalStock = (product: FishProduct): number => {
@@ -91,289 +117,220 @@ export default function AdminFishProductsPage() {
     return product.sizeCategories.reduce((sum: number, cat: SizeCategory) => sum + (cat.stock || 0), 0);
   };
 
-  return (
-    <div className="space-y-4">
-      {/* Minimal Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Fish Products</h1>
-          <p className="text-sm text-slate-500">Manage your fish product catalog</p>
-        </div>
-        <Link href="/admin/fish/products/add">
-          <Button variant="primary" className="flex items-center gap-2 text-sm">
-            <Plus size={16} />
-            Add Fish Product
-          </Button>
-        </Link>
-      </div>
+  const columns: TableColumn[] = [
+    { key: "product", label: "Product", align: "left" },
+    { key: "sizes", label: "Size Categories", align: "left" },
+    { key: "price", label: "Price Range", align: "left" },
+    { key: "stock", label: "Stock (kg)", align: "left" },
+    { key: "status", label: "Status", align: "left" },
+    { key: "actions", label: "Actions", align: "right" },
+  ];
 
-      {/* Minimal Search Bar */}
-      <div className="bg-white">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Search fish products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50"
-            />
-          </div>
-          <button
-            onClick={fetchProducts}
-            className="px-4 py-2 bg-slate-100"
-          >
-            <RefreshCw size={16} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50">
-          <p className="text-sm text-red-800">{error}</p>
-        </div>
-      )}
-
-      {/* Products Table - Modern Design */}
-      <div className="bg-white">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-slate-200"></div>
-            <p className="text-sm text-slate-500">Loading fish products...</p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="p-12 text-center">
-            <Fish className="mx-auto text-slate-400" size={40} />
-            <p className="text-sm text-slate-500">No fish products found</p>
-            <Link href="/admin/fish/products/add">
-              <Button variant="primary" className="text-sm">Add Your First Fish Product</Button>
-            </Link>
-          </div>
-        ) : (
-          <>
-            {/* Bulk Actions */}
-            {selectedIds.size > 0 && (
-              <div className="px-5 py-3 bg-slate-50">
-                <span className="text-sm text-slate-700">
-                  {selectedIds.size} selected
-                </span>
-                <button
-                  onClick={() => {
-                    selectedIds.forEach((id) => handleDelete(id));
-                    setSelectedIds(new Set());
-                  }}
-                  className="text-sm text-red-600"
-                >
-                  Delete Selected
-                </button>
-              </div>
-            )}
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-5 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.size === products.length && products.length > 0}
-                        onChange={toggleSelectAll}
-                        className="rounded border-slate-300"
-                      />
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Product
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Size Categories
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Price Range
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Stock (kg)
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500">
-                      Status
-                    </th>
-                    <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {products.map((product) => {
-                    const totalStock = getTotalStock(product);
-                    return (
-                      <tr
-                        key={product._id}
-                        className="hover:bg-slate-50"
-                      >
-                        <td className="px-5 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(product._id)}
-                            onChange={() => toggleSelect(product._id)}
-                            className="rounded border-slate-300"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            {product.image ? (
-                              <img
-                                src={product.image}
-                                alt={product.name || "Fish Product"}
-                                className="w-10 h-10 rounded-lg object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-lg bg-slate-100">
-                                <Fish className="text-slate-400" size={18} />
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-sm font-medium text-slate-900">
-                                {product.name || "Unnamed Product"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex flex-wrap gap-1">
-                            {product.sizeCategories && product.sizeCategories.length > 0 ? (
-                              product.sizeCategories.slice(0, 2).map((cat: SizeCategory, idx: number) => (
-                                <span
-                                  key={cat._id || idx}
-                                  className="px-2 py-0.5 bg-slate-100"
-                                >
-                                  {cat.label || "N/A"}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-xs text-slate-500">No sizes</span>
-                            )}
-                            {product.sizeCategories && product.sizeCategories.length > 2 && (
-                              <span className="px-2 py-0.5 bg-slate-100">
-                                +{product.sizeCategories.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className="text-sm font-medium text-slate-900">
-                            {getPriceRange(product)}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`text-sm font-medium ${
-                              totalStock < 10
-                                ? "text-red-600"
-                                : "text-slate-900"
-                            }`}
-                          >
-                            {totalStock} kg
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span
-                            className={`px-2 py-1 rounded-md text-xs font-medium ${
-                              product.status === "active"
-                                ? "bg-emerald-100"
-                                : "bg-slate-100"
-                            }`}
-                          >
-                            {product.status || "inactive"}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center justify-end gap-1">
-                            <Link
-                              href={`/admin/fish/products/${product._id}`}
-                              className="p-1.5 text-slate-600"
-                              title="View"
-                            >
-                              <Eye size={16} />
-                            </Link>
-                            <Link
-                              href={`/admin/fish/products/edit/${product._id}`}
-                              className="p-1.5 text-slate-600"
-                              title="Edit"
-                            >
-                              <Edit size={16} />
-                            </Link>
-                            <button
-                              onClick={() => setDeleteConfirm(product._id)}
-                              className="p-1.5 text-slate-600"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Minimal Pagination */}
-            {totalPages > 1 && (
-              <div className="px-5 py-4 border-t border-slate-200">
-                <p className="text-sm text-slate-500">
-                  Page {currentPage} of {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1.5 bg-slate-100"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1.5 bg-slate-100"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Delete Confirmation Modal - Minimal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white">
-            <h3 className="text-base font-semibold text-slate-900">Delete Fish Product</h3>
-            <p className="text-sm text-slate-600">
-              This action cannot be undone.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 bg-slate-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  const bulkActions = selectedIds.size > 0 ? (
+    <div className="flex items-center justify-between w-full">
+      <span className="text-sm font-medium text-emerald-900">
+        {selectedIds.size} selected
+      </span>
+      <button
+        onClick={() => setBulkDeleteConfirm(true)}
+        className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-colors"
+      >
+        Delete Selected
+      </button>
     </div>
+  ) : undefined;
+
+  return (
+    <>
+      <AdminListPageLayout
+        title="Fish Products"
+        description="Manage your fish product catalog"
+        primaryAction={{
+          label: "Add Fish Product",
+          href: "/admin/fish/products/add",
+          icon: Plus,
+        }}
+        searchPlaceholder="Search fish products..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        onRefresh={fetchProducts}
+        error={error}
+        onErrorDismiss={() => setError(null)}
+        loading={loading}
+        empty={!loading && products.length === 0}
+        emptyIcon={<Fish className="mx-auto text-slate-400 mb-3" size={40} strokeWidth={1.5} />}
+        emptyTitle="No fish products found"
+        emptyAction={
+          <Link href="/admin/fish/products/add">
+            <button className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md text-sm font-semibold">
+              Add Your First Fish Product
+            </button>
+          </Link>
+        }
+        pagination={
+          totalPages > 1
+            ? {
+                currentPage,
+                totalPages,
+                onPageChange: setCurrentPage,
+              }
+            : undefined
+        }
+        bulkActions={bulkActions}
+      >
+        <table className="w-full">
+          <AdminTableHeader
+            columns={columns}
+            selectable
+            selectedCount={selectedIds.size}
+            totalCount={products.length}
+            onSelectAll={toggleSelectAll}
+          />
+          <tbody className="divide-y divide-slate-200">
+            {products.map((product) => {
+              const totalStock = getTotalStock(product);
+              return (
+                <AdminTableRow
+                  key={product._id}
+                  selectable
+                  selected={selectedIds.has(product._id || "")}
+                  onSelect={(selected) => {
+                    if (product._id) {
+                      if (selected) {
+                        setSelectedIds((prev) => new Set([...prev, product._id!]));
+                      } else {
+                        setSelectedIds((prev) => {
+                          const next = new Set(prev);
+                          next.delete(product._id!);
+                          return next;
+                        });
+                      }
+                    }
+                  }}
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name || "Fish Product"}
+                          className="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-200">
+                          <Fish className="text-slate-400" size={18} />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">
+                          {product.name || "Unnamed Product"}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      {product.sizeCategories && product.sizeCategories.length > 0 ? (
+                        product.sizeCategories.slice(0, 2).map((cat: SizeCategory, idx: number) => (
+                          <span
+                            key={cat._id || idx}
+                            className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-xs font-medium"
+                          >
+                            {cat.label || "N/A"}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500">No sizes</span>
+                      )}
+                      {product.sizeCategories && product.sizeCategories.length > 2 && (
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-xs font-medium">
+                          +{product.sizeCategories.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm font-medium text-slate-900">
+                      {getPriceRange(product)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`text-sm font-medium ${
+                        totalStock < 10 ? "text-red-600" : "text-slate-900"
+                      }`}
+                    >
+                      {totalStock} kg
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                        product.status === "active"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                          : "bg-slate-400 text-white"
+                      }`}
+                    >
+                      {product.status || "inactive"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/fish/products/${product._id}`}
+                        className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all"
+                        title="View"
+                      >
+                        <Eye size={18} strokeWidth={2} />
+                      </Link>
+                      <Link
+                        href={`/admin/fish/products/edit/${product._id}`}
+                        className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all"
+                        title="Edit"
+                      >
+                        <Edit size={18} strokeWidth={2} />
+                      </Link>
+                      <button
+                        onClick={() => setDeleteConfirm(product._id || null)}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </td>
+                </AdminTableRow>
+              );
+            })}
+          </tbody>
+        </table>
+      </AdminListPageLayout>
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Fish Product"
+        message="This action cannot be undone. Are you sure you want to delete this fish product?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteConfirm) {
+            handleDelete(deleteConfirm);
+          }
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        title="Delete Selected Fish Products"
+        message={`Are you sure you want to delete ${selectedIds.size} fish product(s)? This action cannot be undone.`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleBulkDelete}
+        onCancel={() => setBulkDeleteConfirm(false)}
+      />
+    </>
   );
 }

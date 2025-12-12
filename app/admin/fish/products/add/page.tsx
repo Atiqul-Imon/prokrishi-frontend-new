@@ -2,22 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { fishProductApi } from "../../../../utils/fishApi";
 import { handleApiError } from "../../../../utils/errorHandler";
-import { ArrowLeft, Save, Plus, X, Package, Image as ImageIcon, Settings, DollarSign, BarChart3, Upload, AlertCircle, Fish } from "lucide-react";
-
-interface SizeCategory {
-  label: string;
-  pricePerKg: string;
-  stock: string;
-  minWeight?: string;
-  maxWeight?: string;
-  sku?: string;
-  measurementIncrement?: string;
-  status: "active" | "inactive" | "out_of_stock";
-  isDefault: boolean;
-}
+import { Fish, Image as ImageIcon, Settings } from "lucide-react";
+import {
+  AdminFormPageLayout,
+  FormSection,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  FormCheckbox,
+  ImageUpload,
+  SizeCategoryManager,
+  type SizeCategoryForm,
+} from "@/components/admin";
 
 export default function AddFishProductPage() {
   const router = useRouter();
@@ -25,7 +23,7 @@ export default function AddFishProductPage() {
   const [error, setError] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [sizeCategories, setSizeCategories] = useState<SizeCategory[]>([
+  const [sizeCategories, setSizeCategories] = useState<SizeCategoryForm[]>([
     { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: true },
   ]);
   const [formData, setFormData] = useState({
@@ -39,11 +37,15 @@ export default function AddFishProductPage() {
     metaDescription: "",
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageChange = (file: File | null) => {
+    setImage(file);
     if (file) {
-      setImage(file);
       setImagePreview(URL.createObjectURL(file));
+    } else {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(null);
     }
   };
 
@@ -64,7 +66,7 @@ export default function AddFishProductPage() {
     }
   };
 
-  const updateSizeCategory = (index: number, field: keyof SizeCategory, value: string | boolean) => {
+  const updateSizeCategory = (index: number, field: keyof SizeCategoryForm, value: string | boolean) => {
     const newCategories = [...sizeCategories];
     if (field === "isDefault") {
       newCategories.forEach((cat, i) => {
@@ -152,416 +154,115 @@ export default function AddFishProductPage() {
     }
   };
 
+  const statusOptions = [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "out_of_stock", label: "Out of Stock" },
+  ];
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header - Nexus Style */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin/fish/products">
-          <button className="p-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
-            <ArrowLeft size={20} strokeWidth={2} />
-          </button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Add New Fish Product</h1>
-          <p className="text-sm text-slate-600">Create a new fish product for your catalog</p>
-        </div>
-      </div>
+    <AdminFormPageLayout
+      title="Add New Fish Product"
+      description="Create a new fish product for your catalog"
+      backHref="/admin/fish/products"
+      error={error}
+      onErrorDismiss={() => setError(null)}
+      onSubmit={handleSubmit}
+      loading={loading}
+      submitLabel="Create Fish Product"
+    >
+      <FormSection title="Basic Information" description="Essential product details" icon={Fish}>
+        <FormInput
+          label="Product Name"
+          required
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Enter fish product name"
+        />
 
-      {/* Error Message - Nexus Style */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="text-red-600 mt-0.5 flex-shrink-0" size={20} strokeWidth={2} />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-900">Error</p>
-            <p className="text-sm text-red-800 mt-1">{error}</p>
-          </div>
-          <button
-            onClick={() => setError(null)}
-            className="text-red-600 hover:text-red-800 transition-colors"
-          >
-            <X size={18} strokeWidth={2} />
-          </button>
-        </div>
-      )}
+        <FormInput
+          label="Short Description"
+          type="text"
+          maxLength={100}
+          value={formData.shortDescription}
+          onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+          placeholder="Brief description (max 100 characters)"
+          showCharCount
+          helperText={`${formData.shortDescription.length}/100 characters`}
+        />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-teal-100">
-              <Fish className="text-teal-600" size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Basic Information</h2>
-              <p className="text-xs text-slate-500">Essential product details</p>
-            </div>
-          </div>
+        <FormTextarea
+          label="Description"
+          rows={5}
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Detailed product description"
+        />
 
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Product Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter fish product name"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-              />
-            </div>
+        <FormSelect
+          label="Status"
+          required
+          options={statusOptions}
+          value={formData.status}
+          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+        />
+      </FormSection>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Short Description
-              </label>
-              <input
-                type="text"
-                maxLength={100}
-                value={formData.shortDescription}
-                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                placeholder="Brief description (max 100 characters)"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-              />
-              <p className="text-xs text-slate-500 mt-1.5">{formData.shortDescription.length}/100 characters</p>
-            </div>
+      <FormSection title="Product Image" description="Upload product image" icon={ImageIcon}>
+        <ImageUpload
+          label="Product Image"
+          value={image}
+          preview={imagePreview}
+          onChange={handleImageChange}
+          helperText="Recommended: 800x800px or larger"
+        />
+      </FormSection>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Description
-              </label>
-              <textarea
-                rows={5}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Detailed product description"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
-              />
-            </div>
-          </div>
-        </div>
+      <FormSection title="Size Categories" description="Define size categories with pricing" icon={Fish}>
+        <SizeCategoryManager
+          sizeCategories={sizeCategories}
+          onAdd={addSizeCategory}
+          onRemove={removeSizeCategory}
+          onUpdate={updateSizeCategory}
+          minCategories={1}
+        />
+      </FormSection>
 
-        {/* Image Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-teal-100">
-              <ImageIcon className="text-teal-600" size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Product Image</h2>
-              <p className="text-xs text-slate-500">Upload product image</p>
-            </div>
-          </div>
+      <FormSection title="Additional Options" description="SEO and marketing settings" icon={Settings}>
+        <FormCheckbox
+          label="Featured Product"
+          checked={formData.isFeatured}
+          onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+        />
 
-          <label className="block cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            {imagePreview ? (
-              <div className="relative inline-block">
-                <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl border-2 border-slate-200 shadow-sm" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
-                  className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
-                >
-                  <X size={14} strokeWidth={2.5} />
-                </button>
-              </div>
-            ) : (
-              <div className="px-6 py-12 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-all text-center cursor-pointer">
-                <Upload className="mx-auto mb-3 text-slate-400" size={32} strokeWidth={1.5} />
-                <p className="text-sm font-medium text-slate-700 mb-1">Click to upload image</p>
-                <p className="text-xs text-slate-500">Recommended: 800x800px or larger</p>
-              </div>
-            )}
-          </label>
-        </div>
+        <FormInput
+          label="Tags (comma-separated)"
+          type="text"
+          value={formData.tags}
+          onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+          placeholder="e.g., fresh, premium, organic"
+        />
 
-        {/* Size Categories Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-100">
-                <BarChart3 className="text-purple-600" size={20} strokeWidth={2.5} />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Size Categories <span className="text-red-500">*</span></h2>
-                <p className="text-xs text-slate-500">{sizeCategories.length} size categor{sizeCategories.length !== 1 ? 'ies' : 'y'} added</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={addSizeCategory}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
-            >
-              <Plus size={16} strokeWidth={2.5} />
-              Add Size
-            </button>
-          </div>
+        <FormInput
+          label="Meta Title"
+          type="text"
+          value={formData.metaTitle}
+          onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+          placeholder="SEO meta title"
+        />
 
-          <div className="space-y-4">
-            {sizeCategories.map((category, index) => (
-              <div
-                key={index}
-                className="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 hover:border-purple-300 transition-all"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">
-                      Size {index + 1}
-                    </span>
-                    {category.isDefault && (
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold">
-                        Default
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        checked={category.isDefault}
-                        onChange={() => updateSizeCategory(index, "isDefault", true)}
-                        className="w-4 h-4 border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-                      />
-                      <span className="text-xs font-medium text-slate-600">Set as Default</span>
-                    </label>
-                    {sizeCategories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSizeCategory(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove size category"
-                      >
-                        <X size={16} strokeWidth={2} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Label <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={category.label}
-                      onChange={(e) => updateSizeCategory(index, "label", e.target.value)}
-                      placeholder="e.g., Small, 2kg size"
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Price/Kg (৳) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={category.pricePerKg}
-                      onChange={(e) => updateSizeCategory(index, "pricePerKg", e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      Stock (kg) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={category.stock}
-                      onChange={(e) => updateSizeCategory(index, "stock", e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Min Increment (kg)</label>
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={category.measurementIncrement || "0.25"}
-                      onChange={(e) => updateSizeCategory(index, "measurementIncrement", e.target.value)}
-                      placeholder="e.g., 0.25"
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                    <p className="text-[11px] text-slate-500 mt-1">Minimum sellable increment; default 0.25kg.</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Min Weight (kg)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={category.minWeight || ""}
-                      onChange={(e) => updateSizeCategory(index, "minWeight", e.target.value || undefined)}
-                      placeholder="Optional"
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Max Weight (kg)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={category.maxWeight || ""}
-                      onChange={(e) => updateSizeCategory(index, "maxWeight", e.target.value || undefined)}
-                      placeholder="Optional"
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">SKU</label>
-                    <input
-                      type="text"
-                      value={category.sku || ""}
-                      onChange={(e) => updateSizeCategory(index, "sku", e.target.value || undefined)}
-                      placeholder="Optional"
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
-                    <select
-                      value={category.status}
-                      onChange={(e) => updateSizeCategory(index, "status", e.target.value)}
-                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="out_of_stock">Out of Stock</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Additional Options Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-purple-100">
-              <Settings className="text-purple-600" size={20} strokeWidth={2.5} />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Additional Options</h2>
-              <p className="text-xs text-slate-500">SEO and marketing settings</p>
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Status <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-              <input
-                type="checkbox"
-                checked={formData.isFeatured}
-                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                className="w-5 h-5 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-              />
-              <span className="text-sm font-medium text-slate-900">Featured Product</span>
-            </label>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
-                Tags (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g., fresh, premium, local"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Title</label>
-              <input
-                type="text"
-                value={formData.metaTitle}
-                onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                placeholder="SEO meta title"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Description</label>
-              <textarea
-                rows={3}
-                maxLength={160}
-                value={formData.metaDescription}
-                onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                placeholder="SEO meta description"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
-              />
-              <p className="text-xs text-slate-500 mt-1.5">{formData.metaDescription.length}/160 characters</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-          <Link href="/admin/fish/products">
-            <button
-              type="button"
-              className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
-            >
-              Cancel
-            </button>
-          </Link>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating...</span>
-              </>
-            ) : (
-              <>
-                <Save size={16} strokeWidth={2.5} />
-                <span>Create Product</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+        <FormTextarea
+          label="Meta Description"
+          rows={3}
+          maxLength={160}
+          value={formData.metaDescription}
+          onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+          placeholder="SEO meta description"
+          showCharCount
+          helperText={`${formData.metaDescription.length}/160 characters`}
+        />
+      </FormSection>
+    </AdminFormPageLayout>
   );
 }
