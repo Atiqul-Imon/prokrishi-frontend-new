@@ -777,7 +777,6 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
   // NestJS returns { message, success, orders, pagination }
   return {
     success: response.success ?? true,
-    message: response.message || 'Orders fetched successfully',
     orders: response.orders || [],
     pagination: response.pagination || {},
   };
@@ -791,7 +790,6 @@ export async function getAdminOrderStats(period: number = 30): Promise<AdminOrde
   // NestJS returns { message, success, stats }
   return {
     success: response.success ?? true,
-    message: response.message || 'Order statistics fetched successfully',
     stats: response.stats || {},
   };
 }
