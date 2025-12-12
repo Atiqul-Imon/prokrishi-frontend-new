@@ -52,7 +52,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
 
   const sidebarContent = (
     <>
-      {/* Logo Section - Enhanced */}
+      {/* Logo Section */}
       <div className="px-6 py-6 border-b border-slate-700/50 bg-gradient-to-br from-slate-900 to-slate-800">
         <Link href="/admin" className="flex items-center gap-3 group">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/20 transition-all duration-300 group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-emerald-500/30">
@@ -60,16 +60,17 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
           </div>
           <div className="flex flex-col">
             <span className="text-base font-bold text-white tracking-tight">Prokrishi</span>
-            <span className="text-xs text-white/80 font-medium">Admin Panel</span>
+            <span className="text-xs text-white opacity-80 font-medium">Admin Panel</span>
           </div>
         </Link>
       </div>
 
-      {/* Main Navigation - Enhanced */}
+      {/* Main Navigation */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto">
         <div className="space-y-1.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (pathname?.startsWith(item.href + "/") && item.href !== "/admin");
+            const Icon = item.icon;
             
             return (
               <Link
@@ -80,18 +81,24 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                 className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   isActive
                     ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
-                    : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
+                    : "text-white hover:bg-slate-800/80 hover:scale-[1.01]"
                 }`}
+                style={{ color: isActive ? '#ffffff' : '#ffffff' }}
               >
-                <item.icon 
+                <Icon 
                   size={20} 
+                  strokeWidth={2.5}
                   className={`transition-all duration-300 ${
                     isActive 
-                      ? "text-white scale-110" 
-                      : "text-white/90 group-hover:text-white group-hover:scale-110"
+                      ? "scale-110" 
+                      : "group-hover:scale-110"
                   }`}
+                  style={{ 
+                    color: '#ffffff',
+                    stroke: '#ffffff'
+                  }}
                 />
-                <span className="flex-1 font-medium">{item.label}</span>
+                <span className="flex-1 font-medium" style={{ color: '#ffffff' }}>{item.label}</span>
                 {isActive && (
                   <>
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -107,23 +114,40 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         <div className="mt-6 pt-6 border-t border-slate-700/50">
           <button
             onClick={() => setFishSectionOpen(!fishSectionOpen)}
-            className="w-full flex items-center justify-between px-4 py-3 mb-3 rounded-xl text-xs font-bold text-white uppercase tracking-wider hover:bg-slate-800/80 hover:bg-opacity-80 transition-all duration-200 group"
+            className="w-full flex items-center justify-between px-4 py-3 mb-3 rounded-xl text-xs font-bold text-white uppercase tracking-wider hover:bg-slate-800/80 transition-all duration-200 group"
             title="Toggle Fish Section"
+            style={{ color: '#ffffff' }}
           >
             <span className="flex items-center gap-2">
-              <Fish size={16} className="text-teal-300 group-hover:text-teal-200 transition-colors" />
+              <Fish 
+                size={16} 
+                strokeWidth={2.5}
+                style={{ color: '#5eead4', stroke: '#5eead4' }}
+                className="group-hover:scale-110 transition-all duration-200"
+              />
               <span>Fish</span>
             </span>
             {fishSectionOpen ? (
-              <ChevronUp size={16} className="text-white/80 group-hover:text-white transition-all duration-200" />
+              <ChevronUp 
+                size={16} 
+                strokeWidth={2.5}
+                style={{ color: '#ffffff', stroke: '#ffffff' }}
+                className="opacity-80 group-hover:opacity-100 transition-all duration-200"
+              />
             ) : (
-              <ChevronDown size={16} className="text-white/80 group-hover:text-white transition-all duration-200" />
+              <ChevronDown 
+                size={16} 
+                strokeWidth={2.5}
+                style={{ color: '#ffffff', stroke: '#ffffff' }}
+                className="opacity-80 group-hover:opacity-100 transition-all duration-200"
+              />
             )}
           </button>
           {fishSectionOpen && (
             <div className="space-y-1.5 transition-all duration-300 ease-out">
               {fishNavItems.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                const Icon = item.icon;
                 
                 return (
                   <Link
@@ -134,18 +158,24 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                     className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg shadow-teal-500/30 scale-[1.02]"
-                        : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
+                        : "text-white hover:bg-slate-800/80 hover:scale-[1.01]"
                     }`}
+                    style={{ color: '#ffffff' }}
                   >
-                    <item.icon 
+                    <Icon 
                       size={20} 
+                      strokeWidth={2.5}
                       className={`transition-all duration-300 ${
                         isActive 
-                          ? "text-white scale-110" 
-                          : "text-white/90 group-hover:text-white group-hover:scale-110"
+                          ? "scale-110" 
+                          : "group-hover:scale-110"
                       }`}
+                      style={{ 
+                        color: '#ffffff',
+                        stroke: '#ffffff'
+                      }}
                     />
-                    <span className="flex-1 font-medium">{item.label}</span>
+                    <span className="flex-1 font-medium" style={{ color: '#ffffff' }}>{item.label}</span>
                     {isActive && (
                       <>
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -160,10 +190,11 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Bottom Navigation - Enhanced */}
+      {/* Bottom Navigation */}
       <div className="px-4 py-4 border-t border-slate-700/50 space-y-1.5 bg-gradient-to-t from-slate-900 to-slate-800/50">
         {bottomNavItems.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+          const Icon = item.icon;
           
           return (
             <Link
@@ -174,18 +205,24 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
               className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                 isActive
                   ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30 scale-[1.02]"
-                  : "text-white hover:bg-slate-800/80 hover:bg-opacity-80 hover:scale-[1.01]"
+                  : "text-white hover:bg-slate-800/80 hover:scale-[1.01]"
               }`}
+              style={{ color: '#ffffff' }}
             >
-              <item.icon 
+              <Icon 
                 size={20} 
+                strokeWidth={2.5}
                 className={`transition-all duration-300 ${
                   isActive 
-                    ? "text-white scale-110" 
-                    : "text-white/90 group-hover:text-white group-hover:scale-110"
+                    ? "scale-110" 
+                    : "group-hover:scale-110"
                 }`}
+                style={{ 
+                  color: '#ffffff',
+                  stroke: '#ffffff'
+                }}
               />
-              <span className="flex-1 font-medium">{item.label}</span>
+              <span className="flex-1 font-medium" style={{ color: '#ffffff' }}>{item.label}</span>
               {isActive && (
                 <>
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -198,9 +235,15 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         <Link
           href="/"
           title="Back to Site"
-          className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-white hover:bg-slate-800/80 hover:bg-opacity-80 transition-all duration-300 hover:scale-[1.01] mt-2"
+          className="group flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-white hover:bg-slate-800/80 transition-all duration-300 hover:scale-[1.01] mt-2"
+          style={{ color: '#ffffff' }}
         >
-          <Home size={20} className="text-white/90 group-hover:text-white group-hover:scale-110 transition-all duration-300" />
+          <Home 
+            size={20} 
+            strokeWidth={2.5}
+            style={{ color: '#ffffff', stroke: '#ffffff' }}
+            className="group-hover:scale-110 transition-all duration-300"
+          />
           <span className="font-medium">Back to Site</span>
         </Link>
       </div>
@@ -217,7 +260,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Mobile Sidebar - Enhanced */}
+      {/* Mobile Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 border-r border-slate-700/50 z-50 transform transition-transform duration-300 ease-out lg:hidden flex flex-col shadow-2xl ${
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -227,17 +270,21 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
           <span className="text-sm font-bold text-white tracking-tight">Menu</span>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-300 hover:bg-slate-800/70 hover:text-white transition-all duration-200 hover:scale-110"
+            className="p-2 rounded-xl hover:bg-slate-800/70 transition-all duration-200 hover:scale-110"
             title="Close Menu"
             aria-label="Close sidebar"
           >
-            <X size={20} />
+            <X 
+              size={20} 
+              strokeWidth={2.5}
+              style={{ color: '#ffffff', stroke: '#ffffff' }}
+            />
           </button>
         </div>
         {sidebarContent}
       </aside>
 
-      {/* Desktop Sidebar - Enhanced */}
+      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 border-r border-slate-700/50 z-30 flex flex-col shadow-2xl">
         {sidebarContent}
       </aside>
