@@ -966,8 +966,16 @@ export function resetPasswordWithOTP(phone: string, otp: string, password: strin
  */
 export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   try {
-    const res = await api.get<DashboardStatsResponse>("/dashboard/stats");
-    return res.data;
+    const res = await api.get<any>("/dashboard/stats");
+    // NestJS returns { message, success, data: { stats, recentOrders, lowStockProducts } }
+    const responseData = res.data?.data || res.data;
+    return {
+      success: res.data?.success ?? true,
+      message: res.data?.message || 'Dashboard statistics fetched successfully',
+      stats: responseData?.stats || responseData,
+      recentOrders: responseData?.recentOrders,
+      lowStockProducts: responseData?.lowStockProducts,
+    };
   } catch (err: any) {
     throw new Error(
       err.response?.data?.message || err.message || "Failed to get dashboard statistics",
