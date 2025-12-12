@@ -7,6 +7,7 @@ import { logger } from "../utils/logger";
 import { handleApiError } from "../utils/errorHandler";
 import type { Product, Category } from "@/types/models";
 import ProductCard from "@/components/ProductCard";
+import ProductGrid from "@/components/ProductGrid";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Filter, X, ChevronDown } from "lucide-react";
@@ -230,10 +231,13 @@ function ProductsContent() {
         {/* Products Grid */}
         {!loading && !error && products.length > 0 && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
-              {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
+            <div className="mb-8">
+              <ProductGrid
+                products={products}
+                columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
+                gap="md"
+                showBadges={true}
+              />
             </div>
 
             {/* Pagination */}

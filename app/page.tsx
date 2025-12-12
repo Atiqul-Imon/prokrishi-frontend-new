@@ -5,6 +5,7 @@ import Link from "next/link";
 import HeroSection from "@/components/HeroSection";
 import FeaturedCategories from "@/components/FeaturedCategories";
 import ProductCard from "@/components/ProductCard";
+import ProductGrid from "@/components/ProductGrid";
 import { getFeaturedProducts } from "@/app/utils/api";
 import { fishProductApi } from "@/app/utils/fishApi";
 import { logger } from "@/app/utils/logger";
@@ -112,11 +113,13 @@ export default function Home() {
               </div>
             </Card>
           ) : featuredProducts.length > 0 ? (
-            <div className="product-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-4 lg:gap-6 items-stretch">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
+            <ProductGrid
+              products={featuredProducts}
+              columns={{ mobile: 2, tablet: 2, desktop: 3, wide: 5 }}
+              gap="md"
+              showBadges={true}
+              emptyMessage="No featured products available at the moment."
+            />
           ) : (
             <div className="text-center py-8 sm:py-12">
               <p className="text-gray-500 text-sm sm:text-base">No featured products available at the moment.</p>
@@ -151,11 +154,13 @@ export default function Home() {
             </Card>
           ) : fishProducts.length > 0 ? (
             <>
-              <div className="product-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-4 lg:gap-6 items-stretch">
-                {fishProducts.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
+              <ProductGrid
+                products={fishProducts}
+                columns={{ mobile: 2, tablet: 2, desktop: 3, wide: 5 }}
+                gap="md"
+                showBadges={true}
+                emptyMessage="No fish products available at the moment."
+              />
               {fishProducts.length >= 100 && (
                 <div className="text-center mt-8">
                   <Link href="/fish">

@@ -75,6 +75,10 @@ export interface Product {
   status?: string;
   sku?: string;
   isFeatured?: boolean;
+  priceRange?: {
+    min: number;
+    max: number;
+  };
 }
 
 export interface FishProduct extends Omit<Product, 'price' | 'stock' | 'variants' | 'hasVariants'> {

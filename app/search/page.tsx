@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import ProductGrid from "@/components/ProductGrid";
 import { searchProducts } from "@/app/utils/api";
 import { ProductsResponse, PaginationParams } from "@/types/api";
 import { Card } from "@/components/ui/Card";
@@ -283,11 +284,12 @@ function SearchPageContent() {
               </Card>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                  {(results.products || []).map((product: Product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-                </div>
+                <ProductGrid
+                  products={results.products || []}
+                  columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
+                  gap="md"
+                  showBadges={true}
+                />
 
                 {/* Pagination */}
                 {results.pagination && results.pagination.totalPages > 1 && (
