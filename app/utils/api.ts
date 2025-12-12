@@ -266,7 +266,7 @@ export async function getShippingQuote(data: ShippingQuoteRequest): Promise<Ship
     data,
   });
   // NestJS returns { success: true, data: { shippingFee, totalWeightKg, zone, breakdown } }
-  const responseData = response.data || response;
+  const responseData = response.data?.data || response.data || response;
   return {
     shippingFee: responseData.shippingFee || 0,
     totalWeightKg: responseData.totalWeightKg || 0,
