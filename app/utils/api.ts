@@ -774,11 +774,12 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
   const url = `/admin/orders${queryString ? `?${queryString}` : ''}`;
   
   const response = await apiRequest<any>(url);
-  // NestJS returns { message, success, orders, pagination }
+  // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, orders, pagination } }
+  const responseData = response.data || response;
   return {
-    success: response.success ?? true,
-    orders: response.orders || [],
-    pagination: response.pagination || {},
+    success: responseData.success ?? true,
+    orders: responseData.orders || [],
+    pagination: responseData.pagination || {},
   };
 }
 
@@ -787,10 +788,11 @@ export async function getAdminOrders(filters: AdminOrderFilters = {}): Promise<A
  */
 export async function getAdminOrderStats(period: number = 30): Promise<AdminOrderStatsResponse> {
   const response = await apiRequest<any>(`/admin/orders/stats?period=${period}`);
-  // NestJS returns { message, success, stats }
+  // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, stats } }
+  const responseData = response.data || response;
   return {
-    success: response.success ?? true,
-    stats: response.stats || {},
+    success: responseData.success ?? true,
+    stats: responseData.stats || {},
   };
 }
 
@@ -799,10 +801,11 @@ export async function getAdminOrderStats(period: number = 30): Promise<AdminOrde
  */
 export async function getAdminOrderById(id: string): Promise<{ success: boolean; order: any }> {
   const response = await apiRequest<any>(`/admin/orders/${id}`);
-  // NestJS returns { message, success, order }
+  // NestJS TransformInterceptor wraps response in { success: true, data: { message, success, order } }
+  const responseData = response.data || response;
   return {
-    success: response.success ?? true,
-    order: response.order || response,
+    success: responseData.success ?? true,
+    order: responseData.order || responseData,
   };
 }
 
