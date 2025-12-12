@@ -62,8 +62,13 @@ export const fishProductApi = {
         Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
       },
     });
-    // NestJS returns { success: true, data: { fishProducts: [...], pagination: {...} } }
-    return response.data;
+    // NestJS TransformInterceptor wraps response in { success: true, data: { message, fishProducts, pagination, success } }
+    const responseData = response.data?.data || response.data;
+    return {
+      success: responseData.success ?? true,
+      fishProducts: responseData.fishProducts || [],
+      pagination: responseData.pagination || {},
+    };
   },
 
   getFeatured: async (limit?: number) => {
@@ -139,12 +144,13 @@ export const fishOrderApi = {
         Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",
       },
     });
-    // NestJS returns { message, success, fishOrders, pagination }
+    // NestJS TransformInterceptor wraps response in { success: true, data: { message, fishOrders, pagination } }
+    const responseData = response.data?.data || response.data;
     return {
-      success: response.data.success ?? true,
-      message: response.data.message || 'Fish orders fetched successfully',
-      fishOrders: response.data.fishOrders || [],
-      pagination: response.data.pagination || {},
+      success: responseData.success ?? true,
+      message: responseData.message || 'Fish orders fetched successfully',
+      fishOrders: responseData.fishOrders || [],
+      pagination: responseData.pagination || {},
     };
   },
 
