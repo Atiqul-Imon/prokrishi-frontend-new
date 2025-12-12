@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProduct, getAllCategories } from "../../../utils/api";
-import { ArrowLeft, Save, X, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowLeft, Save, X, Plus, Trash2, Package, Image as ImageIcon, Tag, Settings, DollarSign, BarChart3, Upload, AlertCircle } from "lucide-react";
 
 interface ProductVariant {
   _id?: string;
@@ -138,7 +137,6 @@ export default function AddProductPage() {
     setLoading(true);
     setError(null);
 
-    // Validate required fields first
     if (!formData.name || !formData.name.trim()) {
       setError("Product name is required");
       setLoading(false);
@@ -169,7 +167,6 @@ export default function AddProductPage() {
       productData.append("isFeatured", formData.isFeatured.toString());
 
         if (hasVariants && variants.length > 0) {
-        // Validate variants
         for (let i = 0; i < variants.length; i++) {
           const v = variants[i];
           if (!v.label || !v.label.trim()) {
@@ -216,7 +213,6 @@ export default function AddProductPage() {
           )
         );
         } else {
-        // No variants - use basic pricing
         if (!formData.price || parseFloat(formData.price) <= 0) {
           setError("Price is required");
           setLoading(false);
@@ -240,7 +236,6 @@ export default function AddProductPage() {
           if (formData.lowStockThreshold) productData.append("lowStockThreshold", formData.lowStockThreshold);
       }
 
-      // Handle images
       if (primaryImage) {
         productData.append("image", primaryImage);
       }
@@ -250,14 +245,6 @@ export default function AddProductPage() {
           productData.append("galleryImages", upload.file);
         });
       }
-
-      // Debug: Log what we're sending
-      console.log("Submitting product:", {
-        name: formData.name,
-        category: formData.category,
-        hasVariants,
-        variantsCount: variants.length,
-      });
 
       await createProduct(productData);
       router.push("/admin/products");
@@ -271,624 +258,709 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header - Nexus Style */}
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/admin/products">
-          <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <ArrowLeft size={18} />
+          <button className="p-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            <ArrowLeft size={20} strokeWidth={2} />
           </button>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Add Product</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Create a new product</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Add New Product</h1>
+          <p className="text-sm text-slate-600">Create a new product for your catalog</p>
         </div>
       </div>
 
+      {/* Error Message - Nexus Style */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-4">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="text-red-600 mt-0.5 flex-shrink-0" size={20} strokeWidth={2} />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">Error</p>
+            <p className="text-sm text-red-800 mt-1">{error}</p>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 transition-colors"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Basic Information</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    required
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Status *
-                  </label>
-                  <select
-                    required
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="out_of_stock">Out of Stock</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Short Description
-                </label>
-                <input
-                  type="text"
-                  maxLength={100}
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Max 100 characters</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Description
-                </label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
+        {/* Basic Information Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-emerald-100">
+              <Package className="text-emerald-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Basic Information</h2>
+              <p className="text-xs text-slate-500">Essential product details</p>
             </div>
           </div>
 
-          {/* Variants Toggle */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Product Variants</h2>
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={hasVariants}
-                onChange={(e) => {
-                  setHasVariants(e.target.checked);
-                  if (!e.target.checked) {
-                    setVariants([]);
-                  } else if (variants.length === 0) {
-                    addVariant();
-                  }
-                }}
-                className="w-4 h-4 text-slate-600 rounded focus:ring-slate-500"
-              />
-              <span className="text-sm text-slate-700 dark:text-slate-300">
-                Enable Product Variants (e.g., different sizes, weights, prices)
-              </span>
-            </label>
-          </div>
-
-          {/* Variants Management */}
-          {hasVariants && (
+          <div className="space-y-5">
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Variants</h2>
-                <button
-                  type="button"
-                  onClick={addVariant}
-                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1"
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Product Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter product name"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                 >
-                  <Plus size={16} />
-                  Add Variant
-                </button>
+                  <option value="">Select category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="space-y-3">
-                {variants.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg">
-                    <p>No variants added. Click "Add Variant" to create one.</p>
-                  </div>
-                ) : (
-                  variants.map((variant, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                            Variant {index + 1}
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="out_of_stock">Out of Stock</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Short Description
+              </label>
+              <input
+                type="text"
+                maxLength={100}
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                placeholder="Brief description (max 100 characters)"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+              <p className="text-xs text-slate-500 mt-1.5">{formData.shortDescription.length}/100 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Description
+              </label>
+              <textarea
+                rows={5}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Detailed product description"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Variants Toggle Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-purple-100">
+              <BarChart3 className="text-purple-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-slate-900">Product Variants</h2>
+              <p className="text-xs text-slate-500">Enable variants for different sizes, weights, or prices</p>
+            </div>
+          </div>
+          <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+            <input
+              type="checkbox"
+              checked={hasVariants}
+              onChange={(e) => {
+                setHasVariants(e.target.checked);
+                if (!e.target.checked) {
+                  setVariants([]);
+                } else if (variants.length === 0) {
+                  addVariant();
+                }
+              }}
+              className="w-5 h-5 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-slate-900">
+              Enable Product Variants (e.g., different sizes, weights, prices)
+            </span>
+          </label>
+        </div>
+
+        {/* Variants Management */}
+        {hasVariants && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-100">
+                  <BarChart3 className="text-purple-600" size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Variants</h2>
+                  <p className="text-xs text-slate-500">{variants.length} variant{variants.length !== 1 ? 's' : ''} added</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={addVariant}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                Add Variant
+              </button>
+            </div>
+            <div className="space-y-4">
+              {variants.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-200 rounded-lg">
+                  <BarChart3 className="mx-auto mb-3 text-slate-400" size={32} strokeWidth={1.5} />
+                  <p className="text-sm">No variants added. Click "Add Variant" to create one.</p>
+                </div>
+              ) : (
+                variants.map((variant, index) => (
+                  <div
+                    key={index}
+                    className="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 hover:border-purple-300 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">
+                          Variant {index + 1}
+                        </span>
+                        {variant.isDefault && (
+                          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold">
+                            Default
                           </span>
-                          {variant.isDefault && (
-                            <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300 rounded">
-                              Default
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={variant.isDefault}
-                              onChange={() => updateVariant(index, "isDefault", true)}
-                              className="w-4 h-4 text-slate-600"
-                            />
-                            <span className="text-xs text-slate-500 dark:text-slate-400">Default</span>
-                          </label>
-                          {variants.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeVariant(index)}
-                              className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Label *</label>
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
-                            type="text"
-                            required
-                            value={variant.label}
-                            onChange={(e) => updateVariant(index, "label", e.target.value)}
-                            placeholder="e.g., Small, 500g"
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                            type="checkbox"
+                            checked={variant.isDefault}
+                            onChange={() => updateVariant(index, "isDefault", true)}
+                            className="w-4 h-4 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                           />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">SKU</label>
-                          <input
-                            type="text"
-                            value={variant.sku || ""}
-                            onChange={(e) => updateVariant(index, "sku", e.target.value)}
-                            placeholder="Optional"
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Price (৳) *</label>
-                          <input
-                            type="number"
-                            required
-                            min="0"
-                            step="0.01"
-                            value={variant.price}
-                            onChange={(e) => updateVariant(index, "price", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Sale Price (৳)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={variant.salePrice || ""}
-                            onChange={(e) => updateVariant(index, "salePrice", e.target.value || undefined)}
-                            placeholder="Optional"
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Stock *</label>
-                          <input
-                            type="number"
-                            required
-                            min="0"
-                            value={variant.stock}
-                            onChange={(e) => updateVariant(index, "stock", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Measurement *</label>
-                          <input
-                            type="number"
-                            required
-                            min="0.01"
-                            step="0.01"
-                            value={variant.measurement}
-                            onChange={(e) => updateVariant(index, "measurement", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Unit *</label>
-                          <select
-                            required
-                            value={variant.unit}
-                            onChange={(e) => updateVariant(index, "unit", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                          <span className="text-xs font-medium text-slate-600">Set as Default</span>
+                        </label>
+                        {variants.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(index)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove variant"
                           >
-                            <option value="pcs">Pieces</option>
-                            <option value="kg">Kilogram</option>
-                            <option value="g">Gram</option>
-                            <option value="l">Liter</option>
-                            <option value="ml">Milliliter</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Unit Weight (kg)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.001"
-                            value={variant.unitWeightKg || ""}
-                            onChange={(e) => updateVariant(index, "unitWeightKg", e.target.value || undefined)}
-                            placeholder="Optional"
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Measurement Increment</label>
-                          <input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={variant.measurementIncrement || "0.01"}
-                            onChange={(e) => updateVariant(index, "measurementIncrement", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Price Type</label>
-                          <select
-                            value={variant.priceType || (variant.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT")}
-                            onChange={(e) => updateVariant(index, "priceType", e.target.value as any)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          >
-                            <option value="PER_UNIT">Per Unit</option>
-                            <option value="PER_WEIGHT">Per Weight</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Stock Type</label>
-                          <select
-                            value={variant.stockType || (variant.unit === "pcs" ? "COUNT" : "WEIGHT")}
-                            onChange={(e) => updateVariant(index, "stockType", e.target.value as any)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          >
-                            <option value="COUNT">Count</option>
-                            <option value="WEIGHT">Weight</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Status</label>
-                          <select
-                            value={variant.status}
-                            onChange={(e) => updateVariant(index, "status", e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="out_of_stock">Out of Stock</option>
-                          </select>
-                        </div>
+                            <Trash2 size={16} strokeWidth={2} />
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))
-                )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Label <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={variant.label}
+                          onChange={(e) => updateVariant(index, "label", e.target.value)}
+                          placeholder="e.g., Small, 500g"
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">SKU</label>
+                        <input
+                          type="text"
+                          value={variant.sku || ""}
+                          onChange={(e) => updateVariant(index, "sku", e.target.value)}
+                          placeholder="Optional"
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Price (৳) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={variant.price}
+                          onChange={(e) => updateVariant(index, "price", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Sale Price (৳)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={variant.salePrice || ""}
+                          onChange={(e) => updateVariant(index, "salePrice", e.target.value || undefined)}
+                          placeholder="Optional"
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Stock <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          value={variant.stock}
+                          onChange={(e) => updateVariant(index, "stock", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Measurement <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0.01"
+                          step="0.01"
+                          value={variant.measurement}
+                          onChange={(e) => updateVariant(index, "measurement", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Unit <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          value={variant.unit}
+                          onChange={(e) => updateVariant(index, "unit", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        >
+                          <option value="pcs">Pieces</option>
+                          <option value="kg">Kilogram</option>
+                          <option value="g">Gram</option>
+                          <option value="l">Liter</option>
+                          <option value="ml">Milliliter</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Unit Weight (kg)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          value={variant.unitWeightKg || ""}
+                          onChange={(e) => updateVariant(index, "unitWeightKg", e.target.value || undefined)}
+                          placeholder="Optional"
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Measurement Increment</label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={variant.measurementIncrement || "0.01"}
+                          onChange={(e) => updateVariant(index, "measurementIncrement", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Price Type</label>
+                        <select
+                          value={variant.priceType || (variant.unit === "pcs" ? "PER_UNIT" : "PER_WEIGHT")}
+                          onChange={(e) => updateVariant(index, "priceType", e.target.value as any)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        >
+                          <option value="PER_UNIT">Per Unit</option>
+                          <option value="PER_WEIGHT">Per Weight</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Stock Type</label>
+                        <select
+                          value={variant.stockType || (variant.unit === "pcs" ? "COUNT" : "WEIGHT")}
+                          onChange={(e) => updateVariant(index, "stockType", e.target.value as any)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        >
+                          <option value="COUNT">Count</option>
+                          <option value="WEIGHT">Weight</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
+                        <select
+                          value={variant.status}
+                          onChange={(e) => updateVariant(index, "status", e.target.value)}
+                          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Pricing & Inventory - Only show if no variants */}
+        {!hasVariants && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-amber-100">
+                <DollarSign className="text-amber-600" size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Pricing & Inventory</h2>
+                <p className="text-xs text-slate-500">Set product pricing and stock information</p>
               </div>
             </div>
-          )}
 
-          {/* Pricing & Inventory - Only show if no variants */}
-          {!hasVariants && (
-            <div>
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Pricing & Inventory</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Price (৳) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Sale Price (৳)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.salePrice}
-                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
-                    placeholder="Optional"
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Stock *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Measurement
-                  </label>
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={formData.measurement}
-                    onChange={(e) => setFormData({ ...formData, measurement: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Unit *
-                  </label>
-                  <select
-                    required
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  >
-                    <option value="pcs">Pieces</option>
-                    <option value="kg">Kilogram</option>
-                    <option value="g">Gram</option>
-                    <option value="l">Liter</option>
-                    <option value="ml">Milliliter</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Unit Weight (kg)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    value={formData.unitWeightKg}
-                    onChange={(e) => setFormData({ ...formData, unitWeightKg: e.target.value })}
-                    placeholder="Optional"
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Low Stock Threshold
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.lowStockThreshold}
-                    onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Measurement Increment
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Price (৳) <span className="text-red-500">*</span>
                 </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Sale Price (৳)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.salePrice}
+                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                  placeholder="Optional"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Stock <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Measurement</label>
                 <input
                   type="number"
                   min="0.01"
                   step="0.01"
-                  value={formData.measurementIncrement}
-                  onChange={(e) => setFormData({ ...formData, measurementIncrement: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
+                  value={formData.measurement}
+                  onChange={(e) => setFormData({ ...formData, measurement: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Unit <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                >
+                  <option value="pcs">Pieces</option>
+                  <option value="kg">Kilogram</option>
+                  <option value="g">Gram</option>
+                  <option value="l">Liter</option>
+                  <option value="ml">Milliliter</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Unit Weight (kg)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={formData.unitWeightKg}
+                  onChange={(e) => setFormData({ ...formData, unitWeightKg: e.target.value })}
+                  placeholder="Optional"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Low Stock Threshold</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.lowStockThreshold}
+                  onChange={(e) => setFormData({ ...formData, lowStockThreshold: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                 />
               </div>
             </div>
-          )}
 
-          {/* Images */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Product Images</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Primary Image
-                </label>
-                <label className="block">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePrimaryImageChange}
-                    className="hidden"
-                  />
-                  <div className="px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer text-center">
-                    <Plus className="mx-auto mb-2 text-slate-400" size={24} />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Click to upload primary image</span>
-                  </div>
-                </label>
-                {primaryImagePreview && (
-                  <div className="mt-4 relative inline-block">
-                    <img src={primaryImagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg" />
+            <div className="mt-5">
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Measurement Increment</label>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={formData.measurementIncrement}
+                onChange={(e) => setFormData({ ...formData, measurementIncrement: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Images Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-teal-100">
+              <ImageIcon className="text-teal-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Product Images</h2>
+              <p className="text-xs text-slate-500">Upload product images</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-3">
+                Primary Image
+              </label>
+              <label className="block cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePrimaryImageChange}
+                  className="hidden"
+                />
+                {primaryImagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={primaryImagePreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl border-2 border-slate-200 shadow-sm" />
                     <button
                       type="button"
                       onClick={() => {
                         setPrimaryImage(null);
                         setPrimaryImagePreview(null);
                       }}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                      className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
                     >
-                      <X size={14} />
+                      <X size={14} strokeWidth={2.5} />
                     </button>
                   </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Gallery Images
-                </label>
-                <label className="block">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleGalleryFilesChange}
-                    className="hidden"
-                  />
-                  <div className="px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer text-center">
-                    <Plus className="mx-auto mb-2 text-slate-400" size={24} />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Click to upload gallery images</span>
-                  </div>
-                </label>
-                {galleryUploads.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {galleryUploads.map((upload, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={upload.preview}
-                          alt={`Gallery ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeGalleryUpload(index)}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+                ) : (
+                  <div className="px-6 py-12 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-all text-center cursor-pointer">
+                    <Upload className="mx-auto mb-3 text-slate-400" size={32} strokeWidth={1.5} />
+                    <p className="text-sm font-medium text-slate-700 mb-1">Click to upload primary image</p>
+                    <p className="text-xs text-slate-500">Recommended: 800x800px or larger</p>
                   </div>
                 )}
-              </div>
+              </label>
             </div>
-          </div>
 
-          {/* Additional Options */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Additional Options</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-slate-600 rounded focus:ring-slate-500"
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">Featured Product</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Tags (comma-separated)
-                </label>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-3">
+                Gallery Images
+              </label>
+              <label className="block cursor-pointer">
                 <input
-                  type="text"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="e.g., fresh, premium, organic"
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleGalleryFilesChange}
+                  className="hidden"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Meta Title
-                </label>
-                <input
-                  type="text"
-                  value={formData.metaTitle}
-                  onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Meta Description
-                </label>
-                <textarea
-                  rows={2}
-                  maxLength={160}
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Max 160 characters</p>
-              </div>
+                <div className="px-6 py-12 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-all text-center cursor-pointer">
+                  <Upload className="mx-auto mb-3 text-slate-400" size={32} strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-slate-700 mb-1">Click to upload gallery images</p>
+                  <p className="text-xs text-slate-500">You can select multiple images</p>
+                </div>
+              </label>
+              {galleryUploads.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  {galleryUploads.map((upload, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={upload.preview}
+                        alt={`Gallery ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-slate-200 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryUpload(index)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-700"
+                      >
+                        <X size={12} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3">
+        {/* Additional Options Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-purple-100">
+              <Settings className="text-purple-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Additional Options</h2>
+              <p className="text-xs text-slate-500">SEO and marketing settings</p>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+              <input
+                type="checkbox"
+                checked={formData.isFeatured}
+                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                className="w-5 h-5 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-slate-900">Featured Product</span>
+            </label>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Tags (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                placeholder="e.g., fresh, premium, organic"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Title</label>
+              <input
+                type="text"
+                value={formData.metaTitle}
+                onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                placeholder="SEO meta title"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Description</label>
+              <textarea
+                rows={3}
+                maxLength={160}
+                value={formData.metaDescription}
+                onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                placeholder="SEO meta description"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
+              />
+              <p className="text-xs text-slate-500 mt-1.5">{formData.metaDescription.length}/160 characters</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
           <Link href="/admin/products">
-            <Button variant="outline" type="button">Cancel</Button>
+            <button
+              type="button"
+              className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
+            >
+              Cancel
+            </button>
           </Link>
-          <Button variant="primary" type="submit" disabled={loading} isLoading={loading}>
-            <Save size={16} />
-            Create Product
-          </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} strokeWidth={2.5} />
+                <span>Create Product</span>
+              </>
+            )}
+          </button>
         </div>
       </form>
     </div>
   );
 }
-
-

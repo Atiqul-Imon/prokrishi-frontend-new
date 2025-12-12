@@ -20,12 +20,12 @@ export default function AdminMediaPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Media Library</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your media files</p>
+          <h1 className="text-3xl font-bold text-gray-900">Media Library</h1>
+          <p className="text-gray-500">Manage your media files</p>
         </div>
         <label className="cursor-pointer">
           <input
@@ -43,12 +43,12 @@ export default function AdminMediaPage() {
       </div>
 
       {/* Upload Area */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
-        <Image className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-        <p className="text-gray-500 dark:text-gray-400 mb-4">
+      <div className="bg-white">
+        <Image className="mx-auto text-gray-400" size={48} />
+        <p className="text-gray-500">
           Media library functionality will be available soon
         </p>
-        <p className="text-sm text-gray-400 dark:text-gray-500">
+        <p className="text-sm text-gray-400">
           Upload and manage images, videos, and other media files
         </p>
       </div>

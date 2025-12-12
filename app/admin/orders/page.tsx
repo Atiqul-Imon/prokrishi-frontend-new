@@ -10,7 +10,6 @@ import {
   AdminOrderFilters,
 } from "../../utils/api";
 import { Search, Eye, RefreshCw, Package, ShoppingCart, DollarSign, CheckCircle, Clock, Trash2, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -158,101 +157,101 @@ export default function AdminOrdersPage() {
   };
 
   const statusColors: Record<string, string> = {
-    pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    confirmed: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-    processing: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
-    shipped: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
-    delivered: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    cancelled: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+    pending: "bg-amber-100 text-amber-700",
+    confirmed: "bg-purple-100 text-purple-700",
+    processing: "bg-teal-100 text-teal-700",
+    shipped: "bg-purple-100 text-purple-700",
+    delivered: "bg-emerald-100 text-emerald-700",
+    cancelled: "bg-red-100 text-red-700",
   };
 
   const paymentStatusColors: Record<string, string> = {
-    pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    completed: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    failed: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    cancelled: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400",
+    pending: "bg-amber-100 text-amber-700",
+    completed: "bg-emerald-100 text-emerald-700",
+    failed: "bg-red-100 text-red-700",
+    cancelled: "bg-slate-100 text-slate-700",
   };
 
   const allSelected = orders.length > 0 && orders.every((o) => selectedIds.has(o._id));
   const someSelected = orders.some((o) => selectedIds.has(o._id));
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
+    <div className="space-y-4">
+      {/* Header - Nexus Style */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Orders</h1>
-          <p className="text-base text-slate-600 dark:text-slate-400">Manage customer orders</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Orders</h1>
+          <p className="text-sm text-slate-600">Manage customer orders</p>
         </div>
       </div>
 
-      {/* Enhanced Statistics Cards */}
+      {/* Statistics Cards - Nexus Style */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-900 border-2 border-cyan-200 dark:border-cyan-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Orders</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {stats.totalOrders?.toLocaleString() || "0"}
-                </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-sm">
+                <ShoppingCart className="text-white" size={20} strokeWidth={2.5} />
               </div>
-              <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
-                <ShoppingCart className="text-white" size={24} />
-              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Orders</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {stats.totalOrders?.toLocaleString() || "0"}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border-2 border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Total Revenue</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                  ৳{(stats.totalRevenue || 0).toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
-                  Last 30 days: ৳{(stats.periodRevenue || 0).toLocaleString()}
-                </p>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-sm">
+                <DollarSign className="text-white" size={20} strokeWidth={2.5} />
               </div>
-              <div className="p-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
-                <DollarSign className="text-white" size={24} />
-              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Revenue</p>
+              <p className="text-2xl font-bold text-slate-900">
+                ৳{(stats.totalRevenue || 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                Last 30 days: ৳{(stats.periodRevenue || 0).toLocaleString()}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Pending Orders</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {stats.statusBreakdown?.pending || 0}
-                </p>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 shadow-sm">
+                <Clock className="text-white" size={20} strokeWidth={2.5} />
               </div>
-              <div className="p-4 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg">
-                <Clock className="text-white" size={24} />
-              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Pending Orders</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {stats.statusBreakdown?.pending || 0}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-900/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Delivered Orders</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {stats.statusBreakdown?.delivered || 0}
-                </p>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-sm">
+                <CheckCircle className="text-white" size={20} strokeWidth={2.5} />
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl shadow-lg">
-                <CheckCircle className="text-white" size={24} />
-              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Delivered Orders</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {stats.statusBreakdown?.delivered || 0}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Enhanced Search and Filters */}
-      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
-        <div className="flex flex-col sm:flex-row gap-4">
+      {/* Search and Filters - Nexus Style */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
@@ -260,14 +259,14 @@ export default function AdminOrdersPage() {
               placeholder="Search orders..."
               value={filters.search || ""}
               onChange={(e) => handleFilterChange("search", e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
             />
           </div>
           <div className="flex gap-2">
             <select
               value={filters.status || "all"}
               onChange={(e) => handleFilterChange("status", e.target.value === "all" ? undefined : e.target.value)}
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all font-medium"
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -282,7 +281,7 @@ export default function AdminOrdersPage() {
               onChange={(e) =>
                 handleFilterChange("paymentStatus", e.target.value === "all" ? undefined : e.target.value)
               }
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all font-medium"
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
             >
               <option value="all">All Payment</option>
               <option value="pending">Pending</option>
@@ -292,20 +291,20 @@ export default function AdminOrdersPage() {
             </select>
             <button
               onClick={fetchOrders}
-              className="px-4 py-2.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:from-slate-200 hover:to-slate-300 dark:hover:from-slate-700 dark:hover:to-slate-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+              className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all shadow-sm hover:shadow-md flex items-center gap-2 font-medium"
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={18} strokeWidth={2} />
               Refresh
             </button>
           </div>
         </div>
       </div>
 
-      {/* Bulk Actions */}
+      {/* Bulk Actions - Nexus Style */}
       {selectedIds.size > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30 rounded-xl p-4">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+            <p className="text-sm font-medium text-emerald-900">
               {selectedIds.size} order{selectedIds.size !== 1 ? "s" : ""} selected
             </p>
             <div className="flex items-center gap-2">
@@ -315,7 +314,7 @@ export default function AdminOrdersPage() {
                     handleBulkStatusUpdate(e.target.value);
                   }
                 }}
-                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 defaultValue=""
               >
                 <option value="">Update Status</option>
@@ -328,16 +327,16 @@ export default function AdminOrdersPage() {
               </select>
               <button
                 onClick={handleBulkDelete}
-                className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors flex items-center gap-2 text-sm"
+                className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2 text-sm font-medium"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} strokeWidth={2} />
                 Delete
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 text-sm"
+                className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm font-medium"
               >
-                <X size={16} />
+                <X size={16} strokeWidth={2} />
                 Clear
               </button>
             </div>
@@ -345,24 +344,24 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Dialogs */}
+      {/* Delete Confirmation Dialogs - Nexus Style */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Delete Order</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Order</h3>
+            <p className="text-sm text-slate-600 mb-4">
               Are you sure you want to delete this order? This action cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteOrder}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
@@ -373,21 +372,21 @@ export default function AdminOrdersPage() {
 
       {bulkDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Delete Multiple Orders</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Multiple Orders</h3>
+            <p className="text-sm text-slate-600 mb-4">
               Are you sure you want to delete {selectedIds.size} order(s)? This action cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setBulkDeleteConfirm(false)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Delete All
               </button>
@@ -398,21 +397,21 @@ export default function AdminOrdersPage() {
 
       {bulkStatusConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Update Order Status</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Update Order Status</h3>
+            <p className="text-sm text-slate-600 mb-4">
               Update {selectedIds.size} order(s) to "{bulkStatusConfirm}"?
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setBulkStatusConfirm(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmBulkStatusUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 Update
               </button>
@@ -423,30 +422,30 @@ export default function AdminOrdersPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-800 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Enhanced Orders Table */}
-      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Orders Table - Nexus Style */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-12 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
-            <p className="text-slate-500 dark:text-slate-400 mt-4">Loading orders...</p>
+            <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+            <p className="text-slate-500 mt-4">Loading orders...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="p-12 text-center">
-            <Package className="mx-auto text-slate-400 dark:text-slate-500 mb-4" size={48} />
-            <p className="text-slate-500 dark:text-slate-400">No orders found</p>
+            <Package className="mx-auto text-slate-400 mb-4" size={48} strokeWidth={1.5} />
+            <p className="text-slate-500">No orders found</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b-2 border-slate-200 dark:border-slate-700">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4 text-left">
+                    <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
                         checked={allSelected}
@@ -454,74 +453,74 @@ export default function AdminOrdersPage() {
                           if (input) input.indeterminate = someSelected && !allSelected;
                         }}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                       />
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Order ID
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Customer
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Total
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Payment
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100">
                   {orders.map((order) => (
                     <tr
                       key={order._id}
-                      className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/10 dark:hover:to-indigo-900/10 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400"
+                      className="hover:bg-emerald-50/50 transition-all duration-200"
                     >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(order._id)}
                           onChange={(e) => handleSelect(order._id, e.target.checked)}
-                          className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                         />
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm text-slate-900 dark:text-white">
+                        <span className="font-mono text-sm text-slate-900">
                           #{order.invoiceNumber || order._id?.slice(-8)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-medium text-slate-900 dark:text-white">
+                          <p className="font-medium text-slate-900">
                             {order.user?.name || order.guestInfo?.name || "Guest"}
                           </p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                          <p className="text-sm text-slate-500">
                             {order.user?.email || order.guestInfo?.email || order.guestInfo?.phone || ""}
                           </p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-slate-900 dark:text-white">
+                        <span className="text-sm text-slate-900">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-medium text-slate-900 dark:text-white">
+                        <span className="font-medium text-slate-900">
                           ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                          className={`px-3 py-1 rounded-md text-xs font-semibold ${
                             statusColors[order.status] || statusColors.pending
                           }`}
                         >
@@ -530,7 +529,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                          className={`px-3 py-1 rounded-md text-xs font-semibold ${
                             paymentStatusColors[order.paymentStatus] || paymentStatusColors.pending
                           }`}
                         >
@@ -541,17 +540,17 @@ export default function AdminOrdersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/orders/${order._id}`}
-                            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm hover:shadow-md"
+                            className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all"
                             title="View"
                           >
-                            <Eye size={18} />
+                            <Eye size={18} strokeWidth={2} />
                           </Link>
                           <button
                             onClick={() => handleDeleteOrder(order._id)}
-                            className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm hover:shadow-md"
+                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
                             title="Delete"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={18} strokeWidth={2} />
                           </button>
                         </div>
                       </td>
@@ -563,22 +562,22 @@ export default function AdminOrdersPage() {
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+              <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+                <p className="text-sm text-slate-600">
                   Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalOrders || pagination.total} total)
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                     disabled={pagination.currentPage === 1 || pagination.hasPrev === false || pagination.hasPrevPage === false}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                     disabled={pagination.currentPage === pagination.totalPages || pagination.hasNext === false || pagination.hasNextPage === false}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
                   </button>

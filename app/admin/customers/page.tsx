@@ -38,33 +38,33 @@ export default function AdminCustomersPage() {
   }, [fetchCustomers]);
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
+    <div className="space-y-4">
+      {/* Header - Nexus Style */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Customers</h1>
-          <p className="text-base text-slate-600 dark:text-slate-400">Manage customer accounts</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Customers</h1>
+          <p className="text-sm text-slate-600">Manage customer accounts</p>
         </div>
       </div>
 
-      {/* Enhanced Search */}
-      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
-        <div className="flex flex-col sm:flex-row gap-4">
+      {/* Search - Nexus Style */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input
               type="text"
               placeholder="Search customers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
             />
           </div>
           <button
             onClick={fetchCustomers}
-            className="px-4 py-2.5 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:from-slate-200 hover:to-slate-300 dark:hover:from-slate-700 dark:hover:to-slate-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+            className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all shadow-sm hover:shadow-md flex items-center gap-2 text-sm font-medium"
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={18} strokeWidth={2} />
             Refresh
           </button>
         </div>
@@ -72,51 +72,51 @@ export default function AdminCustomersPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p className="text-red-800 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Enhanced Customers Table */}
-      <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* Customers Table - Nexus Style */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-12 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-gray-200 dark:border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-            <p className="text-gray-500 dark:text-gray-400 mt-4">Loading customers...</p>
+            <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
+            <p className="text-slate-500 mt-4">Loading customers...</p>
           </div>
         ) : customers.length === 0 ? (
           <div className="p-12 text-center">
-            <User className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-            <p className="text-gray-500 dark:text-gray-400">No customers found</p>
+            <User className="mx-auto text-slate-400 mb-4" size={48} strokeWidth={1.5} />
+            <p className="text-slate-500">No customers found</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-b-2 border-slate-200 dark:border-slate-700">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700">
                       Customer
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700">
                       Contact
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700">
                       Role
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700">
                       Joined
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-700">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-200">
                   {customers.map((customer) => (
                     <tr
                       key={customer._id}
-                      className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/10 dark:hover:to-indigo-900/10 transition-all duration-200 border-l-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400"
+                      className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -126,10 +126,10 @@ export default function AdminCustomersPage() {
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
+                            <p className="font-medium text-slate-900">
                               {customer.name || "Unknown"}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-slate-500">
                               ID: {customer._id?.slice(-8)}
                             </p>
                           </div>
@@ -138,14 +138,14 @@ export default function AdminCustomersPage() {
                       <td className="px-6 py-4">
                         <div className="space-y-1">
                           {customer.email && (
-                            <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
-                              <Mail size={14} className="text-gray-400" />
+                            <div className="flex items-center gap-2 text-sm text-slate-900">
+                              <Mail size={14} className="text-slate-400" />
                               {customer.email}
                             </div>
                           )}
                           {customer.phone && (
-                            <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
-                              <Phone size={14} className="text-gray-400" />
+                            <div className="flex items-center gap-2 text-sm text-slate-900">
+                              <Phone size={14} className="text-slate-400" />
                               {customer.phone}
                             </div>
                           )}
@@ -163,7 +163,7 @@ export default function AdminCustomersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-900 dark:text-white">
+                        <span className="text-sm text-slate-900">
                           {new Date(customer.createdAt).toLocaleDateString()}
                         </span>
                       </td>
@@ -171,7 +171,7 @@ export default function AdminCustomersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/customers/${customer._id}`}
-                            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all shadow-sm hover:shadow-md"
+                            className="p-2 text-emerald-600"
                             title="View"
                           >
                             <Eye size={18} />
@@ -186,22 +186,22 @@ export default function AdminCustomersPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="px-6 py-4 border-t border-slate-200">
+                <p className="text-sm text-slate-500">
                   Page {currentPage} of {totalPages}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-slate-100"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 bg-slate-100"
                   >
                     Next
                   </button>

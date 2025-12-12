@@ -12,8 +12,10 @@ import {
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
 
 interface DashboardStats {
   stats?: {
@@ -27,6 +29,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,10 +52,10 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-slate-100 dark:bg-slate-900 rounded-xl animate-pulse"></div>
+            <div key={i} className="h-32 bg-slate-100 rounded-xl animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -61,12 +64,12 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-6">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6">
         <div className="flex items-center gap-3">
-          <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
+          <AlertCircle className="text-red-600" size={20} />
           <div>
-            <h3 className="text-sm font-semibold text-red-900 dark:text-red-200">Error</h3>
-            <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">{error}</p>
+            <h3 className="text-sm font-semibold text-red-900">Error</h3>
+            <p className="text-sm text-red-700 mt-0.5">{error}</p>
           </div>
         </div>
       </div>
@@ -81,6 +84,7 @@ export default function AdminDashboard() {
       change: "+12%",
       isPositive: true,
       href: "/admin/customers",
+      color: "purple",
     },
     {
       title: "Products",
@@ -89,6 +93,7 @@ export default function AdminDashboard() {
       change: "+8%",
       isPositive: true,
       href: "/admin/products",
+      color: "purple",
     },
     {
       title: "Orders",
@@ -97,6 +102,7 @@ export default function AdminDashboard() {
       change: "+15%",
       isPositive: true,
       href: "/admin/orders",
+      color: "emerald",
     },
     {
       title: "Revenue",
@@ -104,67 +110,70 @@ export default function AdminDashboard() {
       icon: DollarSign,
       change: "+22%",
       isPositive: true,
+      color: "amber",
     },
   ];
 
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, any> = {
+      purple: {
+        iconBg: "bg-gradient-to-br from-purple-500 to-purple-600",
+        border: "border-purple-200",
+        text: "text-purple-700",
+        bg: "bg-purple-50",
+      },
+      emerald: {
+        iconBg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+        border: "border-emerald-200",
+        text: "text-emerald-700",
+        bg: "bg-emerald-50",
+      },
+      amber: {
+        iconBg: "bg-gradient-to-br from-amber-500 to-amber-600",
+        border: "border-amber-200",
+        text: "text-amber-700",
+        bg: "bg-amber-50",
+      },
+    };
+    return colors[color] || colors.emerald;
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Enhanced Header */}
-      <div className="mb-2">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">Overview</h1>
-        <p className="text-base text-slate-600 dark:text-slate-400">Monitor your business at a glance</p>
+    <div className="space-y-4">
+      {/* Welcome Section - Nexus Style */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+            Welcome back, {user?.name?.split(" ")[0] || "Admin"}
+          </h1>
+          <p className="text-sm text-slate-600">Here's what's happening with your business today</p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+          <Home size={16} className="text-slate-500" />
+          <span className="text-sm text-slate-600">Dashboard</span>
+        </div>
       </div>
 
-      {/* Metrics Grid - Enhanced Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Metrics Grid - Nexus Style Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
+          const colorClasses = getColorClasses(metric.color);
           
-          // Color schemes for different metrics
-          const colorSchemes = [
-            { // Users - Blue
-              iconBg: "bg-gradient-to-br from-blue-500 to-indigo-600",
-              iconColor: "text-white",
-              borderColor: "border-blue-200 dark:border-blue-900/50",
-              hoverBorder: "hover:border-blue-300 dark:hover:border-blue-800",
-              shadow: "shadow-blue-100 dark:shadow-blue-900/20",
-            },
-            { // Products - Purple
-              iconBg: "bg-gradient-to-br from-purple-500 to-violet-600",
-              iconColor: "text-white",
-              borderColor: "border-purple-200 dark:border-purple-900/50",
-              hoverBorder: "hover:border-purple-300 dark:hover:border-purple-800",
-              shadow: "shadow-purple-100 dark:shadow-purple-900/20",
-            },
-            { // Orders - Green
-              iconBg: "bg-gradient-to-br from-emerald-500 to-teal-600",
-              iconColor: "text-white",
-              borderColor: "border-emerald-200 dark:border-emerald-900/50",
-              hoverBorder: "hover:border-emerald-300 dark:hover:border-emerald-800",
-              shadow: "shadow-emerald-100 dark:shadow-emerald-900/20",
-            },
-            { // Revenue - Amber
-              iconBg: "bg-gradient-to-br from-amber-500 to-orange-600",
-              iconColor: "text-white",
-              borderColor: "border-amber-200 dark:border-amber-900/50",
-              hoverBorder: "hover:border-amber-300 dark:hover:border-amber-800",
-              shadow: "shadow-amber-100 dark:shadow-amber-900/20",
-            },
-          ];
-          
-          const scheme = colorSchemes[index] || colorSchemes[0];
-          
-          const CardContent = (
-            <div className={`group relative bg-white dark:bg-slate-900 border-2 ${scheme.borderColor} rounded-2xl p-6 ${scheme.hoverBorder} hover:shadow-xl ${scheme.shadow} transition-all duration-300 hover:-translate-y-1`}>
-              <div className="flex items-start justify-between mb-5">
-                <div className={`p-3 rounded-xl ${scheme.iconBg} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={scheme.iconColor} size={20} />
+          return (
+            <div
+              key={index}
+              className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-lg ${colorClasses.iconBg} shadow-sm`}>
+                  <Icon className="text-white" size={20} strokeWidth={2.5} />
                 </div>
                 {metric.change && (
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold ${
                     metric.isPositive 
-                      ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
-                      : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                      ? "bg-emerald-50 text-emerald-700" 
+                      : "bg-red-50 text-red-700"
                   }`}>
                     {metric.isPositive ? (
                       <ArrowUpRight size={12} />
@@ -176,66 +185,69 @@ export default function AdminDashboard() {
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">{metric.title}</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">{metric.value}</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                  {metric.title}
+                </p>
+                <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
               </div>
               {metric.href && (
                 <Link
                   href={metric.href}
-                  className="absolute inset-0 rounded-2xl"
+                  className="absolute inset-0 rounded-xl"
                   aria-label={`View ${metric.title}`}
                 />
               )}
             </div>
           );
-
-          return <div key={index}>{CardContent}</div>;
         })}
       </div>
 
-      {/* Recent Activity & Alerts - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Recent Activity & Alerts - Nexus Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Orders */}
-        <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Recent Orders</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Latest customer orders</p>
+              <h2 className="text-lg font-bold text-slate-900">Recent Orders</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Latest customer orders</p>
             </div>
-            <Link href="/admin/orders" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+            <Link 
+              href="/admin/orders" 
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
               View all →
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {stats?.recentOrders && stats.recentOrders.length > 0 ? (
               stats.recentOrders.slice(0, 5).map((order: any) => (
                 <Link
                   key={order._id}
                   href={`/admin/orders/${order._id}`}
-                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all duration-200 group"
+                  className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all duration-200 group"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-emerald-700 transition-colors">
                       {order.user?.name || order.guestInfo?.name || "Guest"}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">
+                    <p className="text-xs text-slate-500 mt-0.5 font-mono">
                       #{order.invoiceNumber || order._id?.slice(-8)}
                     </p>
                   </div>
                   <div className="text-right ml-4">
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    <p className="text-sm font-bold text-slate-900">
                       ৳{order.totalPrice?.toLocaleString() || 0}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <Activity size={24} className="opacity-50" />
+              <div className="text-center py-10 text-slate-500">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Activity size={20} className="opacity-50" />
                 </div>
                 <p className="text-sm font-medium">No recent orders</p>
                 <p className="text-xs mt-1">Orders will appear here</p>
@@ -244,44 +256,49 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Low Stock Alerts */}
-        <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-6">
+        {/* Stock Alerts */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Stock Alerts</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Products needing attention</p>
+              <h2 className="text-lg font-bold text-slate-900">Stock Alerts</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Products needing attention</p>
             </div>
-            <Link href="/admin/products" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+            <Link 
+              href="/admin/products" 
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
               View all →
             </Link>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
               stats.lowStockProducts.map((product: any) => (
                 <Link
                   key={product._id}
                   href={`/admin/products/${product._id}`}
-                  className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700 hover:border-red-300 dark:hover:border-red-700 hover:shadow-md transition-all duration-200 group"
+                  className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100 hover:border-red-200 hover:bg-red-50/50 transition-all duration-200 group"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{product.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-red-700 transition-colors">
+                      {product.name}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {product.stock === 0 ? "Out of stock" : `${product.stock} units left`}
                     </p>
                   </div>
-                  <div className={`ml-4 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
+                  <div className={`ml-4 px-2.5 py-1 rounded-md text-xs font-bold ${
                     product.stock === 0
-                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                      : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                      ? "bg-red-500 text-white"
+                      : "bg-amber-500 text-white"
                   }`}>
                     {product.stock === 0 ? "Critical" : "Low"}
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <Package size={24} className="text-emerald-600 dark:text-emerald-400" />
+              <div className="text-center py-10 text-slate-500">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Package size={20} className="text-emerald-600" />
                 </div>
                 <p className="text-sm font-medium">All products in stock</p>
                 <p className="text-xs mt-1">Great job managing inventory!</p>

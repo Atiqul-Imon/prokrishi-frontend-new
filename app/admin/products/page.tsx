@@ -79,23 +79,23 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
+    <div className="space-y-4">
+      {/* Header - Nexus Style */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Products</h1>
-          <p className="text-base text-slate-600">Manage your product catalog</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Products</h1>
+          <p className="text-sm text-slate-600">Manage your product catalog</p>
         </div>
         <Link href="/admin/products/add">
-          <Button variant="primary" className="flex items-center gap-2 text-sm shadow-lg hover:shadow-xl transition-shadow">
-            <Plus size={16} />
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md text-sm font-semibold">
+            <Plus size={16} strokeWidth={2.5} />
             Add Product
-          </Button>
+          </button>
         </Link>
       </div>
 
-      {/* Enhanced Search Bar */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      {/* Search Bar - Nexus Style */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -104,14 +104,14 @@ export default function AdminProductsPage() {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
             />
           </div>
           <button
             onClick={fetchProducts}
             className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all shadow-sm hover:shadow-md flex items-center gap-2 text-sm font-medium"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={16} strokeWidth={2} />
             Refresh
           </button>
         </div>
@@ -128,23 +128,25 @@ export default function AdminProductsPage() {
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-12 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-slate-200 border-t-green-600 rounded-full animate-spin"></div>
+            <div className="inline-block w-6 h-6 border-2 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
             <p className="text-sm text-slate-500 mt-3">Loading products...</p>
           </div>
         ) : products.length === 0 ? (
           <div className="p-12 text-center">
-            <Package className="mx-auto text-slate-400 mb-3" size={40} />
+            <Package className="mx-auto text-slate-400 mb-3" size={40} strokeWidth={1.5} />
             <p className="text-sm text-slate-500 mb-4">No products found</p>
             <Link href="/admin/products/add">
-              <Button variant="primary" className="text-sm">Add Your First Product</Button>
+              <button className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md text-sm font-semibold">
+                Add Your First Product
+              </button>
             </Link>
           </div>
         ) : (
           <>
-            {/* Bulk Actions */}
+            {/* Bulk Actions - Nexus Style */}
             {selectedIds.size > 0 && (
-              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <span className="text-sm text-slate-700">
+              <div className="px-5 py-3 bg-emerald-50 border-b border-emerald-200 flex items-center justify-between">
+                <span className="text-sm font-medium text-emerald-900">
                   {selectedIds.size} selected
                 </span>
                 <button
@@ -152,7 +154,7 @@ export default function AdminProductsPage() {
                     selectedIds.forEach((id) => handleDelete(id));
                     setSelectedIds(new Set());
                   }}
-                  className="text-sm text-red-600 hover:underline"
+                  className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-colors"
                 >
                   Delete Selected
                 </button>
@@ -169,7 +171,7 @@ export default function AdminProductsPage() {
                         type="checkbox"
                         checked={selectedIds.size === products.length && products.length > 0}
                         onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-2 border-slate-300 text-green-600 focus:ring-2 focus:ring-green-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                       />
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -199,14 +201,14 @@ export default function AdminProductsPage() {
                   {products.map((product) => (
                     <tr
                       key={product._id}
-                      className="hover:bg-slate-50 transition-all duration-200"
+                      className="hover:bg-emerald-50/50 transition-all duration-200"
                     >
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.has(product._id)}
                           onChange={() => toggleSelect(product._id)}
-                          className="w-4 h-4 rounded border-2 border-slate-300 text-green-600 focus:ring-2 focus:ring-green-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                         />
                       </td>
                       <td className="px-6 py-4">
@@ -284,24 +286,24 @@ export default function AdminProductsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             href={`/admin/products/${product._id}`}
-                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
+                            className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all"
                             title="View"
                           >
-                            <Eye size={18} />
+                            <Eye size={18} strokeWidth={2} />
                           </Link>
                           <Link
                             href={`/admin/products/edit/${product._id}`}
                             className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all"
                             title="Edit"
                           >
-                            <Edit size={18} />
+                            <Edit size={18} strokeWidth={2} />
                           </Link>
                           <button
                             onClick={() => setDeleteConfirm(product._id)}
                             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
                             title="Delete"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={18} strokeWidth={2} />
                           </button>
                         </div>
                       </td>
@@ -339,15 +341,15 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal - Nexus Style */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-8 max-w-md w-full border border-slate-200 shadow-xl">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full border border-slate-200 shadow-xl">
             <div className="mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                <Trash2 className="text-red-600" size={24} />
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="text-red-600" size={20} strokeWidth={2.5} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">Delete Product</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2 text-center">Delete Product</h3>
               <p className="text-sm text-slate-600 text-center">
                 This action cannot be undone. Are you sure you want to delete this product?
               </p>
@@ -355,13 +357,13 @@ export default function AdminProductsPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all text-sm font-medium"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-bold"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"
               >
                 Delete
               </button>

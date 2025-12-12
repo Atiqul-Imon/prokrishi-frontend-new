@@ -97,8 +97,8 @@ export default function OrderDetailsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="inline-block w-6 h-6 border-2 border-slate-200 dark:border-slate-800 border-t-slate-900 dark:border-t-slate-100 rounded-full animate-spin"></div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">Loading order...</p>
+          <div className="inline-block w-6 h-6 border-2 border-slate-200"></div>
+          <p className="text-sm text-slate-500">Loading order...</p>
         </div>
       </div>
     );
@@ -106,13 +106,13 @@ export default function OrderDetailsPage() {
 
   if (error || !order) {
     return (
-      <div className="space-y-6">
-        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-6">
+      <div className="space-y-4">
+        <div className="bg-red-50">
           <div className="flex items-center gap-3">
-            <AlertCircle className="text-red-600 dark:text-red-400" size={20} />
+            <AlertCircle className="text-red-600" size={20} />
             <div>
-              <h3 className="text-sm font-semibold text-red-900 dark:text-red-200">Error</h3>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">{error || "Order not found"}</p>
+              <h3 className="text-sm font-semibold text-red-900">Error</h3>
+              <p className="text-sm text-red-700">{error || "Order not found"}</p>
             </div>
           </div>
         </div>
@@ -124,19 +124,19 @@ export default function OrderDetailsPage() {
   }
 
   const statusColors: Record<string, string> = {
-    pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    confirmed: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-    processing: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
-    shipped: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
-    delivered: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
-    cancelled: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+    pending: "bg-yellow-100",
+    confirmed: "bg-blue-100",
+    processing: "bg-indigo-100",
+    shipped: "bg-purple-100",
+    delivered: "bg-emerald-100",
+    cancelled: "bg-red-100",
   };
 
   const paymentStatusColors: Record<string, string> = {
-    pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    completed: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    failed: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    cancelled: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400",
+    pending: "bg-yellow-100",
+    completed: "bg-green-100",
+    failed: "bg-red-100",
+    cancelled: "bg-gray-100",
   };
 
   const customerName =
@@ -146,20 +146,20 @@ export default function OrderDetailsPage() {
     order.user?.phone || order.shippingAddress?.phone || order.guestInfo?.phone || "Not provided";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/orders">
-            <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <button className="p-2 rounded-lg text-slate-600">
               <ArrowLeft size={18} />
             </button>
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-semibold text-slate-900">
               Order #{order.invoiceNumber || order._id?.slice(-8)}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-500">
               Placed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
           </div>
@@ -184,15 +184,15 @@ export default function OrderDetailsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           {/* Order Items */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Order Items</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Order Items</h2>
             <div className="space-y-3">
               {order.orderItems?.map((item: any, index: number) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                  className="flex items-center gap-4 p-3 rounded-lg bg-slate-50"
                 >
                   {item.variant?.image || item.product?.image ? (
                     <img
@@ -201,33 +201,33 @@ export default function OrderDetailsPage() {
                       className="w-16 h-16 rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-lg bg-slate-200">
                       <Package className="text-slate-400" size={24} />
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.name}</p>
+                    <p className="text-sm font-medium text-slate-900">{item.name}</p>
                     {item.variant?.label && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500">
                         Variant: {item.variant.label}
                       </p>
                     )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500">
                       Quantity: {item.quantity} × ৳{item.price?.toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <p className="text-sm font-semibold text-slate-900">
                       ৳{((item.price || 0) * (item.quantity || 0)).toLocaleString()}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="border-t border-slate-200 dark:border-slate-800 pt-4 mt-4">
+            <div className="border-t border-slate-200">
               <div className="flex justify-between items-center text-lg font-semibold">
-                <span className="text-slate-900 dark:text-slate-100">Total Amount:</span>
-                <span className="text-green-600 dark:text-green-400">
+                <span className="text-slate-900">Total Amount:</span>
+                <span className="text-emerald-600">
                   ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
                 </span>
               </div>
@@ -235,18 +235,18 @@ export default function OrderDetailsPage() {
           </div>
 
           {/* Order Status Management */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Order Status</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Order Status</h2>
             {editingStatus ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
                     Status
                   </label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full px-3 py-2 bg-slate-50"
                   >
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
@@ -257,14 +257,14 @@ export default function OrderDetailsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
                     Notes (Optional)
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Add any notes about this status change..."
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full px-3 py-2 bg-slate-50"
                     rows={3}
                   />
                 </div>
@@ -272,7 +272,7 @@ export default function OrderDetailsPage() {
                   <button
                     onClick={handleStatusUpdate}
                     disabled={updating}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save size={16} />
                     Save Changes
@@ -283,7 +283,7 @@ export default function OrderDetailsPage() {
                       setNewStatus(order.status);
                       setNotes("");
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100"
                   >
                     <X size={16} />
                     Cancel
@@ -301,14 +301,14 @@ export default function OrderDetailsPage() {
                     {order.status || "pending"}
                   </span>
                   {order.isDelivered && order.deliveredAt && (
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                    <span className="text-sm text-slate-500">
                       Delivered on {new Date(order.deliveredAt).toLocaleDateString()}
                     </span>
                   )}
                 </div>
                 <button
                   onClick={() => setEditingStatus(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  className="flex items-center gap-2 px-3 py-2 text-emerald-600"
                 >
                   <Edit size={16} />
                   Update Status
@@ -318,18 +318,18 @@ export default function OrderDetailsPage() {
           </div>
 
           {/* Payment Status Management */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Payment Status</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Payment Status</h2>
             {editingPayment ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
                     Payment Status
                   </label>
                   <select
                     value={newPaymentStatus}
                     onChange={(e) => setNewPaymentStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full px-3 py-2 bg-slate-50"
                   >
                     <option value="pending">Pending</option>
                     <option value="completed">Completed</option>
@@ -338,7 +338,7 @@ export default function OrderDetailsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
                     Transaction ID (Optional)
                   </label>
                   <input
@@ -346,18 +346,18 @@ export default function OrderDetailsPage() {
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
                     placeholder="Enter transaction ID..."
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full px-3 py-2 bg-slate-50"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-sm font-medium text-slate-700">
                     Notes (Optional)
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Add any notes about this payment status change..."
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full px-3 py-2 bg-slate-50"
                     rows={3}
                   />
                 </div>
@@ -365,7 +365,7 @@ export default function OrderDetailsPage() {
                   <button
                     onClick={handlePaymentUpdate}
                     disabled={updating}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save size={16} />
                     Save Changes
@@ -377,7 +377,7 @@ export default function OrderDetailsPage() {
                       setTransactionId(order.transactionId || "");
                       setNotes("");
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100"
                   >
                     <X size={16} />
                     Cancel
@@ -395,19 +395,19 @@ export default function OrderDetailsPage() {
                     {order.paymentStatus || "pending"}
                   </span>
                   {order.isPaid && order.paidAt && (
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                    <span className="text-sm text-slate-500">
                       Paid on {new Date(order.paidAt).toLocaleDateString()}
                     </span>
                   )}
                   {order.transactionId && (
-                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                    <span className="text-sm text-slate-500">
                       Transaction ID: {order.transactionId}
                     </span>
                   )}
                 </div>
                 <button
                   onClick={() => setEditingPayment(true)}
-                  className="flex items-center gap-2 px-3 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  className="flex items-center gap-2 px-3 py-2 text-emerald-600"
                 >
                   <Edit size={16} />
                   Update Payment
@@ -418,39 +418,39 @@ export default function OrderDetailsPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Order Summary */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Order Summary</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Order Summary</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <DollarSign className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <DollarSign className="text-slate-600" size={16} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Subtotal</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-slate-500">Subtotal</p>
+                  <p className="text-sm font-medium text-slate-900">
                     ৳{order.totalPrice?.toLocaleString() || 0}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <Package className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Package className="text-slate-600" size={16} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Shipping</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-slate-500">Shipping</p>
+                  <p className="text-sm font-medium text-slate-900">
                     ৳{order.shippingFee?.toLocaleString() || 0}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="pt-3 border-t border-slate-200">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Total</p>
-                  <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-sm font-semibold text-slate-900">Total</p>
+                  <p className="text-lg font-bold text-slate-900">
                     ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
                   </p>
                 </div>
@@ -459,36 +459,36 @@ export default function OrderDetailsPage() {
           </div>
 
           {/* Customer Info */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Customer Information</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Customer Information</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <User className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <User className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Name</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{customerName}</p>
+                  <p className="text-xs text-slate-500">Name</p>
+                  <p className="text-sm font-medium text-slate-900">{customerName}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <Mail className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Mail className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Email</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{customerEmail}</p>
+                  <p className="text-xs text-slate-500">Email</p>
+                  <p className="text-sm font-medium text-slate-900">{customerEmail}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <Phone className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Phone className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Phone</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{customerPhone}</p>
+                  <p className="text-xs text-slate-500">Phone</p>
+                  <p className="text-sm font-medium text-slate-900">{customerPhone}</p>
                 </div>
               </div>
             </div>
@@ -496,13 +496,13 @@ export default function OrderDetailsPage() {
 
           {/* Shipping Address */}
           {order.shippingAddress && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Shipping Address</h2>
+            <div className="bg-white">
+              <h2 className="text-sm font-semibold text-slate-900">Shipping Address</h2>
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <MapPin className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <MapPin className="text-slate-600" size={16} />
                 </div>
-                <div className="text-sm text-slate-700 dark:text-slate-300">
+                <div className="text-sm text-slate-700">
                   <p className="font-medium">{order.shippingAddress.name || customerName}</p>
                   <p className="mt-1">{order.shippingAddress.address}</p>
                   {order.shippingAddress.upazila && (
@@ -521,40 +521,40 @@ export default function OrderDetailsPage() {
           )}
 
           {/* Order Info */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Order Information</h2>
+          <div className="bg-white">
+            <h2 className="text-sm font-semibold text-slate-900">Order Information</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <Calendar className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Calendar className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Date</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-slate-500">Date</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <CreditCard className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <CreditCard className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Payment Method</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-slate-500">Payment Method</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {order.paymentMethod || "N/A"}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
-                  <Package className="text-slate-600 dark:text-slate-400" size={16} />
+                <div className="p-2 rounded-lg bg-slate-100">
+                  <Package className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Total Items</p>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-xs text-slate-500">Total Items</p>
+                  <p className="text-sm font-medium text-slate-900">
                     {order.orderItems?.length || 0}
                   </p>
                 </div>

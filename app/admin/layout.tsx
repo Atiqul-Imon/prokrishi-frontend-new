@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="relative">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-green-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-64 transition-all duration-200">
         <AdminHeader onToggleSidebar={() => setSidebarOpen(true)} />
-        <main className="p-6 lg:p-8">
+        <main className="p-4 lg:p-6">
           <div className="max-w-[1600px] mx-auto">{children}</div>
         </main>
       </div>

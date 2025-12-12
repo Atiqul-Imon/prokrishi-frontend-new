@@ -36,24 +36,24 @@ export default function AdminFishOrdersPage() {
   }, [fetchOrders]);
 
   const statusColors: Record<string, string> = {
-    pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    confirmed: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
-    processing: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400",
-    shipped: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
-    delivered: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    cancelled: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+    pending: "bg-yellow-100",
+    confirmed: "bg-blue-100",
+    processing: "bg-indigo-100",
+    shipped: "bg-purple-100",
+    delivered: "bg-green-100",
+    cancelled: "bg-red-100",
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Fish Orders</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Manage fish product orders</p>
+        <h1 className="text-3xl font-bold text-gray-900">Fish Orders</h1>
+        <p className="text-gray-500">Manage fish product orders</p>
       </div>
 
       {/* Search */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+      <div className="bg-white">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -62,12 +62,12 @@ export default function AdminFishOrdersPage() {
               placeholder="Search fish orders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50"
             />
           </div>
           <button
             onClick={fetchOrders}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-gray-100"
           >
             <RefreshCw size={18} />
             Refresh
@@ -77,79 +77,79 @@ export default function AdminFishOrdersPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <p className="text-red-800 dark:text-red-200 text-sm">{error}</p>
+        <div className="bg-red-50">
+          <p className="text-red-800">{error}</p>
         </div>
       )}
 
       {/* Orders Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+      <div className="bg-white">
         {loading ? (
           <div className="p-12 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-gray-200 dark:border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-            <p className="text-gray-500 dark:text-gray-400 mt-4">Loading fish orders...</p>
+            <div className="inline-block w-8 h-8 border-4 border-gray-200"></div>
+            <p className="text-gray-500">Loading fish orders...</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="p-12 text-center">
-            <Fish className="mx-auto text-gray-400 dark:text-gray-500 mb-4" size={48} />
-            <p className="text-gray-500 dark:text-gray-400">No fish orders found</p>
+            <Fish className="mx-auto text-gray-400" size={48} />
+            <p className="text-gray-500">No fish orders found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Order ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Items
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200">
                 {orders.map((order) => (
                   <tr
                     key={order._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
+                    className="hover:bg-gray-50"
                   >
                     <td className="px-6 py-4">
-                      <span className="font-mono text-sm text-gray-900 dark:text-white">
+                      <span className="font-mono text-sm text-gray-900">
                         #{order.orderNumber || order._id?.slice(-8)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-gray-900">
                           {order.user?.name || order.guestInfo?.name || "Guest"}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-500">
                           {order.shippingAddress?.phone || order.guestInfo?.phone || ""}
                         </p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-gray-900">
                         {order.orderItems?.length || 0} item{(order.orderItems?.length || 0) !== 1 ? "s" : ""}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="font-medium text-gray-900">
                         ৳{order.totalAmount?.toLocaleString() || order.totalPrice?.toLocaleString() || 0}
                       </span>
                     </td>
@@ -163,7 +163,7 @@ export default function AdminFishOrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-gray-900">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </span>
                     </td>
@@ -171,7 +171,7 @@ export default function AdminFishOrdersPage() {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           href={`/admin/fish/orders/${order._id}`}
-                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-2 text-gray-600"
                           title="View"
                         >
                           <Eye size={18} />

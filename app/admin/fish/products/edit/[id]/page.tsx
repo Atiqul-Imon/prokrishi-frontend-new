@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fishProductApi } from "../../../../../utils/fishApi";
-import { ArrowLeft, Save, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowLeft, Save, Plus, X, Package, Image as ImageIcon, Settings, DollarSign, BarChart3, Upload, AlertCircle, Fish } from "lucide-react";
 
 interface SizeCategory {
   _id?: string;
@@ -81,7 +80,7 @@ export default function EditFishProductPage() {
           );
         } else {
           setSizeCategories([
-            { label: "", pricePerKg: "", stock: "", status: "active", isDefault: true },
+            { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: true },
           ]);
         }
       } catch (err: any) {
@@ -107,7 +106,7 @@ export default function EditFishProductPage() {
   const addSizeCategory = () => {
     setSizeCategories([
       ...sizeCategories,
-      { label: "", pricePerKg: "", stock: "", status: "active", isDefault: false },
+      { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: false },
     ]);
   };
 
@@ -138,7 +137,6 @@ export default function EditFishProductPage() {
     setLoading(true);
     setError(null);
 
-    // Validation
     if (sizeCategories.length === 0) {
       setError("Please add at least one size category");
       setLoading(false);
@@ -217,203 +215,265 @@ export default function EditFishProductPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="inline-block w-6 h-6 border-2 border-slate-200 dark:border-slate-800 border-t-slate-900 dark:border-t-slate-100 rounded-full animate-spin"></div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">Loading product...</p>
+          <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+          <p className="text-sm text-slate-600">Loading product...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header - Nexus Style */}
+      <div className="flex items-center gap-4 mb-6">
         <Link href={`/admin/fish/products/${productId}`}>
-          <button className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <ArrowLeft size={18} />
+          <button className="p-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+            <ArrowLeft size={20} strokeWidth={2} />
           </button>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Edit Fish Product</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Update fish product information</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Edit Fish Product</h1>
+          <p className="text-sm text-slate-600">Update fish product information</p>
         </div>
       </div>
 
+      {/* Error Message - Nexus Style */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-4">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="text-red-600 mt-0.5 flex-shrink-0" size={20} strokeWidth={2} />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">Error</p>
+            <p className="text-sm text-red-800 mt-1">{error}</p>
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 transition-colors"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-6">
-          {/* Basic Information - Same as Add Page */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Basic Information</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Short Description
-                </label>
-                <input
-                  type="text"
-                  maxLength={100}
-                  value={formData.shortDescription}
-                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Max 100 characters</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Description
-                </label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
+        {/* Basic Information Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-teal-100">
+              <Fish className="text-teal-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Basic Information</h2>
+              <p className="text-xs text-slate-500">Essential product details</p>
             </div>
           </div>
 
-          {/* Image */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Product Image</h2>
-            <label className="block">
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Product Name <span className="text-red-500">*</span>
+              </label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter fish product name"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
               />
-              <div className="px-4 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer text-center">
-                <Plus className="mx-auto mb-2 text-slate-400" size={24} />
-                <span className="text-sm text-slate-600 dark:text-slate-400">Click to upload image</span>
-              </div>
-            </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Short Description
+              </label>
+              <input
+                type="text"
+                maxLength={100}
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                placeholder="Brief description (max 100 characters)"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+              <p className="text-xs text-slate-500 mt-1.5">{formData.shortDescription.length}/100 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Description
+              </label>
+              <textarea
+                rows={5}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Detailed product description"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Image Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-teal-100">
+              <ImageIcon className="text-teal-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Product Image</h2>
+              <p className="text-xs text-slate-500">Upload product image</p>
+            </div>
+          </div>
+
+          <label className="block cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
             {imagePreview ? (
-              <div className="mt-4 relative inline-block">
-                <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg" />
+              <div className="relative inline-block">
+                <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl border-2 border-slate-200 shadow-sm" />
                 <button
                   type="button"
                   onClick={() => {
                     setImage(null);
                     setImagePreview(null);
                   }}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                  className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
                 >
-                  <X size={14} />
+                  <X size={14} strokeWidth={2.5} />
                 </button>
               </div>
             ) : existingImage ? (
-              <div className="mt-4 relative inline-block">
-                <img src={existingImage} alt="Current" className="w-32 h-32 object-cover rounded-lg" />
+              <div className="relative inline-block">
+                <img src={existingImage} alt="Current" className="w-40 h-40 object-cover rounded-xl border-2 border-slate-200 shadow-sm" />
                 <button
                   type="button"
                   onClick={() => setExistingImage(null)}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+                  className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
                 >
-                  <X size={14} />
+                  <X size={14} strokeWidth={2.5} />
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <div className="px-6 py-12 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-emerald-400 transition-all text-center cursor-pointer">
+                <Upload className="mx-auto mb-3 text-slate-400" size={32} strokeWidth={1.5} />
+                <p className="text-sm font-medium text-slate-700 mb-1">Click to upload image</p>
+                <p className="text-xs text-slate-500">Recommended: 800x800px or larger</p>
+              </div>
+            )}
+          </label>
+        </div>
+
+        {/* Size Categories Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <BarChart3 className="text-purple-600" size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Size Categories <span className="text-red-500">*</span></h2>
+                <p className="text-xs text-slate-500">{sizeCategories.length} size categor{sizeCategories.length !== 1 ? 'ies' : 'y'} added</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={addSizeCategory}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
+            >
+              <Plus size={16} strokeWidth={2.5} />
+              Add Size
+            </button>
           </div>
 
-          {/* Size Categories - Same as Add Page */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Size Categories *</h2>
-              <button
-                type="button"
-                onClick={addSizeCategory}
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1"
+          <div className="space-y-4">
+            {sizeCategories.map((category, index) => (
+              <div
+                key={category._id || index}
+                className="p-5 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200 hover:border-purple-300 transition-all"
               >
-                <Plus size={16} />
-                Add Size
-              </button>
-            </div>
-            <div className="space-y-3">
-              {sizeCategories.map((category, index) => (
-                <div key={index} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold">
+                      Size {index + 1}
+                    </span>
+                    {category.isDefault && (
+                      <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         checked={category.isDefault}
                         onChange={() => updateSizeCategory(index, "isDefault", true)}
-                        className="w-4 h-4 text-slate-600"
+                        className="w-4 h-4 border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                       />
-                      <span className="text-xs text-slate-500 dark:text-slate-400">Default</span>
-                      {category.isDefault && (
-                        <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300 rounded">
-                          Default
-                        </span>
-                      )}
+                      <span className="text-xs font-medium text-slate-600">Set as Default</span>
                     </label>
                     {sizeCategories.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSizeCategory(index)}
-                        className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove size category"
                       >
-                        <X size={14} />
+                        <X size={16} strokeWidth={2} />
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Label *</label>
-                      <input
-                        type="text"
-                        required
-                        value={category.label}
-                        onChange={(e) => updateSizeCategory(index, "label", e.target.value)}
-                        placeholder="e.g., Small, 2kg size"
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Price/Kg (৳) *</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        step="0.01"
-                        value={category.pricePerKg}
-                        onChange={(e) => updateSizeCategory(index, "pricePerKg", e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Stock (kg) *</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        value={category.stock}
-                        onChange={(e) => updateSizeCategory(index, "stock", e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                  </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Min Increment (kg)</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Label <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={category.label}
+                      onChange={(e) => updateSizeCategory(index, "label", e.target.value)}
+                      placeholder="e.g., Small, 2kg size"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Price/Kg (৳) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={category.pricePerKg}
+                      onChange={(e) => updateSizeCategory(index, "pricePerKg", e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Stock (kg) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={category.stock}
+                      onChange={(e) => updateSizeCategory(index, "stock", e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Min Increment (kg)</label>
                     <input
                       type="number"
                       min="0.01"
@@ -421,146 +481,168 @@ export default function EditFishProductPage() {
                       value={category.measurementIncrement || "0.25"}
                       onChange={(e) => updateSizeCategory(index, "measurementIncrement", e.target.value)}
                       placeholder="e.g., 0.25"
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     />
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Minimum sellable increment; default 0.25kg.</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Minimum sellable increment; default 0.25kg.</p>
                   </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Min Weight (kg)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={category.minWeight || ""}
-                        onChange={(e) => updateSizeCategory(index, "minWeight", e.target.value || undefined)}
-                        placeholder="Optional"
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Max Weight (kg)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={category.maxWeight || ""}
-                        onChange={(e) => updateSizeCategory(index, "maxWeight", e.target.value || undefined)}
-                        placeholder="Optional"
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">SKU</label>
-                      <input
-                        type="text"
-                        value={category.sku || ""}
-                        onChange={(e) => updateSizeCategory(index, "sku", e.target.value || undefined)}
-                        placeholder="Optional"
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Status</label>
-                      <select
-                        value={category.status}
-                        onChange={(e) => updateSizeCategory(index, "status", e.target.value)}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="out_of_stock">Out of Stock</option>
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Min Weight (kg)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={category.minWeight || ""}
+                      onChange={(e) => updateSizeCategory(index, "minWeight", e.target.value || undefined)}
+                      placeholder="Optional"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Max Weight (kg)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={category.maxWeight || ""}
+                      onChange={(e) => updateSizeCategory(index, "maxWeight", e.target.value || undefined)}
+                      placeholder="Optional"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">SKU</label>
+                    <input
+                      type="text"
+                      value={category.sku || ""}
+                      onChange={(e) => updateSizeCategory(index, "sku", e.target.value || undefined)}
+                      placeholder="Optional"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
+                    <select
+                      value={category.status}
+                      onChange={(e) => updateSizeCategory(index, "status", e.target.value)}
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                    </select>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Additional Options Card */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-purple-100">
+              <Settings className="text-purple-600" size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Additional Options</h2>
+              <p className="text-xs text-slate-500">SEO and marketing settings</p>
             </div>
           </div>
 
-          {/* Additional Options - Same as Add Page */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Additional Options</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Status *
-                </label>
-                <select
-                  required
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
 
-              <div>
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-slate-600 rounded focus:ring-slate-500"
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">Featured Product</span>
-                </label>
-              </div>
+            <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+              <input
+                type="checkbox"
+                checked={formData.isFeatured}
+                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                className="w-5 h-5 rounded border-2 border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-slate-900">Featured Product</span>
+            </label>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="e.g., fresh, premium, local"
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">
+                Tags (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                placeholder="e.g., fresh, premium, local"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Meta Title
-                </label>
-                <input
-                  type="text"
-                  value={formData.metaTitle}
-                  onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Title</label>
+              <input
+                type="text"
+                value={formData.metaTitle}
+                onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                placeholder="SEO meta title"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Meta Description
-                </label>
-                <textarea
-                  rows={2}
-                  maxLength={160}
-                  value={formData.metaDescription}
-                  onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600"
-                />
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Max 160 characters</p>
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-2">Meta Description</label>
+              <textarea
+                rows={3}
+                maxLength={160}
+                value={formData.metaDescription}
+                onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                placeholder="SEO meta description"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all resize-none"
+              />
+              <p className="text-xs text-slate-500 mt-1.5">{formData.metaDescription.length}/160 characters</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3">
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
           <Link href={`/admin/fish/products/${productId}`}>
-            <Button variant="outline" type="button">Cancel</Button>
+            <button
+              type="button"
+              className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm hover:shadow-md text-sm font-semibold"
+            >
+              Cancel
+            </button>
           </Link>
-          <Button variant="primary" type="submit" disabled={loading} isLoading={loading}>
-            <Save size={16} />
-            Save Changes
-          </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} strokeWidth={2.5} />
+                <span>Save Changes</span>
+              </>
+            )}
+          </button>
         </div>
       </form>
     </div>
   );
 }
-

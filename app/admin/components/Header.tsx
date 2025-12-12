@@ -59,7 +59,7 @@ export default function AdminHeader({ onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-lg shadow-slate-200/20">
+    <header className="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           {/* Left Section */}
