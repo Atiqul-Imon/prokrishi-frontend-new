@@ -5,9 +5,11 @@ import Link from "next/link";
 import { fishProductApi } from "../../../utils/fishApi";
 import { Plus, Search, Edit, Trash2, Eye, Fish, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { FishProduct, SizeCategory } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function AdminFishProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<FishProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,13 +22,13 @@ export default function AdminFishProductsPage() {
     setLoading(true);
     setError(null);
     try {
-      const params: any = { page: currentPage, limit: 20 };
+      const params: { page: number; limit: number; search?: string } = { page: currentPage, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       const result = await fishProductApi.getAll(params);
       setProducts(result.fishProducts || []);
       setTotalPages(result.pagination?.totalPages || 1);
-    } catch (err: any) {
-      setError(err.message || "Failed to load fish products");
+    } catch (err) {
+      setError(handleApiError(err, "fetching fish products"));
     } finally {
       setLoading(false);
     }
@@ -41,8 +43,8 @@ export default function AdminFishProductsPage() {
       await fishProductApi.delete(id);
       setProducts(products.filter((p) => p._id !== id));
       setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete product");
+    } catch (err) {
+      setError(handleApiError(err, "deleting fish product"));
     }
   };
 
@@ -66,13 +68,13 @@ export default function AdminFishProductsPage() {
     }
   };
 
-  const getPriceRange = (product: any) => {
+  const getPriceRange = (product: FishProduct): string => {
     if (!product.sizeCategories || product.sizeCategories.length === 0) {
       return "N/A";
     }
     const prices = product.sizeCategories
-      .map((cat: any) => cat.pricePerKg)
-      .filter((p: any) => p != null);
+      .map((cat: SizeCategory) => cat.pricePerKg)
+      .filter((p: number) => p != null);
     if (prices.length === 0) return "N/A";
     const min = Math.min(...prices);
     const max = Math.max(...prices);
@@ -82,11 +84,11 @@ export default function AdminFishProductsPage() {
     return `৳${min.toLocaleString()} - ৳${max.toLocaleString()}/kg`;
   };
 
-  const getTotalStock = (product: any) => {
+  const getTotalStock = (product: FishProduct): number => {
     if (!product.sizeCategories || product.sizeCategories.length === 0) {
       return 0;
     }
-    return product.sizeCategories.reduce((sum: number, cat: any) => sum + (cat.stock || 0), 0);
+    return product.sizeCategories.reduce((sum: number, cat: SizeCategory) => sum + (cat.stock || 0), 0);
   };
 
   return (
@@ -242,7 +244,7 @@ export default function AdminFishProductsPage() {
                         <td className="px-5 py-4">
                           <div className="flex flex-wrap gap-1">
                             {product.sizeCategories && product.sizeCategories.length > 0 ? (
-                              product.sizeCategories.slice(0, 2).map((cat: any, idx: number) => (
+                              product.sizeCategories.slice(0, 2).map((cat: SizeCategory, idx: number) => (
                                 <span
                                   key={cat._id || idx}
                                   className="px-2 py-0.5 bg-slate-100"

@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
+import type { Order, Product } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 interface DashboardStats {
   stats?: {
@@ -24,8 +26,8 @@ interface DashboardStats {
     totalOrders: number;
     totalRevenue: number;
   };
-  recentOrders?: any[];
-  lowStockProducts?: any[];
+  recentOrders?: Order[];
+  lowStockProducts?: Product[];
 }
 
 export default function AdminDashboard() {
@@ -40,8 +42,8 @@ export default function AdminDashboard() {
         setLoading(true);
         const data = await getDashboardStats();
         setStats(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load dashboard data");
+      } catch (err) {
+        setError(handleApiError(err, "loading dashboard data"));
       } finally {
         setLoading(false);
       }
@@ -114,8 +116,15 @@ export default function AdminDashboard() {
     },
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, any> = {
+  interface ColorClasses {
+    iconBg: string;
+    border: string;
+    text: string;
+    bg: string;
+  }
+
+  const getColorClasses = (color: string): ColorClasses => {
+    const colors: Record<string, ColorClasses> = {
       purple: {
         iconBg: "bg-gradient-to-br from-purple-500 to-purple-600",
         border: "border-purple-200",
@@ -220,7 +229,7 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-2">
             {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-              stats.recentOrders.slice(0, 5).map((order: any) => (
+              stats.recentOrders.slice(0, 5).map((order: Order) => (
                 <Link
                   key={order._id}
                   href={`/admin/orders/${order._id}`}
@@ -272,7 +281,7 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-2">
             {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
-              stats.lowStockProducts.map((product: any) => (
+              stats.lowStockProducts.map((product: Product) => (
                 <Link
                   key={product._id}
                   href={`/admin/products/${product._id}`}

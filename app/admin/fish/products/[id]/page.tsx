@@ -6,12 +6,14 @@ import Link from "next/link";
 import { fishProductApi } from "../../../../utils/fishApi";
 import { ArrowLeft, Edit, Fish, DollarSign, PackageCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { FishProduct, SizeCategory } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function FishProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<FishProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +23,8 @@ export default function FishProductDetailsPage() {
         setLoading(true);
         const result = await fishProductApi.getById(productId);
         setProduct(result.fishProduct || result);
-      } catch (err: any) {
-        setError(err.message || "Failed to load fish product");
+      } catch (err) {
+        setError(handleApiError(err, "loading fish product"));
       } finally {
         setLoading(false);
       }
@@ -63,17 +65,17 @@ export default function FishProductDetailsPage() {
     );
   }
 
-  const getTotalStock = () => {
-    if (!product.sizeCategories || product.sizeCategories.length === 0) return 0;
-    return product.sizeCategories.reduce((sum: number, cat: any) => sum + (cat.stock || 0), 0);
+  const getTotalStock = (): number => {
+    if (!product?.sizeCategories || product.sizeCategories.length === 0) return 0;
+    return product.sizeCategories.reduce((sum: number, cat: SizeCategory) => sum + (cat.stock || 0), 0);
   };
 
-  const getPriceRange = () => {
-    if (!product.sizeCategories || product.sizeCategories.length === 0) return "N/A";
+  const getPriceRange = (): string => {
+    if (!product?.sizeCategories || product.sizeCategories.length === 0) return "N/A";
     const prices = product.sizeCategories
-      .filter((cat: any) => cat.status === "active")
-      .map((cat: any) => cat.pricePerKg)
-      .filter((p: any) => p != null);
+      .filter((cat: SizeCategory) => cat.status === "active")
+      .map((cat: SizeCategory) => cat.pricePerKg)
+      .filter((p: number) => p != null);
     if (prices.length === 0) return "N/A";
     const min = Math.min(...prices);
     const max = Math.max(...prices);
@@ -139,7 +141,7 @@ export default function FishProductDetailsPage() {
             <div className="bg-white">
               <h2 className="text-sm font-semibold text-slate-900">Size Categories</h2>
               <div className="space-y-3">
-                {product.sizeCategories.map((cat: any, index: number) => (
+                {product.sizeCategories.map((cat: SizeCategory, index: number) => (
                   <div
                     key={cat._id || index}
                     className="p-4 rounded-lg bg-slate-50"

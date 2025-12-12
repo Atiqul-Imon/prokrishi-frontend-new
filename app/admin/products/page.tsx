@@ -5,9 +5,11 @@ import Link from "next/link";
 import { getAdminProducts, deleteProduct, toggleProductFeatured } from "../../utils/api";
 import { Plus, Search, Edit, Trash2, Eye, Package, RefreshCw, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { Product } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,13 +22,13 @@ export default function AdminProductsPage() {
     setLoading(true);
     setError(null);
     try {
-      const params: any = { page: currentPage, limit: 20 };
+      const params: { page: number; limit: number; search?: string } = { page: currentPage, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       const result = await getAdminProducts(params);
       setProducts(result.products || []);
       setTotalPages(result.pagination?.totalPages || 1);
-    } catch (err: any) {
-      setError(err.message || "Failed to load products");
+    } catch (err) {
+      setError(handleApiError(err, "loading products"));
     } finally {
       setLoading(false);
     }
@@ -41,8 +43,8 @@ export default function AdminProductsPage() {
       await deleteProduct(id);
       setProducts(products.filter((p) => p._id !== id));
       setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete product");
+    } catch (err) {
+      setError(handleApiError(err, "deleting product"));
     }
   };
 
@@ -53,8 +55,8 @@ export default function AdminProductsPage() {
       setProducts(products.map((p) => 
         p._id === id ? { ...p, isFeatured: !p.isFeatured } : p
       ));
-    } catch (err: any) {
-      setError(err.message || "Failed to toggle featured status");
+    } catch (err) {
+      setError(handleApiError(err, "toggling featured status"));
     }
   };
 

@@ -17,6 +17,7 @@ import { logger } from "@/app/utils/logger";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import type { Order } from "@/types/models";
 
 const statusConfig = {
   processing: {
@@ -63,9 +64,13 @@ export default function Orders() {
           getUserFishOrders().catch(() => ({ success: false, orders: [] })),
         ]);
 
-        const allOrders = [
-          ...(regularOrders.orders || []).map((o: any) => ({ ...o, isFishOrder: false })),
-          ...(fishOrders.orders || []).map((o: any) => ({ ...o, isFishOrder: true })),
+        interface OrderWithType extends Order {
+          isFishOrder: boolean;
+        }
+
+        const allOrders: OrderWithType[] = [
+          ...(regularOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: false })),
+          ...(fishOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: true })),
         ].sort((a, b) => {
           const dateA = new Date(a.createdAt || a.date).getTime();
           const dateB = new Date(b.createdAt || b.date).getTime();
@@ -172,7 +177,7 @@ export default function Orders() {
                 {/* Order Items */}
                 {orderItems.length > 0 && (
                   <div className="space-y-2.5 mb-5 bg-gray-50 rounded-lg p-4">
-                    {orderItems.slice(0, 3).map((item: any, itemIndex: number) => (
+                    {orderItems.slice(0, 3).map((item: { name?: string; productName?: string; quantity?: number; price?: number }, itemIndex: number) => (
                       <div
                         key={itemIndex}
                         className="flex justify-between items-center text-base"

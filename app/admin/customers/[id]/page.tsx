@@ -5,11 +5,13 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getUserById } from "../../../utils/api";
 import { ArrowLeft, User, Mail, Phone, MapPin, Calendar, Package, AlertCircle } from "lucide-react";
+import type { User, Address } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function CustomerDetailsPage() {
   const params = useParams();
   const customerId = params.id as string;
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,8 +21,8 @@ export default function CustomerDetailsPage() {
         setLoading(true);
         const result = await getUserById(customerId);
         setCustomer(result.user || result);
-      } catch (err: any) {
-        setError(err.message || "Failed to load customer");
+      } catch (err) {
+        setError(handleApiError(err, "loading customer"));
       } finally {
         setLoading(false);
       }
@@ -142,7 +144,7 @@ export default function CustomerDetailsPage() {
             <div className="bg-white">
               <h2 className="text-sm font-semibold text-slate-900">Saved Addresses</h2>
               <div className="space-y-3">
-                {customer.addresses.map((address: any, index: number) => (
+                {customer.addresses.map((address: Address, index: number) => (
                   <div
                     key={index}
                     className="p-4 rounded-lg bg-slate-50"

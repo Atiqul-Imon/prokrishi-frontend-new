@@ -27,12 +27,14 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { Order } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function OrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState(false);
@@ -53,8 +55,8 @@ export default function OrderDetailsPage() {
         setNewStatus(response.order.status || "");
         setNewPaymentStatus(response.order.paymentStatus || "");
         setTransactionId(response.order.transactionId || "");
-      } catch (err: any) {
-        setError(err.message || "Failed to load order");
+      } catch (err) {
+        setError(handleApiError(err, "loading order"));
       } finally {
         setLoading(false);
       }
@@ -72,8 +74,8 @@ export default function OrderDetailsPage() {
       setOrder({ ...order, status: newStatus });
       setEditingStatus(false);
       setNotes("");
-    } catch (err: any) {
-      alert(err.message || "Failed to update order status");
+    } catch (err) {
+      alert(handleApiError(err, "updating order status"));
     } finally {
       setUpdating(false);
     }
@@ -86,8 +88,8 @@ export default function OrderDetailsPage() {
       setOrder({ ...order, paymentStatus: newPaymentStatus, transactionId });
       setEditingPayment(false);
       setNotes("");
-    } catch (err: any) {
-      alert(err.message || "Failed to update payment status");
+    } catch (err) {
+      alert(handleApiError(err, "updating payment status"));
     } finally {
       setUpdating(false);
     }
@@ -189,7 +191,7 @@ export default function OrderDetailsPage() {
           <div className="bg-white">
             <h2 className="text-sm font-semibold text-slate-900">Order Items</h2>
             <div className="space-y-3">
-              {order.orderItems?.map((item: any, index: number) => (
+              {order.orderItems?.map((item, index: number) => (
                 <div
                   key={index}
                   className="flex items-center gap-4 p-3 rounded-lg bg-slate-50"

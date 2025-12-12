@@ -8,7 +8,7 @@ import ProductCard from "@/components/ProductCard";
 import { getFeaturedProducts } from "@/app/utils/api";
 import { fishProductApi } from "@/app/utils/fishApi";
 import { logger } from "@/app/utils/logger";
-import { Product } from "@/types/models";
+import { Product, FishProduct } from "@/types/models";
 import { Card } from "@/components/ui/Card";
 
 export default function Home() {
@@ -26,7 +26,7 @@ export default function Home() {
         // Fetch only regular featured products
         const data = await getFeaturedProducts();
         setFeaturedProducts(data.products || []);
-      } catch (err: any) {
+      } catch (err) {
         logger.error("Error loading featured products:", err);
         setError("Failed to load featured products");
       } finally {
@@ -49,7 +49,7 @@ export default function Home() {
         const fishProductsList = response.fishProducts || [];
 
         // Transform fish products to match Product type for display
-        const transformedFishProducts: Product[] = fishProductsList.map((fp: any) => ({
+        const transformedFishProducts: Product[] = fishProductsList.map((fp: FishProduct) => ({
           _id: fp._id,
           name: fp.name,
           price: fp.priceRange?.min || 0, // Use min price from range
@@ -66,13 +66,13 @@ export default function Home() {
 
         // Sort by creation date (newest first)
         transformedFishProducts.sort((a, b) => {
-          const dateA = new Date((a as any).createdAt || 0).getTime();
-          const dateB = new Date((b as any).createdAt || 0).getTime();
+          const dateA = new Date((a as Product & { createdAt?: string }).createdAt || 0).getTime();
+          const dateB = new Date((b as Product & { createdAt?: string }).createdAt || 0).getTime();
           return dateB - dateA;
         });
 
         setFishProducts(transformedFishProducts);
-      } catch (err: any) {
+      } catch (err) {
         logger.error("Error loading fish products:", err);
         setFishError("Failed to load fish products");
       } finally {

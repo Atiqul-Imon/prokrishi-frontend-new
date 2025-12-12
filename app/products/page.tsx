@@ -65,8 +65,8 @@ function ProductsContent() {
       });
       setProducts(res.products || []);
       setTotalProducts(res.total || res.products?.length || 0);
-    } catch (err: any) {
-      setError(err?.message || "Failed to load products");
+    } catch (err) {
+      setError(handleApiError(err, "loading products"));
     } finally {
       setLoading(false);
     }

@@ -153,7 +153,7 @@ export async function apiRequest<T = unknown>(
       ...options,
     });
     return res.data as T;
-  } catch (err: any) {
+  } catch (err) {
     const axiosError = err as AxiosErrorResponse;
     let msg = axiosError.response?.data?.message || axiosError.message || "API Error";
     
@@ -569,9 +569,10 @@ export async function getAllProducts(params?: { page?: number; limit?: number; s
       currentPage: responseData.data?.currentPage || responseData.currentPage || 1,
       totalPages: responseData.data?.totalPages || responseData.totalPages || 1,
     };
-  } catch (err: any) {
+  } catch (err) {
+    const axiosError = err as AxiosErrorResponse;
     throw new Error(
-      err.response?.data?.message || err.message || "Failed to get products",
+      axiosError.response?.data?.message || axiosError.message || "Failed to get products",
     );
   }
 }

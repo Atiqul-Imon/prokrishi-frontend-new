@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { apiRequest } from "../../utils/api";
 import { User, Mail, Phone, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function AdminProfilePage() {
   const { user } = useAuth();
@@ -34,8 +35,8 @@ export default function AdminProfilePage() {
         data: profile,
       });
       alert("Profile updated successfully!");
-    } catch (err: any) {
-      alert(err.message || "Failed to update profile");
+    } catch (err) {
+      alert(handleApiError(err, "updating profile"));
     } finally {
       setLoading(false);
     }

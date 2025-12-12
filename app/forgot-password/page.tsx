@@ -30,8 +30,8 @@ export default function ForgotPasswordPage() {
     try {
       await requestPasswordReset(identifier);
       setStep("success");
-    } catch (err: any) {
-      setError(err?.message || "Failed to send reset link. Please try again.");
+    } catch (err) {
+      setError(handleApiError(err, "sending password reset link"));
     } finally {
       setLoading(false);
     }

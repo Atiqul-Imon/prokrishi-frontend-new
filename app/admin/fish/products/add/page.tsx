@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fishProductApi } from "../../../../utils/fishApi";
+import { handleApiError } from "../../../../utils/errorHandler";
 import { ArrowLeft, Save, Plus, X, Package, Image as ImageIcon, Settings, DollarSign, BarChart3, Upload, AlertCircle, Fish } from "lucide-react";
 
 interface SizeCategory {
@@ -63,7 +64,7 @@ export default function AddFishProductPage() {
     }
   };
 
-  const updateSizeCategory = (index: number, field: keyof SizeCategory, value: any) => {
+  const updateSizeCategory = (index: number, field: keyof SizeCategory, value: string | boolean) => {
     const newCategories = [...sizeCategories];
     if (field === "isDefault") {
       newCategories.forEach((cat, i) => {
@@ -144,8 +145,8 @@ export default function AddFishProductPage() {
 
       await fishProductApi.create(fd);
       router.push("/admin/fish/products");
-    } catch (err: any) {
-      setError(err.message || "Failed to create fish product");
+    } catch (err) {
+      setError(handleApiError(err, "creating fish product"));
     } finally {
       setLoading(false);
     }

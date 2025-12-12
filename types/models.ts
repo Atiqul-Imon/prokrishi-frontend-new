@@ -34,6 +34,16 @@ export interface Category {
   image?: string;
 }
 
+export interface SizeCategory {
+  _id: string;
+  label: string;
+  pricePerKg: number;
+  stock?: number;
+  status?: string;
+  isDefault?: boolean;
+  measurementIncrement?: number;
+}
+
 export interface Product {
   _id: string;
   id?: string;
@@ -55,16 +65,13 @@ export interface Product {
   images?: string[];
   category?: Category | string;
   isFishProduct?: boolean;
-  sizeCategories?: Array<{
-    _id: string;
-    label: string;
-    pricePerKg: number;
-    stock?: number;
-    status?: string;
-    isDefault?: boolean;
-    measurementIncrement?: number;
-    [key: string]: unknown;
-  }>;
+  sizeCategories?: SizeCategory[];
+}
+
+export interface FishProduct extends Omit<Product, 'price' | 'stock' | 'variants' | 'hasVariants'> {
+  sizeCategories: SizeCategory[];
+  status?: 'active' | 'inactive';
+  isFeatured?: boolean;
 }
 
 export interface CartItem extends Product {

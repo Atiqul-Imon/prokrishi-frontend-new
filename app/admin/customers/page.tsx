@@ -4,9 +4,18 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../utils/api";
 import { Search, User, Mail, Phone, RefreshCw, Eye } from "lucide-react";
+import type { User } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
+
+interface AdminUsersResponse {
+  users?: User[];
+  pagination?: {
+    totalPages?: number;
+  };
+}
 
 export default function AdminCustomersPage() {
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,17 +26,17 @@ export default function AdminCustomersPage() {
     setLoading(true);
     setError(null);
     try {
-      const params: any = { page: currentPage, limit: 20 };
+      const params: { page: number; limit: number; search?: string } = { page: currentPage, limit: 20 };
       if (searchQuery) params.search = searchQuery;
       
-      const result = await apiRequest<any>("/user/admin", {
+      const result = await apiRequest<AdminUsersResponse>("/user/admin", {
         method: "GET",
         params,
       });
       setCustomers(result.users || []);
       setTotalPages(result.pagination?.totalPages || 1);
-    } catch (err: any) {
-      setError(err.message || "Failed to load customers");
+    } catch (err) {
+      setError(handleApiError(err, "loading customers"));
     } finally {
       setLoading(false);
     }

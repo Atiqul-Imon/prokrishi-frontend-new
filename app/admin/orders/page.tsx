@@ -9,12 +9,16 @@ import {
   updateAdminOrderStatus,
   deleteAdminOrder,
   AdminOrderFilters,
+  AdminOrderStats,
+  AdminOrderResponse,
 } from "../../utils/api";
+import type { Order } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 import { Search, Eye, RefreshCw, Package, ShoppingCart, DollarSign, CheckCircle, Clock, Trash2, X } from "lucide-react";
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [stats, setStats] = useState<AdminOrderStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +28,7 @@ export default function AdminOrdersPage() {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<AdminOrderResponse['pagination'] | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
@@ -37,9 +41,8 @@ export default function AdminOrdersPage() {
       const response = await getAdminOrders(filters);
       setOrders(response.orders || []);
       setPagination(response.pagination);
-    } catch (err: any) {
-      const errorMsg = err.message || "Failed to fetch orders";
-      setError(errorMsg);
+    } catch (err) {
+      setError(handleApiError(err, "fetching orders"));
     } finally {
       setLoading(false);
     }
@@ -80,8 +83,8 @@ export default function AdminOrdersPage() {
       });
       fetchOrders();
       setDeleteConfirm(null);
-    } catch (err: any) {
-      alert(err.message || "Failed to delete order");
+    } catch (err) {
+      alert(handleApiError(err, "deleting order"));
       setDeleteConfirm(null);
     }
   };
@@ -98,8 +101,8 @@ export default function AdminOrdersPage() {
       setSelectedIds(new Set());
       fetchOrders();
       setBulkDeleteConfirm(false);
-    } catch (err: any) {
-      alert(err.message || "Failed to delete orders");
+    } catch (err) {
+      alert(handleApiError(err, "deleting orders"));
       setBulkDeleteConfirm(false);
     }
   };
@@ -119,13 +122,13 @@ export default function AdminOrdersPage() {
       setSelectedIds(new Set());
       fetchOrders();
       setBulkStatusConfirm(null);
-    } catch (err: any) {
-      alert(err.message || "Failed to update order statuses");
+    } catch (err) {
+      alert(handleApiError(err, "updating order statuses"));
       setBulkStatusConfirm(null);
     }
   };
 
-  const handleFilterChange = useCallback((key: string, value: any) => {
+  const handleFilterChange = useCallback((key: string, value: string | number | undefined) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,

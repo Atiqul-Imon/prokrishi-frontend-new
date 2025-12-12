@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getCategoryById, updateCategory } from "../../../../utils/api";
 import { ArrowLeft, Save, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { CategoryFormData } from "@/app/utils/api";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -35,8 +37,8 @@ export default function EditCategoryPage() {
         if (category.image) {
           setExistingImage(category.image);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load category");
+      } catch (err) {
+        setError(handleApiError(err, "loading category"));
       } finally {
         setFetchLoading(false);
       }
@@ -61,22 +63,17 @@ export default function EditCategoryPage() {
     setError(null);
 
     try {
-      const categoryData: any = {
+      const categoryData: CategoryFormData & { existingImage?: string } = {
         name: formData.name,
         description: formData.description,
+        image: image || undefined,
+        ...(existingImage && !image ? { existingImage } : {}),
       };
-
-      if (image) {
-        categoryData.image = image;
-      } else if (existingImage) {
-        // Keep existing image if no new image is uploaded
-        categoryData.existingImage = existingImage;
-      }
 
       await updateCategory(categoryId, categoryData);
       router.push("/admin/categories");
-    } catch (err: any) {
-      setError(err.message || "Failed to update category");
+    } catch (err) {
+      setError(handleApiError(err, "updating category"));
     } finally {
       setLoading(false);
     }

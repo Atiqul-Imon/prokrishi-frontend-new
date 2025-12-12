@@ -41,8 +41,8 @@ export default function ProductsByCategoryPage() {
         } else {
           setProducts([]);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load products");
+      } catch (err) {
+        setError(handleApiError(err, "loading products"));
         logger.error("Error fetching data for category page:", err);
       } finally {
         setLoading(false);

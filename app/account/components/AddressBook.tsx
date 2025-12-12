@@ -146,8 +146,8 @@ export default function AddressBook() {
       updateUser(profileData.user);
       setOpenForm(false);
       setEditAddress(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to save address");
+    } catch (err) {
+      setError(handleApiError(err, "saving address"));
     } finally {
       setLoading(false);
     }
@@ -161,8 +161,8 @@ export default function AddressBook() {
       const profileData = await fetchProfile();
       updateUser(profileData.user);
       setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete address");
+    } catch (err) {
+      setError(handleApiError(err, "deleting address"));
     } finally {
       setLoading(false);
     }

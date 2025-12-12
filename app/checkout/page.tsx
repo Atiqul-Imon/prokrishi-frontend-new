@@ -12,8 +12,24 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import type { CartItem, SizeCategory } from "@/types/models";
 
 type Zone = "inside_dhaka" | "outside_dhaka" | null;
+
+interface ValidationItem {
+  available: boolean;
+  finalQty?: number;
+  requestedQty?: number;
+  [key: string]: unknown;
+}
+
+interface OrderResponse {
+  _id?: string;
+  order?: { _id?: string };
+  data?: { order?: { _id?: string } };
+  fishOrder?: { _id?: string };
+  [key: string]: unknown;
+}
 
 export default function CheckoutPage() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -35,7 +51,7 @@ export default function CheckoutPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [validationChanges, setValidationChanges] = useState<string | null>(null);
 
-  const isFish = (item: any) =>
+  const isFish = (item: CartItem): boolean =>
     item?.isFishProduct === true ||
     (item?.sizeCategories && Array.isArray(item.sizeCategories) && item.sizeCategories.length > 0);
 
@@ -252,8 +268,9 @@ export default function CheckoutPage() {
       };
       const validation = await validateCartApi(validatePayload);
       if (validation?.hasChanges) {
-        const unavailable = validation.items?.filter((i: any) => !i.available) || [];
-        const reduced = validation.items?.filter((i: any) => i.available && i.finalQty !== i.requestedQty) || [];
+        const items = (validation.items || []) as ValidationItem[];
+        const unavailable = items.filter((i: ValidationItem) => !i.available);
+        const reduced = items.filter((i: ValidationItem) => i.available && i.finalQty !== i.requestedQty);
         let msg = "We updated your cart:";
         if (unavailable.length > 0) {
           msg += ` ${unavailable.length} item(s) unavailable.`;
@@ -309,17 +326,17 @@ export default function CheckoutPage() {
               }
             : {}),
         };
-        const regularRes: any = await placeOrder(regularOrderData);
+        const regularRes = await placeOrder(regularOrderData) as OrderResponse;
         // Extract order ID from nested response
         regularOrderId = regularRes._id || regularRes.order?._id || regularRes.data?.order?._id || null;
       }
 
       if (fishProducts.length > 0) {
-        const fishOrderItems = fishProducts.map((item) => {
-          let sizeCategoryId = item.variantId || (item.variantSnapshot as any)?._id;
-          if (!sizeCategoryId && (item as any).sizeCategories && Array.isArray((item as any).sizeCategories)) {
+        const fishOrderItems = fishProducts.map((item: CartItem) => {
+          let sizeCategoryId = item.variantId || (item.variantSnapshot as { _id?: string })?._id;
+          if (!sizeCategoryId && item.sizeCategories && Array.isArray(item.sizeCategories)) {
             const def =
-              (item as any).sizeCategories.find((sc: any) => sc.isDefault) || (item as any).sizeCategories[0];
+              item.sizeCategories.find((sc: SizeCategory) => sc.isDefault) || item.sizeCategories[0];
             if (def) sizeCategoryId = def._id;
           }
           if (!sizeCategoryId) throw new Error(`Size category missing for ${item.name}`);
@@ -355,7 +372,7 @@ export default function CheckoutPage() {
               }
             : {}),
         };
-        const fishRes: any = await fishOrderApi.create(fishOrderData);
+        const fishRes = await fishOrderApi.create(fishOrderData) as OrderResponse;
         // Extract order ID from nested response
         fishOrderId = fishRes?._id || fishRes?.fishOrder?._id || fishRes?.data?.fishOrder?._id || null;
       }

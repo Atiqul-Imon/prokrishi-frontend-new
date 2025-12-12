@@ -76,8 +76,8 @@ export default function RegisterPage() {
       } else {
         setError("Registration failed");
       }
-    } catch (err: any) {
-      let errorMessage = "Registration failed";
+    } catch (err) {
+      const errorMessage = handleApiError(err, "registering user");
 
       if (err.message) {
         if (err.message.includes("already exists")) {

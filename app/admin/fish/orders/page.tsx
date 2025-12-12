@@ -4,9 +4,24 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { fishOrderApi } from "../../../utils/fishApi";
 import { Search, Eye, RefreshCw, Fish, Package } from "lucide-react";
+import type { Order } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
+
+interface FishOrder extends Order {
+  orderNumber?: string;
+  shippingAddress?: {
+    name?: string;
+    phone?: string;
+  };
+  guestInfo?: {
+    name?: string;
+    phone?: string;
+  };
+  orderItems?: unknown[];
+}
 
 export default function AdminFishOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<FishOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,16 +31,16 @@ export default function AdminFishOrdersPage() {
     setError(null);
     try {
       const result = await fishOrderApi.getAll();
-      let filtered = result.fishOrders || [];
+      let filtered = (result.fishOrders || []) as FishOrder[];
       if (searchQuery) {
-        filtered = filtered.filter((order: any) =>
+        filtered = filtered.filter((order: FishOrder) =>
           order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.shippingAddress?.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
       setOrders(filtered);
-    } catch (err: any) {
-      setError(err.message || "Failed to load fish orders");
+    } catch (err) {
+      setError(handleApiError(err, "loading fish orders"));
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createProduct, getAllCategories } from "../../../utils/api";
 import { logger } from "../../../utils/logger";
+import { handleApiError } from "../../../utils/errorHandler";
 import { ArrowLeft, Save, X, Plus, Trash2, Package, Image as ImageIcon, Tag, Settings, DollarSign, BarChart3, Upload, AlertCircle } from "lucide-react";
 
 interface ProductVariant {
@@ -66,7 +67,7 @@ export default function AddProductPage() {
       try {
         const result = await getAllCategories();
         setCategories(result.categories || []);
-      } catch (err: any) {
+      } catch (err) {
         logger.error("Failed to load categories:", err);
       }
     };
@@ -121,7 +122,7 @@ export default function AddProductPage() {
     setVariants(newVariants);
   };
 
-  const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
+  const updateVariant = (index: number, field: keyof ProductVariant, value: string | boolean) => {
     const newVariants = [...variants];
     if (field === "isDefault") {
       newVariants.forEach((v, i) => {
@@ -249,9 +250,9 @@ export default function AddProductPage() {
 
       await createProduct(productData);
       router.push("/admin/products");
-    } catch (err: any) {
+    } catch (err) {
       logger.error("Product creation error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to create product";
+      const errorMessage = handleApiError(err, "creating product");
       setError(errorMessage);
     } finally {
       setLoading(false);

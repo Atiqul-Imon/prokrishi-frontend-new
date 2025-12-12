@@ -6,12 +6,14 @@ import Link from "next/link";
 import { getProductById } from "../../../utils/api";
 import { ArrowLeft, Edit, Package, Tag, DollarSign, PackageCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { Product } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +23,8 @@ export default function ProductDetailsPage() {
         setLoading(true);
         const result = await getProductById(productId);
         setProduct(result.product || result);
-      } catch (err: any) {
-        setError(err.message || "Failed to load product");
+      } catch (err) {
+        setError(handleApiError(err, "loading product"));
       } finally {
         setLoading(false);
       }

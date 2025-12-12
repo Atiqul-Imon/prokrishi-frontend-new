@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getProductById, updateProduct, getAllCategories } from "../../../../utils/api";
 import { logger } from "../../../../utils/logger";
 import { ArrowLeft, Save, X, Plus, Trash2, Package, Image as ImageIcon, Tag, Settings, DollarSign, BarChart3, Upload, AlertCircle } from "lucide-react";
+import type { Category, ProductVariant as ProductVariantType } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 interface ProductVariant {
   _id?: string;
@@ -36,7 +38,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [hasVariants, setHasVariants] = useState(false);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [primaryImage, setPrimaryImage] = useState<File | null>(null);
@@ -102,7 +104,7 @@ export default function EditProductPage() {
         if (product.hasVariants && product.variants && product.variants.length > 0) {
           setHasVariants(true);
           setVariants(
-            product.variants.map((v: any) => ({
+            product.variants.map((v: ProductVariantType) => ({
               _id: v._id?.toString(),
               label: v.label || "",
               sku: v.sku || undefined,
@@ -134,8 +136,8 @@ export default function EditProductPage() {
         }
 
         setCategories(categoriesResult.categories || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to load product");
+      } catch (err) {
+        setError(handleApiError(err, "loading product"));
       } finally {
         setFetchLoading(false);
       }
@@ -200,7 +202,7 @@ export default function EditProductPage() {
     setVariants(newVariants);
   };
 
-  const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
+  const updateVariant = (index: number, field: keyof ProductVariant, value: string | boolean) => {
     const newVariants = [...variants];
     if (field === "isDefault") {
       newVariants.forEach((v, i) => {
@@ -335,10 +337,9 @@ export default function EditProductPage() {
 
       await updateProduct(productId, productData);
       router.push(`/admin/products/${productId}`);
-    } catch (err: any) {
+    } catch (err) {
       logger.error("Product update error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update product";
-      setError(errorMessage);
+      setError(handleApiError(err, "updating product"));
     } finally {
       setLoading(false);
     }

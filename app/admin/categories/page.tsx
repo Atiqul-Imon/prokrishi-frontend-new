@@ -5,9 +5,11 @@ import Link from "next/link";
 import { getAllCategories, deleteCategory } from "../../utils/api";
 import { Plus, Search, Edit, Trash2, Tag, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { Category } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,13 +22,13 @@ export default function AdminCategoriesPage() {
       const result = await getAllCategories();
       let filtered = result.categories || [];
       if (searchQuery) {
-        filtered = filtered.filter((cat: any) =>
+        filtered = filtered.filter((cat: Category) =>
           cat?.name?.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
       setCategories(filtered);
-    } catch (err: any) {
-      setError(err.message || "Failed to load categories");
+    } catch (err) {
+      setError(handleApiError(err, "loading categories"));
     } finally {
       setLoading(false);
     }
@@ -41,8 +43,8 @@ export default function AdminCategoriesPage() {
       await deleteCategory(id);
       setCategories(categories.filter((c) => c._id !== id));
       setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete category");
+    } catch (err) {
+      setError(handleApiError(err, "deleting category"));
     }
   };
 

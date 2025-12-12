@@ -5,11 +5,12 @@ import { useParams } from "next/navigation";
 import { getProductById } from "../../utils/api";
 import { fishProductApi } from "../../utils/fishApi";
 import { useCart } from "../../context/CartContext";
-import type { Product } from "@/types/models";
+import type { Product, FishProduct, SizeCategory } from "@/types/models";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,18 +24,20 @@ export default function ProductDetailPage() {
 
   const isFishProduct = useMemo(() => {
     if (!product) return false;
-    return (product as any).isFishProduct === true ||
-      ((product as any).sizeCategories && Array.isArray((product as any).sizeCategories) && (product as any).sizeCategories.length > 0);
+    const fishProduct = product as FishProduct;
+    return fishProduct.isFishProduct === true ||
+      (fishProduct.sizeCategories && Array.isArray(fishProduct.sizeCategories) && fishProduct.sizeCategories.length > 0);
   }, [product]);
 
   const sizeCategories = useMemo(() => {
     if (!product) return [];
-    return (product as any).sizeCategories || [];
+    const fishProduct = product as FishProduct;
+    return fishProduct.sizeCategories || [];
   }, [product]);
 
   const selectedSizeCategory = useMemo(() => {
     if (!isFishProduct || !variantId) return null;
-    return sizeCategories.find((sc: any) => sc._id === variantId) || null;
+    return sizeCategories.find((sc: SizeCategory) => sc._id === variantId) || null;
   }, [isFishProduct, sizeCategories, variantId]);
 
   useEffect(() => {
@@ -48,9 +51,10 @@ export default function ProductDetailPage() {
             setProduct(res.product);
             return;
           }
-        } catch (regularErr: any) {
+        } catch (regularErr) {
+          const err = regularErr as { status?: number; message?: string };
           // If 404, try fish product endpoint
-          if (regularErr.status === 404 || regularErr.message?.includes('not found')) {
+          if (err.status === 404 || err.message?.includes('not found')) {
             try {
               const fishRes = await fishProductApi.getById(id);
               // Transform fish product to match Product type
@@ -74,7 +78,7 @@ export default function ProductDetailPage() {
                 setProduct(transformedProduct);
                 return;
               }
-            } catch (fishErr: any) {
+            } catch (fishErr) {
               // Both failed, show error
               setError("Product not found - it may have been deleted");
               return;
@@ -83,8 +87,8 @@ export default function ProductDetailPage() {
           // Re-throw if not a 404
           throw regularErr;
         }
-      } catch (err: any) {
-        setError(err?.message || "Failed to load product");
+      } catch (err) {
+        setError(handleApiError(err, "loading product"));
       } finally {
         setLoading(false);
       }
@@ -124,8 +128,8 @@ export default function ProductDetailPage() {
     }
     if (isFishProduct && !selectedSizeCategory) {
       // If no size category selected, use total available stock from all active categories
-      const activeCategories = sizeCategories.filter((sc: any) => sc.status === 'active');
-      return activeCategories.reduce((sum: number, cat: any) => sum + (cat.stock || 0), 0);
+      const activeCategories = sizeCategories.filter((sc: SizeCategory) => sc.status === 'active');
+      return activeCategories.reduce((sum: number, cat: SizeCategory) => sum + (cat.stock || 0), 0);
     }
     if (selectedVariant) return selectedVariant.stock || 0;
     return product?.stock || 0;
@@ -328,7 +332,7 @@ export default function ProductDetailPage() {
                 <div className="space-y-4">
                   <h3 className="text-base font-semibold text-gray-900">Select Size Category</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {sizeCategories.map((sc: any) => {
+                    {sizeCategories.map((sc: SizeCategory) => {
                       const isSelected = variantId === sc._id;
                       return (
                         <button

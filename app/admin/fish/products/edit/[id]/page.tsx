@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fishProductApi } from "../../../../../utils/fishApi";
+import { handleApiError } from "../../../../../utils/errorHandler";
+import type { SizeCategory as SizeCategoryType } from "@/types/models";
 import { ArrowLeft, Save, Plus, X, Package, Image as ImageIcon, Settings, DollarSign, BarChart3, Upload, AlertCircle, Fish } from "lucide-react";
 
 interface SizeCategory {
@@ -65,7 +67,7 @@ export default function EditFishProductPage() {
 
         if (product.sizeCategories && product.sizeCategories.length > 0) {
           setSizeCategories(
-            product.sizeCategories.map((cat: any) => ({
+            product.sizeCategories.map((cat: SizeCategoryType) => ({
               _id: cat._id,
               label: cat.label || "",
               pricePerKg: cat.pricePerKg?.toString() || "",
@@ -83,8 +85,8 @@ export default function EditFishProductPage() {
             { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: true },
           ]);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load fish product");
+      } catch (err) {
+        setError(handleApiError(err, "loading fish product"));
       } finally {
         setFetchLoading(false);
       }
@@ -120,7 +122,7 @@ export default function EditFishProductPage() {
     }
   };
 
-  const updateSizeCategory = (index: number, field: keyof SizeCategory, value: any) => {
+  const updateSizeCategory = (index: number, field: keyof SizeCategory, value: string | boolean) => {
     const newCategories = [...sizeCategories];
     if (field === "isDefault") {
       newCategories.forEach((cat, i) => {
@@ -204,8 +206,8 @@ export default function EditFishProductPage() {
 
       await fishProductApi.update(productId, fd);
       router.push(`/admin/fish/products/${productId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to update fish product");
+    } catch (err) {
+      setError(handleApiError(err, "updating fish product"));
     } finally {
       setLoading(false);
     }

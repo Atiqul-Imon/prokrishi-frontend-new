@@ -12,9 +12,11 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { searchProducts } from "@/app/utils/api";
-import { ProductsResponse } from "@/types/api";
+import { ProductsResponse, PaginationParams } from "@/types/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import type { Category, Product } from "@/types/models";
+import { handleApiError } from "@/app/utils/errorHandler";
 
 function SearchPageContent() {
   const searchParams = useSearchParams();
@@ -61,32 +63,28 @@ function SearchPageContent() {
 
     try {
       // Build search params object with proper types
-      const searchParams: any = {
+      const searchParams: PaginationParams = {
         search: query || undefined,
         category: category || undefined,
         page: parseInt(page) || 1,
+        minPrice: minPrice ? parseInt(minPrice) : undefined,
+        maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
+        sort: sortBy && sortBy !== "name" ? sortBy : undefined,
+        order: sortOrder as "asc" | "desc" | undefined,
+        status: status || undefined,
       };
-      
-      // Add optional numeric params
-      if (minPrice) searchParams.minPrice = parseInt(minPrice);
-      if (maxPrice) searchParams.maxPrice = parseInt(maxPrice);
-      
-      // Add sort params
-      if (sortBy && sortBy !== "name") searchParams.sort = sortBy;
-      if (sortOrder) searchParams.order = sortOrder as "asc" | "desc";
-      if (status) searchParams.status = status;
       
       const data = await searchProducts(searchParams);
 
       setResults(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(handleApiError(err, "searching products"));
     } finally {
       setLoading(false);
     }
   };
 
-  const updateFilters = (newFilters: any) => {
+  const updateFilters = (newFilters: Partial<typeof filters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
 
@@ -179,7 +177,7 @@ function SearchPageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)]"
                   >
                     <option value="">All Categories</option>
-                    {results.categories?.map((cat: any) => (
+                    {results.categories?.map((cat: Category) => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
                       </option>
@@ -283,7 +281,7 @@ function SearchPageContent() {
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                  {(results.products || []).map((product: any) => (
+                  {(results.products || []).map((product: Product) => (
                     <ProductCard key={product._id} product={product} />
                   ))}
                 </div>
