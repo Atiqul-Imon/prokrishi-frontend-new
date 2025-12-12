@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { formatCurrency } from "@/app/utils";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -276,7 +277,7 @@ export default function ProductDetailPage() {
                 <div className="pt-3 border-t border-gray-200">
                   <div className="flex items-baseline gap-2">
                     <p className="text-sm text-gray-500">Price</p>
-                    <p className="text-4xl font-bold text-gray-900">৳{price.toLocaleString()}</p>
+                    <p className="text-4xl font-bold text-gray-900">{formatCurrency(price)}</p>
                     {priceType === "PER_WEIGHT" && (
                       <p className="text-sm text-gray-500">/ {unit}</p>
                     )}
@@ -314,7 +315,7 @@ export default function ProductDetailPage() {
                           }`}
                         >
                           <div className="font-bold">{v.label || v.unit}</div>
-                          <div className="text-xs mt-1">৳{v.price}</div>
+                          <div className="text-xs mt-1">{formatCurrency(v.price)}</div>
                           {!variantInStock && (
                             <div className="text-xs text-red-600 mt-1">Out of stock</div>
                           )}
@@ -348,7 +349,7 @@ export default function ProductDetailPage() {
                           }`}
                         >
                           <div className="font-bold">{sc.label || "Size"}</div>
-                          <div className="text-xs mt-1">৳{sc.pricePerKg}/kg</div>
+                          <div className="text-xs mt-1">{formatCurrency(sc.pricePerKg)}/kg</div>
                         </button>
                       );
                     })}
@@ -389,7 +390,7 @@ export default function ProductDetailPage() {
                   </div>
                   {inStock && (
                     <p className="text-xs text-gray-500 mt-2">
-                      Total: ৳{(price * quantity).toLocaleString()}
+                      Total: {formatCurrency(price * quantity)}
                     </p>
                   )}
                 </div>

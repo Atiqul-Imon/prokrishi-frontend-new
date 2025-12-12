@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Trash2, Plus, Minus } from "lucide-react";
+import { formatCurrency } from "@/app/utils";
 
 export default function CartPage() {
   const { cart, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -86,7 +87,7 @@ export default function CartPage() {
                       <h3 className="font-semibold text-lg text-gray-900 mb-1.5 leading-tight">{item.name}</h3>
                       {item.variantSnapshot && (
                         <p className="text-sm text-gray-600 mb-2">
-                          {item.variantSnapshot.label || item.variantSnapshot.unit} — ৳{item.variantSnapshot.price.toLocaleString()}
+                          {item.variantSnapshot.label || item.variantSnapshot.unit} — {formatCurrency(item.variantSnapshot.price)}
                         </p>
                       )}
                       {(item as any).isFishProduct && (
@@ -116,7 +117,7 @@ export default function CartPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900 mb-1">
-                            ৳{((item.variantSnapshot?.price || item.price) * item.quantity).toLocaleString()}
+                            {formatCurrency((item.variantSnapshot?.price || item.price) * item.quantity)}
                           </p>
                           <button
                             onClick={() => removeFromCart(item.id || item._id, item.variantId)}
@@ -143,7 +144,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center justify-between py-2">
                     <p className="text-base text-gray-600">Subtotal</p>
-                    <p className="text-lg font-bold text-gray-900">৳{summary.subtotal.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-gray-900">{formatCurrency(summary.subtotal)}</p>
                   </div>
                   <div className="pt-4 border-t border-gray-200">
                     <div className="bg-gradient-to-r from-green-50 to-amber-50 rounded-lg p-4 mb-4">

@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { getUserOrders, getUserFishOrders } from "@/app/utils/api";
 import { logger } from "@/app/utils/logger";
+import { formatCurrency, formatDate } from "@/app/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -88,13 +89,6 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const getStatusConfig = (status: string) => {
     return statusConfig[status as keyof typeof statusConfig] || statusConfig.processing;
@@ -166,7 +160,7 @@ export default function Orders() {
                   </div>
                   <div className="text-right sm:text-left sm:ml-auto">
                     <div className="text-xl font-bold text-gray-900 mb-2">
-                      ৳{(order.totalAmount || order.total || 0).toLocaleString()}
+                      {formatCurrency(order.totalAmount || order.total || 0)}
                     </div>
                     <Badge variant={status.label === "Delivered" ? "success" : status.label === "Cancelled" ? "error" : "warning"} size="md">
                       {status.label}
@@ -186,7 +180,7 @@ export default function Orders() {
                           {item.name || item.productName} × {item.quantity}
                         </span>
                         <span className="text-gray-900 font-semibold">
-                          ৳{((item.price || 0) * (item.quantity || 1)).toLocaleString()}
+                          {formatCurrency((item.price || 0) * (item.quantity || 1))}
                         </span>
                       </div>
                     ))}
@@ -264,19 +258,19 @@ export default function Orders() {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Subtotal:</span>
                             <span className="text-gray-900 font-semibold">
-                              ৳{(order.subtotal || order.totalAmount || 0).toLocaleString()}
+                              {formatCurrency(order.subtotal || order.totalAmount || 0)}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Delivery:</span>
                             <span className="text-green-600 font-semibold">
-                              ৳{(order.shippingCost || 0).toLocaleString()}
+                              {formatCurrency(order.shippingCost || 0)}
                             </span>
                           </div>
                           <div className="flex justify-between font-bold pt-2 border-t border-gray-300 text-base">
                             <span className="text-gray-900">Total:</span>
                             <span className="text-green-600">
-                              ৳{(order.totalAmount || order.total || 0).toLocaleString()}
+                              {formatCurrency(order.totalAmount || order.total || 0)}
                             </span>
                           </div>
                         </div>

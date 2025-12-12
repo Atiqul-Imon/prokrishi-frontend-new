@@ -8,6 +8,7 @@ import { placeOrder, createPaymentSession, getShippingQuote, validateCartApi } f
 import { fishOrderApi } from "../utils/fishApi";
 import { logger } from "../utils/logger";
 import { handleApiError, retryWithBackoff } from "../utils/errorHandler";
+import { formatCurrency, formatPhone } from "@/app/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -621,7 +622,7 @@ export default function CheckoutPage() {
                   )}
                   <div className="flex items-center justify-between py-2">
                     <p className="text-base text-gray-600">Subtotal</p>
-                    <p className="text-lg font-bold text-gray-900">৳{cartTotal.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-gray-900">{formatCurrency(cartTotal)}</p>
                   </div>
                   <div className="flex items-center justify-between py-2">
                     <p className="text-base text-gray-600">Shipping</p>
@@ -629,7 +630,7 @@ export default function CheckoutPage() {
                       {shippingLoading ? (
                         <span className="text-gray-400">Calculating...</span>
                       ) : selectedZone ? (
-                        `৳${shippingFee.toLocaleString()}`
+                        formatCurrency(shippingFee)
                       ) : (
                         <span className="text-red-500">Select zone</span>
                       )}
@@ -642,7 +643,7 @@ export default function CheckoutPage() {
                         {shippingLoading ? (
                           <span className="text-gray-400">Calculating...</span>
                         ) : (
-                          `৳${total.toLocaleString()}`
+                          formatCurrency(total)
                         )}
                       </p>
                     </div>
