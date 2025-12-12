@@ -162,6 +162,8 @@ export default function Header() {
   return (
     <>
       <header
+        id="main-navigation"
+        role="banner"
         className={`sticky top-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-100"
@@ -278,6 +280,9 @@ export default function Header() {
                       padding="none"
                       variant="elevated"
                       className="absolute top-full mt-3 w-full shadow-2xl z-50 overflow-hidden"
+                      id="search-results"
+                      role="listbox"
+                      aria-label="Search results"
                     >
                       {loading ? (
                         <div className="p-8 text-center">
@@ -296,7 +301,9 @@ export default function Header() {
                               <button
                                 key={product._id}
                                 onClick={() => handleResultClick(product)}
-                                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${
+                                role="option"
+                                aria-selected={index === selectedIndex}
+                                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset ${
                                   index === selectedIndex ? "bg-green-50" : ""
                                 }`}
                               >

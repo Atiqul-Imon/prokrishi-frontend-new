@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingCartButton from "@/components/FloatingCartButton";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { SkipLinks } from "@/components/SkipLinks";
 
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,11 +19,14 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
   // Render public layout for non-admin routes
   return (
     <div className="min-h-screen flex flex-col">
+      <SkipLinks />
       <Header />
-      <main className="flex-1 pb-16 md:pb-0">{children}</main>
+      <main id="main-content" className="flex-1 pb-16 md:pb-0" role="main">{children}</main>
       <Footer />
       <FloatingCartButton />
       <MobileBottomNav />
+      {/* ARIA live region for dynamic announcements */}
+      <div id="aria-live-region" aria-live="polite" aria-atomic="true" className="sr-only"></div>
     </div>
   );
 }

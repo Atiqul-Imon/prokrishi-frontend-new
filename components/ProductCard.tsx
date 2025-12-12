@@ -59,8 +59,8 @@ export default function ProductCard({ product, showBadges = true, className = ""
   const primaryImage = images && images.length > 0 ? images[0] : image;
 
   return (
-    <div className={`group relative rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col ${className}`}>
-      <Link href={`/products/${_id}`} className="block flex-shrink-0">
+    <article className={`group relative rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col ${className}`} aria-label={`Product: ${name}`}>
+      <Link href={`/products/${_id}`} className="block flex-shrink-0" aria-label={`View details for ${name}`}>
         <div className="relative overflow-hidden aspect-square w-full bg-gray-100">
           {primaryImage ? (
             <img
@@ -87,7 +87,7 @@ export default function ProductCard({ product, showBadges = true, className = ""
 
           {/* Out of Stock Overlay */}
           {!inStock && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10" role="status" aria-live="polite">
               <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] md:text-[9px] font-semibold">
                 Sold Out
               </span>
@@ -130,7 +130,9 @@ export default function ProductCard({ product, showBadges = true, className = ""
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
-            className={`w-full font-bold py-2.5 md:py-2 lg:py-2.5 px-3 md:px-2.5 lg:px-3 rounded-lg transition-all duration-200 flex items-center justify-center text-sm md:text-xs lg:text-sm shadow-md ${
+            aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
+            aria-disabled={!inStock}
+            className={`w-full font-bold py-2.5 md:py-2 lg:py-2.5 px-3 md:px-2.5 lg:px-3 rounded-lg transition-all duration-200 flex items-center justify-center text-sm md:text-xs lg:text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
               inStock
                 ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg active:scale-95"
                 : "bg-gray-400 text-white cursor-not-allowed opacity-50"
@@ -140,7 +142,7 @@ export default function ProductCard({ product, showBadges = true, className = ""
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
