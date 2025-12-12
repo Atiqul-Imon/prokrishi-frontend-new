@@ -18,6 +18,7 @@ import { formatCurrency, formatDate } from "@/app/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { TableSkeleton, Skeleton } from "@/components/ui/SkeletonLoader";
 import type { Order } from "@/types/models";
 
 const statusConfig = {
@@ -51,8 +52,12 @@ const statusConfig = {
   },
 };
 
+interface OrderWithType extends Order {
+  isFishOrder: boolean;
+}
+
 export default function Orders() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderWithType[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
 
@@ -64,10 +69,6 @@ export default function Orders() {
           getUserOrders().catch(() => ({ success: false, orders: [] })),
           getUserFishOrders().catch(() => ({ success: false, orders: [] })),
         ]);
-
-        interface OrderWithType extends Order {
-          isFishOrder: boolean;
-        }
 
         const allOrders: OrderWithType[] = [
           ...(regularOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: false })),
@@ -96,11 +97,12 @@ export default function Orders() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[var(--primary-green)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading orders...</p>
+      <div className="space-y-6">
+        <div className="mb-2">
+          <Skeleton variant="text" height={28} width={200} className="mb-1" />
+          <Skeleton variant="text" height={20} width={300} />
         </div>
+        <TableSkeleton rows={5} columns={4} />
       </div>
     );
   }
@@ -138,8 +140,8 @@ export default function Orders() {
           {orders.map((order) => {
             const status = getStatusConfig(order.status || "processing");
             const StatusIcon = status.icon;
-            const orderId = order._id || order.id;
-            const orderItems = order.items || order.products || [];
+            const orderId = order._id || "";
+            const orderItems = order.orderItems || [];
 
             return (
               <Card key={orderId} padding="lg" variant="elevated" className="hover:shadow-lg transition-shadow">
@@ -160,7 +162,7 @@ export default function Orders() {
                   </div>
                   <div className="text-right sm:text-left sm:ml-auto">
                     <div className="text-xl font-bold text-gray-900 mb-2">
-                      {formatCurrency(order.totalAmount || order.total || 0)}
+                      {formatCurrency(order.totalAmount || 0)}
                     </div>
                     <Badge variant={status.label === "Delivered" ? "success" : status.label === "Cancelled" ? "error" : "warning"} size="md">
                       {status.label}
@@ -197,7 +199,7 @@ export default function Orders() {
                   <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
                     <MapPin size={16} className="text-gray-500" />
                     <span className="truncate max-w-[250px] font-medium">
-                      {order.shippingAddress?.address || order.address || "Address not available"}
+                      {order.shippingAddress?.address || "Address not available"}
                     </span>
                   </div>
                   <div className="flex gap-3">
@@ -258,19 +260,19 @@ export default function Orders() {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Subtotal:</span>
                             <span className="text-gray-900 font-semibold">
-                              {formatCurrency(order.subtotal || order.totalAmount || 0)}
+                              {formatCurrency(order.totalPrice || order.totalAmount || 0)}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Delivery:</span>
                             <span className="text-green-600 font-semibold">
-                              {formatCurrency(order.shippingCost || 0)}
+                              {formatCurrency(order.shippingFee || 0)}
                             </span>
                           </div>
                           <div className="flex justify-between font-bold pt-2 border-t border-gray-300 text-base">
                             <span className="text-gray-900">Total:</span>
                             <span className="text-green-600">
-                              {formatCurrency(order.totalAmount || order.total || 0)}
+                              {formatCurrency(order.totalAmount || order.totalPrice || 0)}
                             </span>
                           </div>
                         </div>

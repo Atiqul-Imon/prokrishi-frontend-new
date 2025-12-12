@@ -59,3 +59,6 @@ export {
 export { cn } from "./cn";
 export { getApiBaseUrl } from "./env";
 
+// Retry utilities
+export { retry, retryOnCondition, isNetworkError, isServerError } from "./retry";
+

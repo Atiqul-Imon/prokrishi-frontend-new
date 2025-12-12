@@ -5,18 +5,19 @@ import { useParams } from "next/navigation";
 import { getCategoryById, getAllProducts } from "@/app/utils/api";
 import { logger } from "@/app/utils/logger";
 import { handleApiError } from "@/app/utils/errorHandler";
-import ProductCard from "@/components/ProductCard";
 import ProductGrid from "@/components/ProductGrid";
+import { ProductGridSkeleton, Skeleton } from "@/components/ui/SkeletonLoader";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft } from "lucide-react";
+import type { Product, Category } from "@/types/models";
 
 export default function ProductsByCategoryPage() {
   const params = useParams();
   const { id: categoryId } = params;
-  const [products, setProducts] = useState<any[]>([]);
-  const [category, setCategory] = useState<any>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -58,10 +59,11 @@ export default function ProductsByCategoryPage() {
     return (
       <div className="min-h-screen bg-white py-8">
         <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
-          <div className="text-center py-20">
-            <div className="inline-block w-8 h-8 border-4 border-[var(--primary-green)] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-gray-600">Loading products...</p>
+          <div className="mb-6">
+            <Skeleton variant="text" height={32} width={300} className="mb-2" />
+            <Skeleton variant="text" height={20} width={200} />
           </div>
+          <ProductGridSkeleton count={12} />
         </div>
       </div>
     );
