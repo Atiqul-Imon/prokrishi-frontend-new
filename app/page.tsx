@@ -44,9 +44,8 @@ export default function Home() {
           order: 'desc',
         });
 
-        // NestJS returns { success: true, data: { fishProducts: [...], pagination: {...} } }
-        // Handle both wrapped and unwrapped responses
-        const fishProductsList = response.data?.data?.fishProducts || response.data?.fishProducts || response.fishProducts || [];
+        // fishProductApi.getAll() returns { success, fishProducts, pagination }
+        const fishProductsList = response.fishProducts || [];
 
         // Transform fish products to match Product type for display
         const transformedFishProducts: Product[] = fishProductsList.map((fp: any) => ({
