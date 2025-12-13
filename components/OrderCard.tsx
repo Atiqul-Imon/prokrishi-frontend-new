@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import OrderItem from "./OrderItem";
+import OrderInvoice from "./OrderInvoice";
 import type { Order } from "@/types/models";
 
 interface OrderCardProps {
@@ -202,7 +203,7 @@ function OrderCard({
           role="region"
           aria-label="Order details"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card padding="md" variant="default" className="bg-gray-50">
               <h5 className="font-bold text-gray-900 mb-3 text-base">
                 Delivery Information
@@ -253,6 +254,19 @@ function OrderCard({
               </div>
             </Card>
           </div>
+
+          {/* Invoice Section */}
+          {showInvoice && (
+            <div className="mt-6">
+              <Card padding="lg" variant="default" className="bg-white">
+                <h5 className="font-bold text-gray-900 mb-4 text-lg">Invoice / Receipt</h5>
+                <OrderInvoice 
+                  order={{ ...order, orderType: (order as any).isFishOrder ? "fish" : "regular" }} 
+                  showActions={true} 
+                />
+              </Card>
+            </div>
+          )}
         </div>
       )}
     </Card>

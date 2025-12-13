@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/Button";
 import type { Order } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { formatCurrency, formatDate, formatDateTimeBD } from "@/app/utils";
+import OrderInvoice from "@/components/OrderInvoice";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -578,6 +579,14 @@ export default function OrderDetailsPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Invoice Section */}
+      <div className="mt-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Invoice / Receipt</h2>
+          <OrderInvoice order={order} showActions={true} />
         </div>
       </div>
     </div>
