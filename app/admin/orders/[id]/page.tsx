@@ -163,9 +163,16 @@ export default function OrderDetailsPage() {
             </button>
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
-              Order #{order.invoiceNumber || order._id?.slice(-8)}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold text-slate-900">
+                Order #{order.invoiceNumber || order._id?.slice(-8)}
+              </h1>
+              {(order as any).orderType === 'fish' && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+                  Fish Order
+                </span>
+              )}
+            </div>
             <p className="text-sm text-slate-500">
               Placed on {formatDate(order.createdAt)}
             </p>
@@ -216,11 +223,14 @@ export default function OrderDetailsPage() {
                     <p className="text-sm font-medium text-slate-900">{item.name}</p>
                     {(item as any).variant?.label && (
                       <p className="text-xs text-slate-500">
-                        Variant: {(item as any).variant.label}
+                        {(order as any).orderType === 'fish' ? 'Size' : 'Variant'}: {(item as any).variant.label}
+                        {(order as any).orderType === 'fish' && (item as any).variant.pricePerKg && (
+                          <span className="ml-1">({formatCurrency((item as any).variant.pricePerKg)}/kg)</span>
+                        )}
                       </p>
                     )}
                     <p className="text-xs text-slate-500">
-                      Quantity: {item.quantity} × {formatCurrency(item.price || 0)}
+                      {(order as any).orderType === 'fish' ? 'Weight' : 'Quantity'}: {item.quantity} {(order as any).orderType === 'fish' ? 'kg' : ''} × {formatCurrency(item.price || 0)}
                     </p>
                   </div>
                   <div className="text-right">

@@ -34,7 +34,6 @@ const navItems = [
 
 const fishNavItems = [
   { label: "Fish Products", href: "/admin/fish/products", icon: Fish },
-  { label: "Fish Orders", href: "/admin/fish/orders", icon: ShoppingCart },
 ];
 
 const bottomNavItems = [

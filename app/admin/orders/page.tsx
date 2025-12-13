@@ -374,9 +374,16 @@ export default function AdminOrdersPage() {
                   }}
                 >
                   <td className="px-6 py-4">
-                    <span className="font-mono text-sm text-slate-900">
-                      #{order.invoiceNumber || order._id?.slice(-8)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm text-slate-900">
+                        #{order.invoiceNumber || order._id?.slice(-8)}
+                      </span>
+                      {(order as any).orderType === 'fish' && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+                          Fish
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>
