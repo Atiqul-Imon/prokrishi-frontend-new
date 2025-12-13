@@ -499,7 +499,7 @@ function CheckoutContent() {
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button
                     onClick={() => setSelectedZone("inside_dhaka")}
-                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm ${
+                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
                       selectedZone === "inside_dhaka"
                         ? "bg-green-50 text-green-800 ring-2 ring-green-500 ring-offset-2"
                         : "hover:bg-green-50/50 bg-white hover:shadow-md"
@@ -519,7 +519,7 @@ function CheckoutContent() {
                       setSelectedZone("outside_dhaka");
                     }}
                     disabled={fishProducts.length > 0}
-                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm ${
+                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
                       fishProducts.length > 0
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
                         : selectedZone === "outside_dhaka"
@@ -564,6 +564,8 @@ function CheckoutContent() {
                       placeholder="Full name"
                       value={address.name}
                       onChange={(e) => setAddress({ ...address, name: e.target.value })}
+                      inputMode="text"
+                      autoComplete="name"
                     />
                     <Input
                       label="Phone Number"
@@ -572,6 +574,8 @@ function CheckoutContent() {
                       placeholder="Phone number"
                       value={address.phone}
                       onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                      inputMode="tel"
+                      autoComplete="tel"
                     />
                   </div>
 
@@ -583,6 +587,8 @@ function CheckoutContent() {
                       placeholder="Enter your complete address in Dhaka"
                       value={address.address}
                       onChange={(e) => setAddress({ ...address, address: e.target.value })}
+                      inputMode="text"
+                      autoComplete="street-address"
                     />
                   ) : selectedZone === "outside_dhaka" ? (
                     /* Outside Dhaka - Full Address Form */
@@ -593,6 +599,8 @@ function CheckoutContent() {
                         placeholder="Division"
                         value={address.division}
                         onChange={(e) => setAddress({ ...address, division: e.target.value })}
+                        inputMode="text"
+                        autoComplete="address-level1"
                       />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Input
@@ -601,6 +609,8 @@ function CheckoutContent() {
                           placeholder="District"
                           value={address.district}
                           onChange={(e) => setAddress({ ...address, district: e.target.value })}
+                          inputMode="text"
+                          autoComplete="address-level2"
                         />
                         <Input
                           label="Upazila/Thana"
@@ -608,6 +618,8 @@ function CheckoutContent() {
                           placeholder="Upazila/Thana"
                           value={address.upazila}
                           onChange={(e) => setAddress({ ...address, upazila: e.target.value })}
+                          inputMode="text"
+                          autoComplete="address-level3"
                         />
                       </div>
                       <Input

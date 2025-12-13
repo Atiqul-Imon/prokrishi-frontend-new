@@ -12,6 +12,7 @@ import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Filter, X, ChevronDown } from "lucide-react";
+import PullToRefresh from "@/components/PullToRefresh";
 
 function ProductsContent() {
   const router = useRouter();
@@ -313,14 +314,16 @@ function ProductsContent() {
         {/* Products Grid */}
         {!loading && !error && products.length > 0 && (
           <>
-            <div className="mb-8">
-              <ProductGrid
-                products={products}
-                columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
-                gap="md"
-                showBadges={true}
-              />
-            </div>
+            <PullToRefresh onRefresh={loadProducts} disabled={loading}>
+              <div className="mb-8">
+                <ProductGrid
+                  products={products}
+                  columns={{ mobile: 2, tablet: 3, desktop: 4, wide: 6 }}
+                  gap="md"
+                  showBadges={true}
+                />
+              </div>
+            </PullToRefresh>
 
             {/* Pagination */}
             {totalPages > 1 && (

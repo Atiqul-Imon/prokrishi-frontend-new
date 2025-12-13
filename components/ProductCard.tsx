@@ -137,9 +137,9 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             disabled={!inStock}
             aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
             aria-disabled={!inStock}
-            className={`group/btn relative w-full font-semibold py-3 md:py-2.5 lg:py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-xs lg:text-sm overflow-hidden ${
+            className={`group/btn relative w-full font-semibold py-3 md:py-2.5 lg:py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-xs lg:text-sm overflow-hidden min-h-[44px] touch-manipulation ${
               inStock
-                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
+                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.95] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
             }`}
           >

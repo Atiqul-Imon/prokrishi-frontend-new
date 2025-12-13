@@ -26,9 +26,11 @@ export default function Header() {
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [scrolled, setScrolled] = useState(false);
+  const [swipeStart, setSwipeStart] = useState<{ x: number; y: number } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Track scroll for header styling
   useEffect(() => {
@@ -87,6 +89,45 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [showMobileMenu]);
+
+  // Swipe-to-close handler for mobile menu
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!showMobileMenu) return;
+    const touch = e.touches[0];
+    setSwipeStart({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!showMobileMenu || !swipeStart || !mobileMenuRef.current) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - swipeStart.x;
+    const deltaY = touch.clientY - swipeStart.y;
+
+    // Only handle horizontal swipes (right swipe to close)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 50) {
+      const menu = mobileMenuRef.current;
+      const translateX = Math.min(deltaX, menu.offsetWidth);
+      menu.style.transform = `translateX(${translateX}px)`;
+      menu.style.opacity = `${1 - translateX / menu.offsetWidth}`;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!showMobileMenu || !swipeStart || !mobileMenuRef.current) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - swipeStart.x;
+    const menu = mobileMenuRef.current;
+
+    // If swiped more than 30% of menu width, close it
+    if (deltaX > menu.offsetWidth * 0.3) {
+      setShowMobileMenu(false);
+    } else {
+      // Snap back
+      menu.style.transform = "";
+      menu.style.opacity = "";
+    }
+    setSwipeStart(null);
+  };
 
   const performSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -485,8 +526,18 @@ export default function Header() {
 
         {/* Enhanced Mobile Menu Drawer */}
         {showMobileMenu && (
-          <div className="xl:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white w-80 max-w-[85vw] h-full shadow-2xl overflow-y-auto">
+          <div 
+            className="xl:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in"
+            onClick={() => setShowMobileMenu(false)}
+          >
+            <div 
+              ref={mobileMenuRef}
+              className="bg-white w-80 max-w-[85vw] h-full shadow-2xl overflow-y-auto transition-transform duration-300 ease-out"
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-amber-50">
                 <div className="flex items-center gap-3">
@@ -502,7 +553,8 @@ export default function Header() {
                 </div>
                 <button
                   onClick={() => setShowMobileMenu(false)}
-                  className="p-2 text-gray-600 hover:text-[var(--primary-green)] hover:bg-white rounded-lg transition-colors"
+                  className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-600 hover:text-[var(--primary-green)] hover:bg-white rounded-lg transition-colors touch-manipulation active:scale-95"
+                  aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -517,7 +569,7 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setShowMobileMenu(false)}
-                      className={`flex items-center gap-3 px-6 py-3.5 mx-2 rounded-xl transition-all duration-200 ${
+                      className={`flex items-center gap-3 px-6 py-3.5 mx-2 rounded-xl transition-all duration-200 min-h-[44px] touch-manipulation active:scale-[0.98] ${
                         isActive
                           ? "bg-green-50 text-[var(--primary-green)] font-semibold"
                           : "text-gray-700 hover:bg-gray-50"

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { formatCurrency } from "@/app/utils";
+import SwipeableCartItem from "@/components/SwipeableCartItem";
 
 function CartContent() {
   const { cart, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -66,71 +67,16 @@ function CartContent() {
                 <h2 className="text-lg font-semibold text-gray-900">Cart Items ({cartCount})</h2>
               </div>
               {cart.map((item) => (
-                <Card key={`${item.id || item._id}-${item.variantId || "default"}`} padding="lg" variant="elevated" className="hover:shadow-lg transition-shadow">
-                  <div className="flex gap-5">
-                    {/* Item Image */}
-                    <div className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Item Details */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-1.5 leading-tight">{item.name}</h3>
-                      {item.variantSnapshot && (
-                        <p className="text-sm text-gray-600 mb-2">
-                          {item.variantSnapshot.label || item.variantSnapshot.unit} — {formatCurrency(item.variantSnapshot.price)}
-                        </p>
-                      )}
-                      {(item as any).isFishProduct && (
-                        <Badge variant="warning" size="sm" className="mb-3">
-                          Fish product
-                        </Badge>
-                      )}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => updateQuantity(item.id || item._id, Math.max(1, item.quantity - 1), item.variantId)}
-                            className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm"
-                            aria-label="Decrease quantity"
-                          >
-                            <Minus className="w-4 h-4 text-gray-700" />
-                          </button>
-                          <span className="px-4 py-2 rounded-lg bg-gray-50 text-base font-bold min-w-[3.5rem] text-center text-gray-900">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id || item._id, item.quantity + 1, item.variantId)}
-                            className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus className="w-4 h-4 text-gray-700" />
-                          </button>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900 mb-1">
-                            {formatCurrency((item.variantSnapshot?.price || item.price) * item.quantity)}
-                          </p>
-                          <button
-                            onClick={() => removeFromCart(item.id || item._id, item.variantId)}
-                            className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                <SwipeableCartItem
+                  key={`${item.id || item._id}-${item.variantId || "default"}`}
+                  item={item}
+                  onRemove={() => removeFromCart(item.id || item._id, item.variantId)}
+                  onUpdateQuantity={(delta) => {
+                    const newQuantity = Math.max(1, item.quantity + delta);
+                    updateQuantity(item.id || item._id, newQuantity, item.variantId);
+                  }}
+                  formatCurrency={formatCurrency}
+                />
               ))}
             </div>
 

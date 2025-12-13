@@ -4,10 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { Home, Search, ShoppingCart, User } from "lucide-react";
+import { formatCurrency } from "@/app/utils";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { cartCount } = useCart();
+  const { cartCount, cartTotal } = useCart();
+
+  // Haptic feedback helper
+  const triggerHaptic = () => {
+    if ("vibrate" in navigator) {
+      navigator.vibrate(10); // Short vibration
+    }
+  };
 
   // Don't show on admin routes
   if (pathname?.startsWith("/admin")) {
@@ -53,23 +61,30 @@ export default function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center flex-1 h-full relative ${
+              onClick={triggerHaptic}
+              className={`flex flex-col items-center justify-center flex-1 h-full relative min-h-[44px] touch-manipulation active:scale-95 ${
                 isActive
                   ? "text-[var(--primary-green)]"
                   : "text-gray-600 hover:text-[var(--primary-green)]"
-              } transition-colors`}
+              } transition-all`}
             >
               <div className="relative">
                 <Icon className="w-6 h-6" />
                 {item.badge && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                     {item.badge > 9 ? "9+" : item.badge}
+                  </span>
+                )}
+                {/* Show cart total on cart icon */}
+                {item.href === "/cart" && cartTotal > 0 && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-700 whitespace-nowrap">
+                    {formatCurrency(cartTotal)}
                   </span>
                 )}
               </div>
               <span className="text-xs font-medium mt-1">{item.label}</span>
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[var(--primary-green)] rounded-b-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-[var(--primary-green)] rounded-b-full transition-all" />
               )}
             </Link>
           );

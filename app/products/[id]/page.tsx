@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { formatCurrency } from "@/app/utils";
+import SwipeableImageGallery from "@/components/SwipeableImageGallery";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +22,6 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const isFishProduct = useMemo(() => {
     if (!product) return false;
@@ -202,48 +202,24 @@ export default function ProductDetailPage() {
           {/* Product Image Section */}
           <div className="space-y-4">
             <Card padding="none" variant="elevated" className="overflow-hidden">
-              <div className="aspect-square w-full bg-gray-100 relative group">
-                {productImages[selectedImageIndex] ? (
-                  <img
-                    src={productImages[selectedImageIndex]}
+              <div className="relative">
+                {productImages.length > 0 ? (
+                  <SwipeableImageGallery
+                    images={productImages}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="aspect-square w-full bg-gray-100 flex items-center justify-center">
                     <Package className="w-16 h-16 text-gray-400" />
                   </div>
                 )}
                 {!inStock && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20 pointer-events-none">
                     <Badge variant="error" size="lg">Out of Stock</Badge>
                   </div>
                 )}
               </div>
             </Card>
-
-            {/* Image Thumbnails */}
-            {productImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {productImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition ${
-                      selectedImageIndex === idx
-                        ? "ring-2 ring-green-600 ring-offset-2"
-                        : "hover:ring-2 hover:ring-green-300"
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${product.name} ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Product Info Section */}

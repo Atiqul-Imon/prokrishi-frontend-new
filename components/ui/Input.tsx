@@ -30,12 +30,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={error ? 'true' : 'false'}
           aria-describedby={describedBy}
           className={cn(
-            "w-full px-4 py-2.5 rounded-lg transition-colors bg-gray-50",
+            "w-full px-4 py-3 rounded-lg transition-colors bg-gray-50 min-h-[44px]", // Mobile: 44px minimum height for touch
             "focus:outline-none focus:ring-2 focus:ring-offset-0 focus:bg-white focus-visible:ring-2",
+            "text-base", // Prevent zoom on iOS (16px minimum)
             error
               ? "focus:ring-red-500 focus-visible:ring-red-500"
               : "focus:ring-[var(--primary-green)] focus-visible:ring-[var(--primary-green)]",
             "disabled:bg-gray-100 disabled:cursor-not-allowed",
+            "touch-manipulation", // Better touch performance
             className
           )}
           {...props}
