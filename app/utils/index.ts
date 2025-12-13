@@ -18,6 +18,7 @@ export {
   formatCurrencyWhole,
   formatDate,
   formatDateTime,
+  formatDateTimeBD,
   formatRelativeTime,
   formatNumber,
   formatPercentage,

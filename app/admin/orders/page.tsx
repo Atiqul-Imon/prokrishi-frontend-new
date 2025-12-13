@@ -14,7 +14,7 @@ import {
 } from "../../utils/api";
 import type { Order } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
-import { formatCurrency, formatDate, formatNumber } from "@/app/utils";
+import { formatCurrency, formatDateTimeBD, formatNumber } from "@/app/utils";
 import { Eye, Package, ShoppingCart, DollarSign, CheckCircle, Clock, Trash2 } from "lucide-react";
 import {
   AdminListPageLayout,
@@ -397,7 +397,7 @@ export default function AdminOrdersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-slate-900">
-                      {formatDate(order.createdAt)}
+                      {formatDateTimeBD(order.createdAt)}
                     </span>
                   </td>
                   <td className="px-6 py-4">

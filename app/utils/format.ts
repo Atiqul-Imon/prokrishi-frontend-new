@@ -85,6 +85,38 @@ export function formatDateTime(date: string | Date | undefined | null): string {
 }
 
 /**
+ * Format date and time in Bangladesh timezone (UTC+6)
+ * Shows date and time in Bangladesh Standard Time (BST)
+ */
+export function formatDateTimeBD(date: string | Date | undefined | null): string {
+  if (!date) {
+    return "N/A";
+  }
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) {
+      return "Invalid Date";
+    }
+    
+    // Format using Bangladesh timezone (Asia/Dhaka)
+    // Format: "Dec 13, 2024, 2:30 PM (BDT)"
+    const dateStr = d.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Dhaka",
+    });
+    
+    return `${dateStr} (BDT)`;
+  } catch {
+    return "Invalid Date";
+  }
+}
+
+/**
  * Format relative time (e.g., "2 hours ago", "3 days ago")
  */
 export function formatRelativeTime(date: string | Date | undefined | null): string {

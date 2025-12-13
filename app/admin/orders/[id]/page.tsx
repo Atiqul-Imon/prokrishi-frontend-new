@@ -29,7 +29,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import type { Order } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
-import { formatCurrency, formatDate } from "@/app/utils";
+import { formatCurrency, formatDate, formatDateTimeBD } from "@/app/utils";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -174,7 +174,7 @@ export default function OrderDetailsPage() {
               )}
             </div>
             <p className="text-sm text-slate-500">
-              Placed on {formatDate(order.createdAt)}
+              Placed on {formatDateTimeBD(order.createdAt)}
             </p>
           </div>
         </div>
@@ -546,9 +546,9 @@ export default function OrderDetailsPage() {
                   <Calendar className="text-slate-600" size={16} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Date</p>
+                  <p className="text-xs text-slate-500">Date & Time</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {formatDate(order.createdAt)}
+                    {formatDateTimeBD(order.createdAt)}
                   </p>
                 </div>
               </div>
