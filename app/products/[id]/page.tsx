@@ -12,8 +12,30 @@ import { Badge } from "@/components/ui/Badge";
 import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { formatCurrency } from "@/app/utils";
-import SwipeableImageGallery from "@/components/SwipeableImageGallery";
-import CollapsibleSection from "@/components/CollapsibleSection";
+import dynamic from "next/dynamic";
+import { ProductCardSkeleton } from "@/components/ui/SkeletonLoader";
+import ShareButton from "@/components/ShareButton";
+
+// Lazy load heavy components for code splitting
+const SwipeableImageGallery = dynamic(() => import("@/components/SwipeableImageGallery"), {
+  ssr: true,
+  loading: () => (
+    <div className="aspect-square w-full bg-gray-100 rounded-lg animate-pulse" />
+  ),
+});
+
+const CollapsibleSection = dynamic(() => import("@/components/CollapsibleSection"), {
+  ssr: true,
+  loading: () => (
+    <div className="bg-white rounded-xl p-6 shadow-sm">
+      <div className="h-6 bg-gray-200 rounded animate-pulse mb-4" />
+      <div className="space-y-2">
+        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+      </div>
+    </div>
+  ),
+});
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -171,11 +193,28 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-600 mt-4">Loading product…</p>
+      <div className="min-h-screen bg-white py-8 pb-24 md:pb-16">
+        <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
+          <div className="grid gap-4 lg:grid-cols-2 max-w-6xl mx-auto">
+            {/* Image skeleton */}
+            <div className="space-y-4">
+              <div className="aspect-square w-full bg-gray-200 rounded-lg animate-pulse" />
+              <div className="flex gap-2 overflow-x-auto">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-20 h-20 bg-gray-200 rounded-lg animate-pulse flex-shrink-0" />
+                ))}
+              </div>
+            </div>
+            {/* Content skeleton */}
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-3/4" />
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+                <div className="h-12 bg-gray-200 rounded animate-pulse w-1/3" />
+              </div>
+              <div className="h-32 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="h-24 bg-gray-200 rounded-lg animate-pulse" />
+            </div>
           </div>
         </div>
       </div>
@@ -229,9 +268,16 @@ export default function ProductDetailPage() {
             <Card padding="lg" variant="elevated">
               <div className="space-y-3">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">
-                    {product.name}
-                  </h1>
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight flex-1">
+                      {product.name}
+                    </h1>
+                    <ShareButton
+                      productName={product.name}
+                      productUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/products/${product._id}`}
+                      variant="icon"
+                    />
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {isFishProduct && (
                       <Badge variant="warning" size="md">

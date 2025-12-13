@@ -13,8 +13,18 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Filter, X, ChevronDown } from "lucide-react";
 import PullToRefresh from "@/components/PullToRefresh";
-import FilterDrawer from "@/components/FilterDrawer";
-import SortBottomSheet from "@/components/SortBottomSheet";
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components for code splitting
+const FilterDrawer = dynamic(() => import("@/components/FilterDrawer"), {
+  ssr: false,
+  loading: () => null,
+});
+
+const SortBottomSheet = dynamic(() => import("@/components/SortBottomSheet"), {
+  ssr: false,
+  loading: () => null,
+});
 
 function ProductsContent() {
   const router = useRouter();

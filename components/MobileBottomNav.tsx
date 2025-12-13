@@ -4,17 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { Home, Search, ShoppingCart, User } from "lucide-react";
+import { triggerHaptic, HapticType } from "@/app/utils/haptics";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { cartCount } = useCart();
-
-  // Haptic feedback helper
-  const triggerHaptic = () => {
-    if ("vibrate" in navigator) {
-      navigator.vibrate(10); // Short vibration
-    }
-  };
 
   // Don't show on admin routes
   if (pathname?.startsWith("/admin")) {
@@ -60,7 +54,7 @@ export default function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={triggerHaptic}
+              onClick={() => triggerHaptic(HapticType.SELECTION)}
               className={`flex flex-col items-center justify-center flex-1 h-full relative min-h-[44px] touch-manipulation active:scale-95 ${
                 isActive
                   ? "text-[var(--primary-green)]"

@@ -5,6 +5,7 @@ import { Trash2, Plus, Minus } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/app/utils";
+import { triggerHaptic, HapticType } from "@/app/utils/haptics";
 import type { CartItem } from "@/types/models";
 
 interface SwipeableCartItemProps {
@@ -58,12 +59,6 @@ export default function SwipeableCartItem({
     onUpdateQuantity(delta);
   };
 
-  // Haptic feedback helper (if available)
-  const triggerHaptic = () => {
-    if ("vibrate" in navigator) {
-      navigator.vibrate(10); // Short vibration
-    }
-  };
 
   return (
     <div className="relative overflow-hidden">
@@ -124,7 +119,7 @@ export default function SwipeableCartItem({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={(e) => {
-                      triggerHaptic();
+                      triggerHaptic(HapticType.SELECTION);
                       handleQuantityChange(-1, e);
                     }}
                     className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm touch-manipulation active:scale-95"
@@ -137,7 +132,7 @@ export default function SwipeableCartItem({
                   </span>
                   <button
                     onClick={(e) => {
-                      triggerHaptic();
+                      triggerHaptic(HapticType.SELECTION);
                       handleQuantityChange(1, e);
                     }}
                     className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors shadow-sm touch-manipulation active:scale-95"
@@ -155,7 +150,7 @@ export default function SwipeableCartItem({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      triggerHaptic();
+                      triggerHaptic(HapticType.MEDIUM);
                       onRemove();
                     }}
                     className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors min-h-[44px] px-2 touch-manipulation active:scale-95"

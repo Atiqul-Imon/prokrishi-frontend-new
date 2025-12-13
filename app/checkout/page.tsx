@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import CheckoutProgress from "@/components/CheckoutProgress";
+import LocationButton from "@/components/LocationButton";
 import type { CartItem, SizeCategory } from "@/types/models";
 
 type Zone = "inside_dhaka" | "outside_dhaka" | null;
@@ -566,9 +567,24 @@ function CheckoutContent() {
 
               {/* Shipping Address */}
               <Card padding="lg" variant="elevated" className="shadow-md">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
-                  <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
+                    <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+                  </div>
+                  {selectedZone && (
+                    <LocationButton
+                      onLocationReceived={(location) => {
+                        // Note: In production, you would reverse geocode the coordinates
+                        // to get the address. For now, we just log the location.
+                        console.log("Location received:", location);
+                        // You could integrate with a geocoding API here
+                      }}
+                      onError={(error) => {
+                        setMessage(error);
+                      }}
+                    />
+                  )}
                 </div>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

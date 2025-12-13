@@ -63,3 +63,18 @@ export { getApiBaseUrl } from "./env";
 // Retry utilities
 export { retry, retryOnCondition, isNetworkError, isServerError } from "./retry";
 
+// Mobile utilities
+export { triggerHaptic, isHapticAvailable, HapticType } from "./haptics";
+export { shareContent, shareProduct, sharePage, isShareAvailable } from "./share";
+export {
+  getCurrentLocation,
+  watchLocation,
+  clearLocationWatch,
+  isGeolocationAvailable,
+  type LocationCoordinates,
+  type LocationError,
+} from "./location";
+
+// Analytics
+export { analytics } from "./analytics";
+

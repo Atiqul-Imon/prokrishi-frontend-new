@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SwipeableImageGalleryProps {
@@ -97,16 +98,20 @@ export default function SwipeableImageGallery({
               key={idx}
               className="min-w-full h-full relative flex-shrink-0"
             >
-              <img
+              <Image
                 src={img}
                 alt={`${alt} ${idx + 1}`}
-                className={`w-full h-full object-cover transition-transform duration-300 ${
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className={`object-cover transition-transform duration-300 ${
                   isZoomed && idx === currentIndex
                     ? "scale-150 cursor-zoom-out"
                     : "cursor-zoom-in"
                 }`}
                 onClick={handleImageClick}
                 draggable={false}
+                priority={idx === 0}
+                loading={idx === 0 ? "eager" : "lazy"}
               />
             </div>
           ))}
@@ -176,11 +181,14 @@ export default function SwipeableImageGallery({
               }`}
               aria-label={`View image ${idx + 1}`}
             >
-              <img
+              <Image
                 src={img}
                 alt={`${alt} thumbnail ${idx + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
                 draggable={false}
+                loading="lazy"
               />
             </button>
           ))}

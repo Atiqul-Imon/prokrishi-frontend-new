@@ -3,7 +3,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { getUserOrders, getUserFishOrders } from "@/app/utils/api";
-import OrderInvoice from "@/components/OrderInvoice";
+import dynamic from "next/dynamic";
+
+// Lazy load OrderInvoice for code splitting
+const OrderInvoice = dynamic(() => import("@/components/OrderInvoice"), {
+  ssr: true,
+  loading: () => (
+    <div className="bg-white rounded-lg p-6 shadow-sm">
+      <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
+      <div className="space-y-2">
+        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+      </div>
+    </div>
+  ),
+});
 import { logger } from "@/app/utils/logger";
 import type { Order } from "@/types/models";
 

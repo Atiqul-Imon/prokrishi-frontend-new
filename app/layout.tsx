@@ -7,6 +7,10 @@ import ConditionalLayout from "./ConditionalLayout";
 import { ErrorBoundaryWrapper } from "./components/ErrorBoundaryWrapper";
 import FontLoader from "../components/FontLoader";
 import BanglaFontAdjuster from "../components/BanglaFontAdjuster";
+import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
+import ResourcePrefetcher from "../components/ResourcePrefetcher";
+import PWAInstallPrompt from "../components/PWAInstallPrompt";
+import OfflineIndicator from "../components/OfflineIndicator";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -42,8 +46,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[var(--background)] text-[var(--foreground)]">
       <body className={`${roboto.variable} antialiased`}>
+        <ResourcePrefetcher />
         <FontLoader />
         <BanglaFontAdjuster />
+        <ServiceWorkerRegistration />
+        <PWAInstallPrompt />
+        <OfflineIndicator />
         <ErrorBoundaryWrapper>
           <AuthProvider>
             <CartProvider>
