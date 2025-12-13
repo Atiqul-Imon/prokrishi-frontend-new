@@ -78,3 +78,45 @@ export {
 // Analytics
 export { analytics } from "./analytics";
 
+// Accessibility
+export {
+  prefersReducedMotion,
+  prefersHighContrast,
+  prefersDarkMode,
+  trapFocus,
+  announceToScreenReader,
+  getFocusableElements,
+  isElementVisible,
+  getContrastRatio,
+  meetsWCAGAA,
+} from "./accessibility";
+
+// Performance
+export {
+  performanceMonitor,
+  measureFunction,
+  measureAsyncFunction,
+  type PerformanceMetric,
+} from "./performance";
+
+// Network
+export {
+  getNetworkInfo,
+  isSlowConnection,
+  isDataSaverEnabled,
+  onNetworkChange,
+  simulateNetworkThrottle,
+  restoreNetworkFetch,
+  type NetworkInfo,
+} from "./network";
+
+// Memory
+export {
+  getMemoryUsage,
+  monitorMemoryUsage,
+  isMemoryUsageHigh,
+  getMemoryUsagePercentage,
+  detectMemoryLeak,
+  type MemoryInfo,
+} from "./memory";
+

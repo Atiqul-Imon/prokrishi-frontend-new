@@ -9,8 +9,12 @@ import FontLoader from "../components/FontLoader";
 import BanglaFontAdjuster from "../components/BanglaFontAdjuster";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ResourcePrefetcher from "../components/ResourcePrefetcher";
-import PWAInstallPrompt from "../components/PWAInstallPrompt";
 import OfflineIndicator from "../components/OfflineIndicator";
+import { SkipLinks } from "../components/SkipLinks";
+import PerformanceMonitor from "../components/PerformanceMonitor";
+import KeyboardNavigation from "../components/KeyboardNavigation";
+import NetworkOptimizer from "../components/NetworkOptimizer";
+import MemoryMonitor from "../components/MemoryMonitor";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -46,11 +50,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-[var(--background)] text-[var(--foreground)]">
       <body className={`${roboto.variable} antialiased`}>
+        <SkipLinks />
+        <KeyboardNavigation />
+        <PerformanceMonitor />
+        <NetworkOptimizer />
+        <MemoryMonitor />
         <ResourcePrefetcher />
         <FontLoader />
         <BanglaFontAdjuster />
         <ServiceWorkerRegistration />
-        <PWAInstallPrompt />
         <OfflineIndicator />
         <ErrorBoundaryWrapper>
           <AuthProvider>
