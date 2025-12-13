@@ -40,7 +40,22 @@ export default function ProductsByCategoryPage() {
         });
 
         if (productRes.products) {
-          setProducts(productRes.products);
+          // Normalize products - ensure stock field is set correctly
+          const normalizedProducts = productRes.products.map((product: any) => {
+            // For products with variants, use variantSummary.totalStock
+            if (product.hasVariants && product.variantSummary?.totalStock !== undefined) {
+              return {
+                ...product,
+                stock: product.variantSummary.totalStock,
+              };
+            }
+            // For products without variants, use stock field directly (or 0 if missing)
+            return {
+              ...product,
+              stock: product.stock ?? 0,
+            };
+          });
+          setProducts(normalizedProducts);
         } else {
           setProducts([]);
         }

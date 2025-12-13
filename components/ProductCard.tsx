@@ -106,13 +106,13 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
       <div className="p-4 md:p-3.5 lg:p-4 flex flex-col flex-grow">
         {/* Title */}
         <Link href={`/products/${_id}`}>
-          <h3 className="text-base md:text-sm lg:text-base font-bold text-gray-900 mb-2.5 md:mb-2 lg:mb-2.5 line-clamp-2 hover:text-emerald-700 transition-colors duration-200 min-h-[2.5rem] md:min-h-[2.25rem] lg:min-h-[2.5rem] leading-snug group-hover:translate-x-0.5 transition-transform">
+          <h3 className="text-base md:text-sm lg:text-base font-bold text-gray-900 mb-1 md:mb-1 lg:mb-1 line-clamp-2 hover:text-emerald-700 transition-colors duration-200 min-h-[2.5rem] md:min-h-[2.25rem] lg:min-h-[2.5rem] leading-snug group-hover:translate-x-0.5 transition-transform">
             {name}
           </h3>
         </Link>
 
         {/* Price and Measurement */}
-        <div className="mt-auto space-y-2">
+        <div className="mt-auto space-y-1.5">
           <div className="flex items-baseline gap-2">
             <p className="text-2xl md:text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">
               {formatCurrency(displayPrice)}
