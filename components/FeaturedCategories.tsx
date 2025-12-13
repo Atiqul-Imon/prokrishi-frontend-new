@@ -9,25 +9,25 @@ import { Category } from "@/types/models";
 const CategoryCard = memo(({ category }: { category: Category }) => (
   <Link
     href={`/products/category/${category._id}`}
-    className="group block text-center p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+    className="group block text-center p-3 sm:p-4 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
   >
-    <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 overflow-hidden rounded-full border-2 border-gray-200 group-hover:border-[var(--primary-green)] transition-colors duration-300">
+    <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-2 sm:mb-3 overflow-hidden rounded-xl border border-gray-200 group-hover:border-emerald-500 group-hover:shadow-md transition-all duration-300 bg-white">
       {category.image ? (
         <Image
           src={category.image}
           alt={category.name}
           fill
-          sizes="(max-width: 640px) 80px, 96px"
+          sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
           className="object-cover group-hover:scale-110 transition-transform duration-300"
           loading="lazy"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full">
-          <span className="text-gray-400 text-xs">{category.name.charAt(0)}</span>
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+          <span className="text-gray-400 text-xs font-semibold">{category.name.charAt(0)}</span>
         </div>
       )}
     </div>
-    <h3 className="text-sm font-semibold text-gray-800 group-hover:text-[var(--primary-green)] transition-colors duration-300 line-clamp-2">
+    <h3 className="text-xs sm:text-sm font-semibold text-gray-800 group-hover:text-emerald-700 transition-colors duration-300 line-clamp-2 leading-tight">
       {category.name}
     </h3>
   </Link>
@@ -96,7 +96,7 @@ export default function FeaturedCategories() {
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Shop by Category
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 sm:gap-6 justify-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4 md:gap-6 justify-center">
           {categories.map((category) => (
             <CategoryCard key={category._id} category={category} />
           ))}

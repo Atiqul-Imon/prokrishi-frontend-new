@@ -21,7 +21,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
     <div className="min-h-screen flex flex-col">
       <SkipLinks />
       <Header />
-      <main id="main-content" className="flex-1 pb-16 md:pb-0" role="main">{children}</main>
+      <main id="main-content" className="flex-1 pb-16 md:pb-0 pt-16" role="main">{children}</main>
       <Footer />
       <FloatingCartButton />
       <MobileBottomNav />

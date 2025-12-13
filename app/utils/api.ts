@@ -667,7 +667,8 @@ export async function searchProducts(params: PaginationParams = {}): Promise<Pro
       }
     });
 
-    const res = await api.get<ProductsResponse>(`/product/search?${queryParams.toString()}`);
+    // Use the main /product endpoint with search query parameter
+    const res = await api.get<ProductsResponse>(`/product?${queryParams.toString()}`);
     return res.data;
   } catch (err) {
     const axiosError = err as AxiosErrorResponse;

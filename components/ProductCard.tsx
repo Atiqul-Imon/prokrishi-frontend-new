@@ -169,27 +169,19 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             disabled={!inStock}
             aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
             aria-disabled={!inStock}
-            className={`group/btn relative w-full font-semibold py-2 md:py-2 lg:py-2.5 px-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-xs lg:text-sm overflow-hidden min-h-[44px] touch-manipulation ${
+            className={`group/btn relative w-full font-semibold py-2 md:py-2 lg:py-2.5 px-3 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[44px] touch-manipulation ${
               inStock
                 ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
             }`}
           >
+            {/* Shimmer effect on hover - only for in stock */}
             {inStock && (
-              <>
-                {/* Shimmer effect on hover */}
-                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                
-                {/* Text */}
-                <span className="relative z-10">Add to Cart</span>
-              </>
+              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             )}
-            {!inStock && (
-              <>
-                <Package size={18} className="opacity-50" strokeWidth={2} />
-                <span>Out of Stock</span>
-              </>
-            )}
+            
+            {/* Text - same for both in stock and out of stock */}
+            <span className="relative z-10">Add to Cart</span>
           </button>
         </div>
       </div>
