@@ -44,7 +44,7 @@ export default function ProductGrid({
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="inline-block w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin" />
         <p className="text-gray-600 mt-4">Loading products...</p>
       </div>
     );

@@ -60,38 +60,41 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
   const primaryImage = images && images.length > 0 ? images[0] : image;
 
   return (
-    <article className={`group relative rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300 h-full flex flex-col ${className}`} aria-label={`Product: ${name}`}>
-      <Link href={`/products/${_id}`} className="block flex-shrink-0" aria-label={`View details for ${name}`}>
-        <div className="relative overflow-hidden aspect-square w-full bg-gray-100">
+    <article className={`group relative rounded-xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300 h-full flex flex-col ${className}`} aria-label={`Product: ${name}`}>
+      <Link href={`/products/${_id}`} className="block flex-shrink-0 relative" aria-label={`View details for ${name}`}>
+        <div className="relative overflow-hidden aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100">
           {primaryImage ? (
             <Image
               src={primaryImage}
               alt={name}
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+              className="object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
-              <Package className="w-6 h-6 md:w-5 md:h-5 text-gray-400" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+              <Package className="w-8 h-8 text-gray-300" />
             </div>
           )}
           
+          {/* Gradient Overlay on Hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
           {/* Badges */}
           {showBadges && isFishProduct && (
-            <div className="absolute top-1.5 left-1.5 z-10">
-              <Badge variant="warning" size="sm" className="text-[10px] md:text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-0.5">
-                <Fish size={10} className="md:w-3 md:h-3" />
-                <span className="hidden md:inline">Fish</span>
+            <div className="absolute top-3 left-3 z-10">
+              <Badge variant="warning" size="sm" className="text-[11px] font-semibold flex items-center gap-1.5 px-2.5 py-1 shadow-md backdrop-blur-sm bg-amber-500/95 text-white border-0">
+                <Fish size={12} />
+                <span>Fish</span>
               </Badge>
             </div>
           )}
 
           {/* Out of Stock Overlay */}
           {!inStock && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10" role="status" aria-live="polite">
-              <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] md:text-[9px] font-semibold">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10" role="status" aria-live="polite">
+              <span className="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                 Sold Out
               </span>
             </div>
@@ -100,48 +103,61 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
       </Link>
 
       {/* Content */}
-      <div className="p-3 md:p-2.5 lg:p-3 flex flex-col flex-grow">
+      <div className="p-4 md:p-3.5 lg:p-4 flex flex-col flex-grow">
         {/* Title */}
         <Link href={`/products/${_id}`}>
-          <h3 className="text-base md:text-sm lg:text-base font-bold text-gray-900 mb-2 md:mb-1.5 lg:mb-2 line-clamp-2 hover:text-emerald-600 transition-colors min-h-[2.5rem] md:min-h-[2.25rem] lg:min-h-[2.5rem] leading-snug">
+          <h3 className="text-base md:text-sm lg:text-base font-bold text-gray-900 mb-2.5 md:mb-2 lg:mb-2.5 line-clamp-2 hover:text-emerald-700 transition-colors duration-200 min-h-[2.5rem] md:min-h-[2.25rem] lg:min-h-[2.5rem] leading-snug group-hover:translate-x-0.5 transition-transform">
             {name}
           </h3>
         </Link>
 
         {/* Price and Measurement */}
-        <div className="mt-auto">
-          <div className="flex items-center justify-between mb-2.5 md:mb-2 lg:mb-2.5">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-1.5">
-                <p className="text-xl md:text-lg lg:text-xl font-extrabold text-gray-900 truncate">{formatCurrency(displayPrice)}</p>
-                {isFishProduct && priceRange && priceRange.min !== priceRange.max && (
-                  <span className="text-sm md:text-xs lg:text-sm text-gray-600 font-semibold whitespace-nowrap">
-                    - {formatCurrency(priceRange.max || displayPrice)}
-                  </span>
-                )}
-              </div>
-              {measurementText && (
-                <p className="text-xs md:text-[11px] lg:text-xs text-gray-600 mt-1 font-medium">{measurementText}</p>
-              )}
-              {isFishProduct && (
-                <p className="text-xs md:text-[11px] lg:text-xs text-gray-600 mt-1 font-medium">Per kg</p>
-              )}
-            </div>
+        <div className="mt-auto space-y-2">
+          <div className="flex items-baseline gap-2">
+            <p className="text-2xl md:text-xl lg:text-2xl font-extrabold text-gray-900 tracking-tight">
+              {formatCurrency(displayPrice)}
+            </p>
+            {isFishProduct && priceRange && priceRange.min !== priceRange.max && (
+              <span className="text-sm text-gray-500 font-semibold whitespace-nowrap">
+                - {formatCurrency(priceRange.max || displayPrice)}
+              </span>
+            )}
           </div>
+          
+          {(measurementText || isFishProduct) && (
+            <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+              {measurementText && <span>{measurementText}</span>}
+              {isFishProduct && <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md">Per kg</span>}
+            </div>
+          )}
 
-          {/* Add to Cart Button */}
+          {/* Add to Cart Button - Sleek Enterprise Design */}
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
             aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
             aria-disabled={!inStock}
-            className={`w-full font-bold py-2.5 md:py-2 lg:py-2.5 px-3 md:px-2.5 lg:px-3 rounded-lg transition-all duration-200 flex items-center justify-center text-sm md:text-xs lg:text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+            className={`group/btn relative w-full font-semibold py-3 md:py-2.5 lg:py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-xs lg:text-sm overflow-hidden ${
               inStock
-                ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg active:scale-95"
-                : "bg-gray-400 text-white cursor-not-allowed opacity-50"
+                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
             }`}
           >
-            <span>{inStock ? "Add to Cart" : "Out of Stock"}</span>
+            {inStock && (
+              <>
+                {/* Shimmer effect on hover */}
+                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                
+                {/* Text */}
+                <span className="relative z-10">Add to Cart</span>
+              </>
+            )}
+            {!inStock && (
+              <>
+                <Package size={18} className="opacity-50" strokeWidth={2} />
+                <span>Out of Stock</span>
+              </>
+            )}
           </button>
         </div>
       </div>

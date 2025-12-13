@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
-/* Brand palette: Emerald/Amber */
+/* Brand palette: Darker Emerald/Amber */
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --primary-green: #0f9d58;
+  --primary-green: #047857;
   --primary-amber: #f59e0b;
-  --brand-emerald: #0f9d58;
-  --brand-emerald-600: #0c7c45;
-  --brand-emerald-50: #e8f5ed;
+  --brand-emerald: #047857;
+  --brand-emerald-600: #065f46;
+  --brand-emerald-700: #047857;
+  --brand-emerald-800: #065f46;
+  --brand-emerald-50: #ecfdf5;
   --brand-amber: #f59e0b;
   --brand-amber-600: #d97706;
   --brand-amber-50: #fff7eb;
@@ -104,7 +106,7 @@ a {
 .glass-panel {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.08);
+  box-shadow: 0 10px 30px rgba(4, 120, 87, 0.08);
   border-radius: 18px;
 }
 

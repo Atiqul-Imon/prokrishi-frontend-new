@@ -317,7 +317,7 @@ export default function Header() {
                                 onClick={() => handleResultClick(product)}
                                 role="option"
                                 aria-selected={index === selectedIndex}
-                                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset ${
+                                className={`w-full px-4 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-inset ${
                                   index === selectedIndex ? "bg-green-50" : ""
                                 }`}
                               >

@@ -55,7 +55,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
       {/* Logo Section - Nexus Style */}
       <div className="px-6 py-6 border-b border-emerald-800/30">
         <Link href="/admin" className="flex items-center gap-3 group">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all duration-300 group-hover:scale-105">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center shadow-lg shadow-emerald-700/20 transition-all duration-300 group-hover:scale-105">
             <span className="text-white font-bold text-xl">P</span>
           </div>
           <div className="flex flex-col">
@@ -81,7 +81,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                 title={item.label}
                 className={`group relative flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-emerald-500/20 text-white shadow-sm"
+                    ? "bg-emerald-700/20 text-white shadow-sm"
                     : "text-emerald-100 hover:bg-emerald-800/30 hover:text-white"
                 }`}
                 style={{ color: isActive ? '#ffffff' : '#d1fae5' }}
@@ -107,7 +107,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                   />
                 )}
                 {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-400 rounded-r-full"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-600 rounded-r-full"></div>
                 )}
               </Link>
             );
@@ -161,7 +161,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                     title={item.label}
                     className={`group relative flex items-center gap-3 px-3 py-2.5 ml-6 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "bg-emerald-500/20 text-white shadow-sm"
+                        ? "bg-emerald-700/20 text-white shadow-sm"
                         : "text-emerald-100 hover:bg-emerald-800/30 hover:text-white"
                     }`}
                     style={{ color: isActive ? '#ffffff' : '#d1fae5' }}
@@ -177,7 +177,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
                     />
                     <span className="flex-1" style={{ color: isActive ? '#ffffff' : '#d1fae5' }}>{item.label}</span>
                     {isActive && (
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-400 rounded-r-full"></div>
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-600 rounded-r-full"></div>
                     )}
                   </Link>
                 );
