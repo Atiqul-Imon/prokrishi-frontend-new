@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { placeOrder, createPaymentSession, getShippingQuote, validateCartApi } from "../utils/api";
+import { placeOrder, getShippingQuote, validateCartApi } from "../utils/api";
 import { fishOrderApi } from "../utils/fishApi";
 import { logger } from "../utils/logger";
 import { handleApiError, retryWithBackoff } from "../utils/errorHandler";
@@ -286,23 +286,62 @@ function CheckoutContent() {
 
       // Calculate totals separately for regular and fish products
       const regularProductsTotal = regularProducts.reduce(
-        (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
+        (sum, item) => {
+          const price = item.variantSnapshot?.price || item.price || 0;
+          const quantity = item.quantity || 0;
+          return sum + (Number(price) || 0) * (Number(quantity) || 0);
+        },
         0
       );
       const fishProductsTotal = fishProducts.reduce(
-        (sum, item) => sum + (item.variantSnapshot?.price || item.price) * item.quantity,
+        (sum, item) => {
+          const price = item.variantSnapshot?.price || item.price || 0;
+          const quantity = item.quantity || 0;
+          return sum + (Number(price) || 0) * (Number(quantity) || 0);
+        },
         0
       );
 
+      // Validate that we have valid totals
+      if (regularProducts.length > 0 && regularProductsTotal <= 0) {
+        throw new Error("Invalid product prices detected. Please refresh the page and try again.");
+      }
+      if (fishProducts.length > 0 && fishProductsTotal <= 0) {
+        throw new Error("Invalid fish product prices detected. Please refresh the page and try again.");
+      }
+
       // Use validated total if available, otherwise use calculated totals
       const validatedTotal =
-        typeof validation?.totalPrice === "number" ? validation.totalPrice : cartTotal;
+        typeof validation?.totalPrice === "number" && validation.totalPrice > 0
+          ? validation.totalPrice
+          : cartTotal;
       
       // Adjust validated total proportionally if validation changed prices
-      const validationAdjustment = validatedTotal !== cartTotal ? validatedTotal / cartTotal : 1;
+      // Handle division by zero: if cartTotal is 0, use 1 (no adjustment)
+      const validationAdjustment =
+        cartTotal > 0 && validatedTotal !== cartTotal
+          ? Math.max(0, validatedTotal / cartTotal) // Ensure non-negative
+          : 1;
+
+      // Ensure adjustment is valid (not NaN or Infinity)
+      const safeValidationAdjustment = Number.isFinite(validationAdjustment) ? validationAdjustment : 1;
 
       if (regularProducts.length > 0) {
-        const regularOrderTotalPrice = regularProductsTotal * validationAdjustment;
+        const regularOrderTotalPrice = regularProductsTotal * safeValidationAdjustment;
+
+        // Validate totalPrice before sending
+        if (!Number.isFinite(regularOrderTotalPrice) || regularOrderTotalPrice <= 0) {
+          logger.error("Invalid regular order total price:", {
+            regularProductsTotal,
+            safeValidationAdjustment,
+            regularOrderTotalPrice,
+            cartTotal,
+            validatedTotal,
+          });
+          throw new Error(
+            "Invalid order total calculated. Please refresh the page and try again. If the problem persists, contact support."
+          );
+        }
 
         const regularOrderData = {
           orderItems: regularProducts.map((item) => ({
@@ -352,10 +391,37 @@ function CheckoutContent() {
         });
 
         // Use the pre-calculated fish products total, adjusted by validation if needed
-        const fishOrderTotalPrice = fishProductsTotal * validationAdjustment;
+        const fishOrderTotalPrice = fishProductsTotal * safeValidationAdjustment;
+
+        // Validate totalPrice before sending
+        if (!Number.isFinite(fishOrderTotalPrice) || fishOrderTotalPrice <= 0) {
+          logger.error("Invalid fish order total price:", {
+            fishProductsTotal,
+            safeValidationAdjustment,
+            fishOrderTotalPrice,
+            cartTotal,
+            validatedTotal,
+          });
+          throw new Error(
+            "Invalid fish order total calculated. Please refresh the page and try again. If the problem persists, contact support."
+          );
+        }
 
         // For fish orders, shipping is flat rate based on zone
         const fishShippingFee = selectedZone === "inside_dhaka" ? 80 : 150;
+        const fishOrderTotalAmount = fishOrderTotalPrice + fishShippingFee;
+
+        // Validate totalAmount
+        if (!Number.isFinite(fishOrderTotalAmount) || fishOrderTotalAmount <= 0) {
+          logger.error("Invalid fish order total amount:", {
+            fishOrderTotalPrice,
+            fishShippingFee,
+            fishOrderTotalAmount,
+          });
+          throw new Error(
+            "Invalid fish order total amount calculated. Please refresh the page and try again."
+          );
+        }
 
         const fishOrderData = {
           orderItems: fishOrderItems,
@@ -363,7 +429,7 @@ function CheckoutContent() {
           paymentMethod: selectedPayment === "cod" ? "Cash on Delivery" : "Online Payment",
           totalPrice: fishOrderTotalPrice,
           // Add totalAmount for fish orders (totalPrice + flat shipping fee)
-          totalAmount: fishOrderTotalPrice + fishShippingFee,
+          totalAmount: fishOrderTotalAmount,
           shippingZone: selectedZone,
           ...(!user
             ? {
@@ -400,12 +466,25 @@ function CheckoutContent() {
       }
     } catch (err) {
       const errorMessage = handleApiError(err, "Checkout");
-      setMessage(errorMessage);
-      // If price mismatch error, show helpful message
-      if (errorMessage.includes("Price mismatch") || errorMessage.includes("price")) {
+      logger.error("Checkout error:", err);
+      
+      // Handle specific error cases
+      if (
+        errorMessage.includes("Total price must be greater than 0") ||
+        errorMessage.includes("price must be greater") ||
+        errorMessage.includes("Invalid order total") ||
+        errorMessage.includes("Invalid product prices") ||
+        errorMessage.includes("Invalid fish order")
+      ) {
         setMessage(
           "There was a price calculation error. Please refresh the page and try again. If the problem persists, contact support."
         );
+      } else if (errorMessage.includes("Price mismatch") || errorMessage.includes("price")) {
+        setMessage(
+          "There was a price calculation error. Please refresh the page and try again. If the problem persists, contact support."
+        );
+      } else {
+        setMessage(errorMessage);
       }
     } finally {
       setIsSubmitting(false);

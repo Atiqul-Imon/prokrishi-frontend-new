@@ -42,11 +42,15 @@ export default function FeaturedCategories() {
     async function loadCategories() {
       try {
         setLoading(true);
+        setError(null);
         const data = await getFeaturedCategories();
-        setCategories((data.categories || []).slice(0, 8));
+        const categoriesList = data.categories || [];
+        console.log("Loaded categories:", categoriesList.length, categoriesList);
+        setCategories(categoriesList.slice(0, 8));
       } catch (err: any) {
-        setError("Failed to load featured categories.");
-        console.error(err);
+        const errorMessage = err?.message || "Failed to load featured categories.";
+        setError(errorMessage);
+        console.error("Error loading categories:", err);
       } finally {
         setLoading(false);
       }
@@ -67,7 +71,22 @@ export default function FeaturedCategories() {
     );
   }
 
-  if (error || categories.length === 0) {
+  if (error) {
+    console.warn("Categories error:", error);
+    // Don't hide on error, show a message instead for debugging
+    return (
+      <section className="py-8 lg:py-12 bg-gradient-to-br from-amber-50 via-white to-green-50">
+        <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
+          <div className="text-center text-red-600">
+            <p>Failed to load categories: {error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) {
+    console.warn("No categories found");
     return null;
   }
 

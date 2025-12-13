@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getAllProducts, getFeaturedCategories } from "../utils/api";
+import { fishProductApi } from "../utils/fishApi";
 import { logger } from "../utils/logger";
 import { handleApiError } from "../utils/errorHandler";
-import type { Product, Category } from "@/types/models";
+import type { Product, Category, FishProduct } from "@/types/models";
 import ProductGrid from "@/components/ProductGrid";
 import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
 import { Card } from "@/components/ui/Card";
@@ -52,27 +53,108 @@ function ProductsContent() {
     loadCategories();
   }, []);
 
-  // Load products with filters
+  // Load products with filters (both regular and fish products)
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await getAllProducts({
+      
+      // Fetch regular products
+      const regularProductsRes = await getAllProducts({
         page: currentPage,
-        limit,
+        limit: Math.ceil(limit / 2), // Split limit between regular and fish products
         category: selectedCategory || undefined,
         search: searchQuery || undefined,
         sort: sortBy === "newest" ? undefined : sortBy,
         order: sortOrder,
       });
-      setProducts(res.products || []);
-      setTotalProducts(res.total || res.products?.length || 0);
+      
+      // Normalize regular products - ensure stock field is set correctly
+      const normalizedRegularProducts = (regularProductsRes.products || []).map((product: any) => {
+        // For products with variants, use variantSummary.totalStock
+        if (product.hasVariants && product.variantSummary?.totalStock !== undefined) {
+          return {
+            ...product,
+            stock: product.variantSummary.totalStock,
+          };
+        }
+        // For products without variants, use stock field directly (or 0 if missing)
+        return {
+          ...product,
+          stock: product.stock ?? 0,
+        };
+      });
+      
+      // Fetch fish products (only if no category filter or category is fish)
+      let fishProducts: Product[] = [];
+      try {
+        const fishRes = await fishProductApi.getAll({
+          page: currentPage,
+          limit: Math.ceil(limit / 2),
+          status: 'active',
+          search: searchQuery || undefined,
+          sort: sortBy === "newest" ? "createdAt" : sortBy,
+          order: sortOrder,
+        });
+        
+        // Transform fish products to match Product type
+        const fishProductsList = fishRes.fishProducts || [];
+        fishProducts = fishProductsList.map((fp: FishProduct) => ({
+          _id: fp._id,
+          name: fp.name,
+          price: (fp as any).priceRange?.min || 0,
+          stock: (fp as any).availableStock || 0,
+          image: fp.image,
+          unit: 'kg',
+          measurement: 1,
+          category: fp.category,
+          isFishProduct: true,
+          priceRange: (fp as any).priceRange,
+          sizeCategories: fp.sizeCategories,
+          createdAt: (fp as any).createdAt,
+        }));
+      } catch (fishErr) {
+        logger.warn("Failed to load fish products:", fishErr);
+        // Continue without fish products if they fail to load
+      }
+      
+      // Combine regular and fish products
+      const allProducts = [...normalizedRegularProducts, ...fishProducts];
+      
+      // Apply sorting if needed
+      if (sortBy === "price") {
+        allProducts.sort((a, b) => {
+          const priceA = a.isFishProduct ? (a.priceRange?.min || 0) : a.price;
+          const priceB = b.isFishProduct ? (b.priceRange?.min || 0) : b.price;
+          return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
+        });
+      } else if (sortBy === "name") {
+        allProducts.sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+          return sortOrder === "asc" 
+            ? nameA.localeCompare(nameB)
+            : nameB.localeCompare(nameA);
+        });
+      } else if (sortBy === "newest") {
+        allProducts.sort((a, b) => {
+          const dateA = new Date((a as any).createdAt || 0).getTime();
+          const dateB = new Date((b as any).createdAt || 0).getTime();
+          return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+        });
+      }
+      
+      // Limit to requested limit
+      const limitedProducts = allProducts.slice(0, limit);
+      
+      setProducts(limitedProducts);
+      setTotalProducts(allProducts.length);
     } catch (err) {
       setError(handleApiError(err, "loading products"));
     } finally {
       setLoading(false);
     }
-  }, [currentPage, selectedCategory, sortBy, sortOrder, searchQuery]);
+  }, [currentPage, selectedCategory, sortBy, sortOrder, searchQuery, limit]);
 
   useEffect(() => {
     loadProducts();

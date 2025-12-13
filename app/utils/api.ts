@@ -779,14 +779,58 @@ export async function deleteCategory(id: string): Promise<ApiResponse> {
 }
 
 export async function getFeaturedCategories(): Promise<{ categories: Category[] }> {
-  // NestJS uses GET /category?featured=true instead of /category/featured
+  // NestJS uses GET /category?featured=true or /category/featured
   const timestamp = Date.now();
-  const response = await apiRequest<{ success?: boolean; data?: { categories: Category[] }; categories?: Category[] }>(`/category?featured=true&t=${timestamp}`);
-  // NestJS returns { success: true, data: { message, categories } }
-  // Return in format expected by frontend: { categories: [...] }
-  return {
-    categories: response.data?.categories || response.categories || [],
-  };
+  try {
+    // Use axios directly to get full response structure
+    const res = await api.get<{ 
+      success?: boolean; 
+      data?: Category[] | { message?: string; categories?: Category[] }; 
+      categories?: Category[];
+      message?: string;
+    }>(`/category/featured?t=${timestamp}`);
+    
+    const responseData = res.data;
+    
+    // NestJS TransformInterceptor returns { success: true, data: [categories array] }
+    // The categories are directly in data as an array
+    let categories: Category[] = [];
+    if (Array.isArray(responseData.data)) {
+      categories = responseData.data;
+    } else if (responseData.data && typeof responseData.data === 'object' && 'categories' in responseData.data) {
+      categories = (responseData.data as { categories?: Category[] }).categories || [];
+    } else if (Array.isArray(responseData.categories)) {
+      categories = responseData.categories;
+    }
+    
+    return { categories };
+  } catch (err) {
+    // Fallback to query parameter approach
+    try {
+      const res = await api.get<{ 
+        success?: boolean; 
+        data?: Category[] | { message?: string; categories?: Category[] }; 
+        categories?: Category[];
+        message?: string;
+      }>(`/category?featured=true&t=${timestamp}`);
+      
+      const responseData = res.data;
+      
+      let categories: Category[] = [];
+      if (Array.isArray(responseData.data)) {
+        categories = responseData.data;
+      } else if (responseData.data && typeof responseData.data === 'object' && 'categories' in responseData.data) {
+        categories = (responseData.data as { categories?: Category[] }).categories || [];
+      } else if (Array.isArray(responseData.categories)) {
+        categories = responseData.categories;
+      }
+      
+      return { categories };
+    } catch (fallbackErr) {
+      logger.error("Failed to load featured categories:", fallbackErr);
+      return { categories: [] };
+    }
+  }
 }
 
 // Address Management
