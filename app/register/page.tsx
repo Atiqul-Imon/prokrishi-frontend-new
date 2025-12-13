@@ -67,7 +67,15 @@ export default function RegisterPage() {
     }
 
     try {
-      const result = await registerUser(form);
+      // Remove email from payload if it's empty
+      const registrationData = {
+        name: form.name,
+        phone: form.phone,
+        password: form.password,
+        ...(form.email && form.email.trim() !== '' ? { email: form.email.trim() } : {}),
+      };
+      
+      const result = await registerUser(registrationData);
       if (result.success) {
         setSuccess(true);
         setError("");
