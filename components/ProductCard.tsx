@@ -56,22 +56,54 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
 
   const measurementText = measurement && unit ? `${measurement} ${unit}` : null;
   
-  // Get primary image (use first from images array if available, otherwise use image)
-  const primaryImage = images && images.length > 0 ? images[0] : image;
+  // Get all available images
+  const allImages = useMemo(() => {
+    if (images && images.length > 0) {
+      return images;
+    }
+    if (image) {
+      return [image];
+    }
+    return [];
+  }, [images, image]);
+  
+  // Get primary and secondary images
+  const primaryImage = allImages[0] || null;
+  const secondaryImage = allImages.length > 1 ? allImages[1] : null;
+  const hasMultipleImages = allImages.length > 1;
 
   return (
     <article className={`group relative rounded-xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300 h-full flex flex-col ${className}`} aria-label={`Product: ${name}`}>
       <Link href={`/products/${_id}`} className="block flex-shrink-0 relative" aria-label={`View details for ${name}`}>
         <div className="relative overflow-hidden aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100">
           {primaryImage ? (
-            <Image
-              src={primaryImage}
-              alt={name}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out"
-              loading="lazy"
-            />
+            <>
+              {/* Primary Image */}
+              <Image
+                src={primaryImage}
+                alt={name}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className={`object-cover object-center transition-all duration-500 ease-out ${
+                  hasMultipleImages 
+                    ? "group-hover:opacity-0 group-hover:scale-110" 
+                    : "group-hover:scale-105 group-hover:brightness-110"
+                }`}
+                loading="lazy"
+              />
+              
+              {/* Secondary Image (shown on hover when multiple images exist) */}
+              {hasMultipleImages && secondaryImage && (
+                <Image
+                  src={secondaryImage}
+                  alt={`${name} - view 2`}
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover object-center opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out absolute inset-0"
+                  loading="lazy"
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
               <Package className="w-8 h-8 text-gray-300" />

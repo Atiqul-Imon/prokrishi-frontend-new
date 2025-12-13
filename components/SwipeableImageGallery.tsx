@@ -117,64 +117,16 @@ export default function SwipeableImageGallery({
           ))}
         </div>
 
-        {/* Navigation Arrows - Desktop Only */}
-        {images.length > 1 && (
-          <>
-            {currentIndex > 0 && (
-              <button
-                onClick={goToPrevious}
-                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg transition-all z-10 touch-manipulation active:scale-95"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-900" />
-              </button>
-            )}
-            {currentIndex < images.length - 1 && (
-              <button
-                onClick={goToNext}
-                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full items-center justify-center shadow-lg transition-all z-10 touch-manipulation active:scale-95"
-                aria-label="Next image"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-900" />
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Image Indicators */}
-        {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all touch-manipulation ${
-                  idx === currentIndex
-                    ? "w-6 bg-white"
-                    : "w-2 bg-white/50 hover:bg-white/75"
-                }`}
-                aria-label={`Go to image ${idx + 1}`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Swipe Hint - Show on first load for mobile */}
-        {images.length > 1 && currentIndex === 0 && (
-          <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-md md:hidden">
-            Swipe to view more
-          </div>
-        )}
       </div>
 
-      {/* Thumbnail Navigation */}
+      {/* Image Gallery - All Images Below */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide">
+        <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 mt-4 scrollbar-hide">
           {images.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all touch-manipulation active:scale-95 ${
+              className={`relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden transition-all touch-manipulation active:scale-95 ${
                 currentIndex === idx
                   ? "ring-2 ring-emerald-600 ring-offset-2"
                   : "hover:ring-2 hover:ring-emerald-300 opacity-75 hover:opacity-100"
@@ -183,9 +135,9 @@ export default function SwipeableImageGallery({
             >
               <Image
                 src={img}
-                alt={`${alt} thumbnail ${idx + 1}`}
+                alt={`${alt} ${idx + 1}`}
                 fill
-                sizes="80px"
+                sizes="96px"
                 className="object-cover"
                 draggable={false}
                 loading="lazy"
