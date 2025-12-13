@@ -85,95 +85,48 @@ function CheckoutContent() {
         }
       }
 
-      // Need at least a basic address for shipping quote
-      if (!address.address || address.address.trim().length < 2) {
-        // Use a placeholder address for quote calculation
-        const placeholderAddress = {
-          address: selectedZone === "inside_dhaka" ? "Dhaka" : "Outside Dhaka",
-          ...(selectedZone === "outside_dhaka" && {
-            division: address.division || "Dhaka",
-            district: address.district || "Dhaka",
-            upazila: address.upazila || "Dhaka",
-          }),
-        };
+      // Always use placeholder address for quote calculation
+      // Shipping cost is based on zone and product weight, not the specific address
+      // Actual address is only needed when placing the order, not for quote calculation
+      const placeholderAddress = {
+        address: selectedZone === "inside_dhaka" ? "Dhaka" : "Outside Dhaka",
+        ...(selectedZone === "outside_dhaka" && {
+          division: "Dhaka",
+          district: "Dhaka",
+          upazila: "Dhaka",
+        }),
+      };
 
-        try {
-          setShippingLoading(true);
-          const quote = await getShippingQuote({
-            orderItems: cart.map((item) => ({
-              product: item.id || item._id,
-              quantity: item.quantity,
-              variantId: item.variantId,
-            })),
-            shippingAddress: {
-              address: placeholderAddress.address,
-              ...(placeholderAddress.division && {
-                division: placeholderAddress.division,
-                district: placeholderAddress.district,
-                upazila: placeholderAddress.upazila,
-              }),
-            },
-            shippingZone: selectedZone,
-          });
-          setShippingFee(quote.shippingFee || 0);
-        } catch (err) {
-          logger.warn("Failed to get shipping quote, using fallback rates:", err);
-          // Fallback to flat rates if quote fails
-          setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
-        } finally {
-          setShippingLoading(false);
-        }
-      } else {
-        // Use actual address when available
-        const shippingAddress =
-          selectedZone === "inside_dhaka"
-            ? {
-                name: address.name || "Customer",
-                phone: address.phone || "",
-                address: address.address,
-              }
-            : {
-                name: address.name || "Customer",
-                phone: address.phone || "",
-                address: address.address,
-                division: address.division,
-                district: address.district,
-                upazila: address.upazila,
-              };
-
-        try {
-          setShippingLoading(true);
-          const quote = await getShippingQuote({
-            orderItems: cart.map((item) => ({
-              product: item.id || item._id,
-              quantity: item.quantity,
-              variantId: item.variantId,
-            })),
-            shippingAddress: {
-              name: shippingAddress.name,
-              phone: shippingAddress.phone,
-              address: shippingAddress.address,
-              ...(shippingAddress.division && {
-                division: shippingAddress.division,
-                district: shippingAddress.district,
-                upazila: shippingAddress.upazila,
-              }),
-            },
-            shippingZone: selectedZone,
-          });
-          setShippingFee(quote.shippingFee || 0);
-        } catch (err) {
-          logger.warn("Failed to get shipping quote, using fallback rates:", err);
-          // Fallback to flat rates if quote fails
-          setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
-        } finally {
-          setShippingLoading(false);
-        }
+      try {
+        setShippingLoading(true);
+        const quote = await getShippingQuote({
+          orderItems: cart.map((item) => ({
+            product: item.id || item._id,
+            quantity: item.quantity,
+            variantId: item.variantId,
+          })),
+          shippingAddress: {
+            address: placeholderAddress.address,
+            ...(placeholderAddress.division && {
+              division: placeholderAddress.division,
+              district: placeholderAddress.district,
+              upazila: placeholderAddress.upazila,
+            }),
+          },
+          shippingZone: selectedZone,
+        });
+        setShippingFee(quote.shippingFee || 0);
+      } catch (err) {
+        logger.warn("Failed to get shipping quote, using fallback rates:", err);
+        // Fallback to flat rates if quote fails
+        setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
+      } finally {
+        setShippingLoading(false);
       }
     };
 
     fetchShippingQuote();
-  }, [selectedZone, cart, address.address, address.division, address.district, address.upazila]);
+  }, [selectedZone, cart.length, fishProducts.length]); // Only depend on zone and cart, not address fields
 
   const total = cartTotal + shippingFee;
 
@@ -407,20 +360,21 @@ function CheckoutContent() {
           );
         }
 
-        // For fish orders, shipping is flat rate based on zone
-        const fishShippingFee = selectedZone === "inside_dhaka" ? 80 : 150;
-        const fishOrderTotalAmount = fishOrderTotalPrice + fishShippingFee;
+        // Don't calculate shipping fee or totalAmount - let backend calculate it
+        // Backend will calculate shipping fee based on zone and add it to totalPrice to get totalAmount
+        // This ensures server-authoritative pricing and prevents mismatches
 
-        // Validate totalAmount
-        if (!Number.isFinite(fishOrderTotalAmount) || fishOrderTotalAmount <= 0) {
-          logger.error("Invalid fish order total amount:", {
-            fishOrderTotalPrice,
-            fishShippingFee,
-            fishOrderTotalAmount,
-          });
-          throw new Error(
-            "Invalid fish order total amount calculated. Please refresh the page and try again."
-          );
+        // Ensure shipping zone is set correctly for fish products
+        const finalFishZone = selectedZone || "inside_dhaka";
+        
+        // Validate fish order items before sending
+        for (const item of fishOrderItems) {
+          if (!item.fishProduct || !item.sizeCategoryId) {
+            throw new Error(`Invalid fish order item: missing fishProduct or sizeCategoryId`);
+          }
+          if (!item.requestedWeight || item.requestedWeight <= 0) {
+            throw new Error(`Invalid requested weight for ${item.notes || 'fish product'}`);
+          }
         }
 
         const fishOrderData = {
@@ -428,9 +382,9 @@ function CheckoutContent() {
           shippingAddress,
           paymentMethod: selectedPayment === "cod" ? "Cash on Delivery" : "Online Payment",
           totalPrice: fishOrderTotalPrice,
-          // Add totalAmount for fish orders (totalPrice + flat shipping fee)
-          totalAmount: fishOrderTotalAmount,
-          shippingZone: selectedZone,
+          // Don't send totalAmount - backend calculates it (totalPrice + shippingFee)
+          // Don't send shippingFee - backend calculates it based on zone
+          shippingZone: finalFishZone,
           ...(!user
             ? {
                 guestInfo: {
@@ -441,9 +395,20 @@ function CheckoutContent() {
               }
             : {}),
         };
-        const fishRes = await fishOrderApi.create(fishOrderData) as OrderResponse;
-        // Extract order ID from nested response
-        fishOrderId = fishRes?._id || fishRes?.fishOrder?._id || fishRes?.data?.fishOrder?._id || null;
+        
+        try {
+          const fishRes = await fishOrderApi.create(fishOrderData) as OrderResponse;
+          // Extract order ID from nested response
+          fishOrderId = fishRes?._id || fishRes?.fishOrder?._id || fishRes?.data?.fishOrder?._id || null;
+          
+          if (!fishOrderId) {
+            logger.warn("Fish order created but no ID returned:", fishRes);
+          }
+        } catch (fishErr: any) {
+          logger.error("Failed to create fish order:", fishErr);
+          const errorMsg = fishErr?.response?.data?.message || fishErr?.message || "Failed to create fish order";
+          throw new Error(`Fish order failed: ${Array.isArray(errorMsg) ? errorMsg.join(", ") : errorMsg}`);
+        }
       }
 
       // Handle multiple orders - show both order IDs if both were created

@@ -102,27 +102,48 @@ export const fishProductApi = {
   },
 
   create: async (data: FormData) => {
-    const response = await fishApi.post("/products", data, {
+    // Backend endpoint: POST /fish-product (base is already /fish-product)
+    const response = await fishApi.post("", data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return response.data;
+    // NestJS returns { success: true, data: { message, fishProduct } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      fishProduct: responseData?.fishProduct || responseData,
+    };
   },
 
   update: async (id: string, data: FormData) => {
-    const response = await fishApi.put(`/products/${id}`, data, {
+    // Backend endpoint: PUT /fish-product/:id (base is already /fish-product)
+    const response = await fishApi.put(`/${id}`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return response.data;
+    // NestJS returns { success: true, data: { message, fishProduct } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      fishProduct: responseData?.fishProduct || responseData,
+    };
   },
 
   delete: async (id: string) => {
-    const response = await fishApi.delete(`/products/${id}`);
-    return response.data;
+    // Backend endpoint: DELETE /fish-product/:id (base is already /fish-product)
+    const response = await fishApi.delete(`/${id}`);
+    // NestJS returns { success: true, data: { message } }
+    const responseData = response.data?.data || response.data;
+    return responseData || response.data;
   },
 
   toggleFeatured: async (id: string) => {
-    const response = await fishApi.patch(`/products/${id}/featured`);
-    return response.data;
+    // Backend endpoint: PUT /fish-product/:id/toggle-featured (base is already /fish-product)
+    const response = await fishApi.put(`/${id}/toggle-featured`, {});
+    // NestJS returns { success: true, data: { message, fishProduct } }
+    const responseData = response.data?.data || response.data;
+    return {
+      ...responseData,
+      fishProduct: responseData?.fishProduct || responseData,
+    };
   },
 };
 
