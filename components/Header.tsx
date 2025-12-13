@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, ShoppingCart, User, Menu, X, Settings, ChevronDown, Package, LogOut } from "lucide-react";
+import { Search, ShoppingBag, User, Menu, X, Settings, ChevronDown, Package, LogOut } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCart } from "@/app/context/CartContext";
 import { searchProducts } from "@/app/utils/api";
@@ -456,7 +456,7 @@ export default function Header() {
                 href="/cart"
                 className="relative p-2 text-gray-600 hover:text-[var(--primary-green)] hover:bg-gray-50 rounded-lg transition-all duration-200 group"
               >
-                <ShoppingCart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                <ShoppingBag className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 {cartCount > 0 && (
                   <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse ${
                     cartCount > 9 

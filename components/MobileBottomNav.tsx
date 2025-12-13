@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
-import { Home, Search, ShoppingCart, User } from "lucide-react";
+import { Home, ShoppingBag, User } from "lucide-react";
 import { triggerHaptic, HapticType } from "@/app/utils/haptics";
 
 export default function MobileBottomNav() {
@@ -23,14 +23,8 @@ export default function MobileBottomNav() {
       active: pathname === "/",
     },
     {
-      href: "/search",
-      icon: Search,
-      label: "Search",
-      active: pathname?.startsWith("/search"),
-    },
-    {
       href: "/cart",
-      icon: ShoppingCart,
+      icon: ShoppingBag,
       label: "Cart",
       active: pathname === "/cart",
       badge: cartCount > 0 ? cartCount : null,
