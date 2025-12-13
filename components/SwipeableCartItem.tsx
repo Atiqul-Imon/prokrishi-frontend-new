@@ -89,8 +89,8 @@ export default function SwipeableCartItem({
       >
         <Card padding="lg" variant="elevated" className="hover:shadow-lg transition-shadow">
           <div className="flex gap-5">
-            {/* Item Image */}
-            <div className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
+            {/* Item Image - Larger on Mobile */}
+            <div className="w-32 h-32 md:w-24 md:h-24 lg:w-28 lg:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
               {item.image ? (
                 <img
                   src={item.image}

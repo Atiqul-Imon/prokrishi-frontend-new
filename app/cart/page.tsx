@@ -24,7 +24,7 @@ function CartContent() {
   }, [cartTotal]);
 
   return (
-    <div className="min-h-screen bg-white py-8 pb-20">
+    <div className="min-h-screen bg-white py-8 pb-24 md:pb-20">
       <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <div>
@@ -80,8 +80,30 @@ function CartContent() {
               ))}
             </div>
 
-            {/* Order Summary */}
-            <div className="lg:sticky lg:top-4 h-fit">
+            {/* Sticky Order Summary - Mobile */}
+            {hasItems && (
+              <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg">
+                <div className="px-4 py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-sm text-gray-600">Subtotal ({cartCount} items)</p>
+                      <p className="text-xl font-bold text-emerald-700">
+                        {formatCurrency(summary.subtotal)}
+                      </p>
+                    </div>
+                    <Link href="/checkout" className="flex-shrink-0">
+                      <Button variant="primary" size="lg" className="font-bold text-base px-6 py-3 min-h-[44px]">
+                        Checkout
+                      </Button>
+                    </Link>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">{summary.shippingHint}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Order Summary - Desktop */}
+            <div className="lg:sticky lg:top-4 h-fit hidden md:block">
               <Card padding="lg" variant="elevated" className="shadow-lg">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
                 <div className="space-y-5">

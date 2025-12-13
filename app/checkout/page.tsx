@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
+import CheckoutProgress from "@/components/CheckoutProgress";
 import type { CartItem, SizeCategory } from "@/types/models";
 
 type Zone = "inside_dhaka" | "outside_dhaka" | null;
@@ -456,8 +457,18 @@ function CheckoutContent() {
     }
   }
 
+  // Determine current step
+  const getCurrentStep = () => {
+    if (!selectedZone) return 1;
+    if (!address.name || !address.phone || !address.address) return 2;
+    return 3;
+  };
+
+  const currentStep = getCurrentStep();
+  const checkoutSteps = ["Zone", "Address", "Review"];
+
   return (
-    <div className="min-h-screen bg-white py-8 pb-20">
+    <div className="min-h-screen bg-white py-8 pb-24 md:pb-20">
       <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <div>
@@ -468,6 +479,9 @@ function CheckoutContent() {
             <Button variant="ghost" size="sm">← Back to Cart</Button>
           </Link>
         </div>
+
+        {/* Progress Indicator */}
+        <CheckoutProgress currentStep={currentStep} steps={checkoutSteps} />
 
         {cart.length === 0 && (
           <Card padding="lg" variant="elevated">
@@ -666,7 +680,7 @@ function CheckoutContent() {
 
             {/* Order Summary */}
             <div className="lg:sticky lg:top-4 h-fit">
-              <Card padding="lg" variant="elevated" className="shadow-lg">
+              <Card padding="lg" variant="elevated" className="shadow-lg hidden md:block">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-2">
@@ -743,6 +757,37 @@ function CheckoutContent() {
                   <p className="text-xs text-gray-500 text-center">Secure checkout • Free returns</p>
                 </div>
               </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Sticky Checkout Summary & Button - Mobile Only */}
+        {cart.length > 0 && (
+          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg">
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-xl font-bold text-emerald-700">
+                    {shippingLoading ? (
+                      <span className="text-gray-400">Calculating...</span>
+                    ) : (
+                      formatCurrency(total)
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px]"
+                  onClick={handlePlaceOrder}
+                  disabled={isSubmitting || !selectedZone || cart.length === 0 || shippingLoading}
+                  isLoading={isSubmitting}
+                >
+                  Place Order
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 text-center">Secure checkout</p>
             </div>
           </div>
         )}

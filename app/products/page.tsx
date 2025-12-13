@@ -13,6 +13,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Filter, X, ChevronDown } from "lucide-react";
 import PullToRefresh from "@/components/PullToRefresh";
+import FilterDrawer from "@/components/FilterDrawer";
+import SortBottomSheet from "@/components/SortBottomSheet";
 
 function ProductsContent() {
   const router = useRouter();
@@ -24,6 +26,7 @@ function ProductsContent() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
 
   // Filter and sort state
   const [selectedCategory, setSelectedCategory] = useState<string>(
@@ -212,46 +215,65 @@ function ProductsContent() {
         {/* Filters and Sort Bar */}
         <div className="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            {/* Mobile Filter Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="sm:hidden"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-            </Button>
-
-            {/* Category Filter */}
-            <div className="relative">
-              <select
-                value={selectedCategory}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                className="appearance-none bg-gray-50 px-4 py-2 pr-10 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white cursor-pointer"
+            {/* Mobile Filter & Sort Buttons */}
+            <div className="flex gap-2 sm:hidden w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(true)}
+                className="flex-1 min-h-[44px]"
               >
-                <option value="">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+                {selectedCategory && (
+                  <span className="ml-2 bg-emerald-600 text-white text-xs px-2 py-0.5 rounded-full">
+                    1
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSortSheet(true)}
+                className="flex-1 min-h-[44px]"
+              >
+                Sort
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
             </div>
 
-            {/* Sort By */}
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="appearance-none bg-gray-50 px-4 py-2 pr-10 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white cursor-pointer"
-              >
-                <option value="newest">Newest First</option>
-                <option value="price">Price</option>
-                <option value="name">Name</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            {/* Desktop Filters */}
+            <div className="hidden sm:flex flex-wrap items-center gap-3">
+              {/* Category Filter */}
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="appearance-none bg-gray-50 px-4 py-2 pr-10 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white cursor-pointer min-h-[44px]"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Sort By */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="appearance-none bg-gray-50 px-4 py-2 pr-10 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white cursor-pointer min-h-[44px]"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="price">Price</option>
+                  <option value="name">Name</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             {/* Sort Order Toggle (only show for price/name) */}
@@ -387,6 +409,57 @@ function ProductsContent() {
             </div>
           </Card>
         )}
+
+        {/* Mobile Filter Drawer */}
+        <FilterDrawer
+          isOpen={showFilters}
+          onClose={() => setShowFilters(false)}
+          title="Filters"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Category
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full appearance-none bg-gray-50 px-4 py-3 pr-10 rounded-lg text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white cursor-pointer min-h-[44px]"
+              >
+                <option value="">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={clearFilters}
+                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Clear All Filters
+              </Button>
+            )}
+          </div>
+        </FilterDrawer>
+
+        {/* Mobile Sort Bottom Sheet */}
+        <SortBottomSheet
+          isOpen={showSortSheet}
+          onClose={() => setShowSortSheet(false)}
+          selectedValue={sortBy}
+          onSelect={handleSortChange}
+          options={[
+            { value: "newest", label: "Newest First" },
+            { value: "price", label: "Price" },
+            { value: "name", label: "Name" },
+          ]}
+        />
       </div>
     </div>
   );

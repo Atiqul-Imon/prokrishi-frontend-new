@@ -13,6 +13,7 @@ import { Package, Truck, Plus, Minus, CheckCircle } from "lucide-react";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { formatCurrency } from "@/app/utils";
 import SwipeableImageGallery from "@/components/SwipeableImageGallery";
+import CollapsibleSection from "@/components/CollapsibleSection";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -196,7 +197,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-8 pb-16">
+    <div className="min-h-screen bg-white py-8 pb-24 md:pb-16">
       <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
         <div className="grid gap-4 lg:grid-cols-2 max-w-6xl mx-auto">
           {/* Product Image Section */}
@@ -269,8 +270,8 @@ export default function ProductDetailPage() {
             {product.hasVariants && product.variants && product.variants.length > 0 && (
               <Card padding="lg" variant="elevated">
                 <div className="space-y-3">
-                  <h3 className="text-base font-semibold text-gray-900">Select Variant</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">Select Variant</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                     {product.variants.map((v) => {
                       const isSelected = variantId === v._id;
                       const variantInStock = (v.stock || 0) > 0;
@@ -282,7 +283,7 @@ export default function ProductDetailPage() {
                             setQuantity(1);
                           }}
                           disabled={!variantInStock}
-                          className={`rounded-xl px-4 py-4 text-sm font-semibold transition text-left ${
+                          className={`rounded-xl px-4 py-3 md:py-4 text-sm font-semibold transition text-left min-h-[44px] touch-manipulation active:scale-95 ${
                             isSelected
                               ? "bg-green-50 text-green-900 ring-2 ring-green-200"
                               : variantInStock
@@ -307,8 +308,8 @@ export default function ProductDetailPage() {
             {isFishProduct && sizeCategories.length > 0 && (
               <Card padding="lg" variant="elevated">
                 <div className="space-y-4">
-                  <h3 className="text-base font-semibold text-gray-900">Select Size Category</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">Select Size Category</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                     {sizeCategories.map((sc: SizeCategory) => {
                       const isSelected = variantId === sc._id;
                       return (
@@ -318,7 +319,7 @@ export default function ProductDetailPage() {
                             setVariantId(sc._id);
                             setQuantity(1);
                           }}
-                          className={`rounded-xl px-4 py-4 text-sm font-semibold transition text-left ${
+                          className={`rounded-xl px-4 py-3 md:py-4 text-sm font-semibold transition text-left min-h-[44px] touch-manipulation active:scale-95 ${
                             isSelected
                               ? "bg-green-50 text-green-900 ring-2 ring-green-200"
                               : "bg-white hover:bg-green-50/50"
@@ -335,7 +336,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* Quantity Selector & Add to Cart */}
-            <Card padding="lg" variant="elevated">
+            <Card padding="lg" variant="elevated" className="hidden md:block">
               <div className="space-y-4">
                 {/* Quantity Selector */}
                 <div>
@@ -346,11 +347,11 @@ export default function ProductDetailPage() {
                     <button
                       onClick={() => handleQuantityChange(-1)}
                       disabled={quantity <= 1}
-                      className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
                     >
                       <Minus className="w-5 h-5" />
                     </button>
-                    <div className="flex-1 px-4 py-2 rounded-lg bg-gray-50 text-center">
+                    <div className="flex-1 px-4 py-3 md:py-2 rounded-lg bg-gray-50 text-center min-h-[44px] flex items-center justify-center">
                       <span className="text-lg font-bold text-gray-900">{quantity}</span>
                       {unit !== "pcs" && (
                         <span className="text-sm text-gray-500 ml-2">{unit}</span>
@@ -359,7 +360,7 @@ export default function ProductDetailPage() {
                     <button
                       onClick={() => handleQuantityChange(1)}
                       disabled={!inStock || quantity >= currentStock}
-                      className="w-10 h-10 rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -371,7 +372,7 @@ export default function ProductDetailPage() {
                   )}
                 </div>
 
-                {/* Add to Cart Button */}
+                {/* Add to Cart Button - Desktop Only */}
                 <Button
                   variant="primary"
                   size="lg"
@@ -401,21 +402,48 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Product Description - Full Width Section */}
+        {/* Product Description - Collapsible on Mobile */}
         {product.description && (
-          <div className="mt-12 max-w-6xl mx-auto">
+          <div className="mt-8 md:mt-12 max-w-6xl mx-auto">
             <Card padding="lg" variant="elevated">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">
-                Product Description
-              </h2>
-              <div className="prose prose-lg max-w-none">
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
-                  {product.description}
+              <CollapsibleSection title="Product Description" defaultOpen={false}>
+                <div className="prose prose-lg max-w-none">
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line text-base">
+                    {product.description}
+                  </div>
                 </div>
-              </div>
+              </CollapsibleSection>
             </Card>
           </div>
         )}
+
+        {/* Sticky Add to Cart Button - Mobile Only */}
+        <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
+          <div className="flex items-center gap-4 max-w-6xl mx-auto">
+            <div className="flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(price * quantity)}
+                </span>
+                {priceType === "PER_WEIGHT" && (
+                  <span className="text-sm text-gray-500">/ {unit}</span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {inStock ? `${currentStock} ${unit} available` : "Out of stock"}
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="lg"
+              className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
+              onClick={() => addToCart(product, quantity, variantId)}
+              disabled={!inStock}
+            >
+              {inStock ? "Add to Cart" : "Out of Stock"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

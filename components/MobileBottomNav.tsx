@@ -4,11 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { Home, Search, ShoppingCart, User } from "lucide-react";
-import { formatCurrency } from "@/app/utils";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { cartCount, cartTotal } = useCart();
+  const { cartCount } = useCart();
 
   // Haptic feedback helper
   const triggerHaptic = () => {
@@ -71,14 +70,12 @@ export default function MobileBottomNav() {
               <div className="relative">
                 <Icon className="w-6 h-6" />
                 {item.badge && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                    {item.badge > 9 ? "9+" : item.badge}
-                  </span>
-                )}
-                {/* Show cart total on cart icon */}
-                {item.href === "/cart" && cartTotal > 0 && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-700 whitespace-nowrap">
-                    {formatCurrency(cartTotal)}
+                  <span className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse ${
+                    item.badge > 9 
+                      ? "px-1.5 py-0.5 min-w-[24px] h-6" 
+                      : "h-5 w-5"
+                  }`}>
+                    {item.badge}
                   </span>
                 )}
               </div>

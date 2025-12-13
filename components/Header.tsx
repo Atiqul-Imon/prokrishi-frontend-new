@@ -429,8 +429,12 @@ export default function Header() {
               >
                 <ShoppingCart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                    {cartCount > 9 ? "9+" : cartCount}
+                  <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse ${
+                    cartCount > 9 
+                      ? "px-1.5 py-0.5 min-w-[24px] h-6" 
+                      : "h-5 w-5"
+                  }`}>
+                    {cartCount}
                   </span>
                 )}
               </Link>
