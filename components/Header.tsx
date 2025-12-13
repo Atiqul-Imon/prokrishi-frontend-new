@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -73,10 +74,22 @@ export default function Header() {
       ) {
         setShowUserMenu(false);
       }
+      // Close mobile menu on outside click (backdrop)
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        showMobileMenu
+      ) {
+        // Only close if clicking on backdrop, not on menu itself
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('xl:hidden') && target.classList.contains('fixed')) {
+          setShowMobileMenu(false);
+        }
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [showMobileMenu]);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -216,7 +229,7 @@ export default function Header() {
       <header
         id="main-navigation"
         role="banner"
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 z-[100] transition-all duration-300 ${
           scrolled
             ? "bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-100"
             : "bg-white/90 backdrop-blur-sm shadow-sm border-b border-gray-50"
@@ -528,15 +541,17 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Enhanced Mobile Menu Drawer */}
-        {showMobileMenu && (
+        {/* Enhanced Mobile Menu Drawer - Rendered via Portal */}
+        {showMobileMenu && typeof window !== 'undefined' && createPortal(
           <div 
-            className="xl:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in"
+            className="xl:hidden fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setShowMobileMenu(false)}
+            style={{ opacity: showMobileMenu ? 1 : 0 }}
           >
             <div 
               ref={mobileMenuRef}
               className="bg-white w-80 max-w-[85vw] h-full shadow-2xl overflow-y-auto transition-transform duration-300 ease-out"
+              style={{ transform: showMobileMenu ? 'translateX(0)' : 'translateX(-100%)' }}
               onClick={(e) => e.stopPropagation()}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -634,7 +649,8 @@ export default function Header() {
                 )}
               </nav>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </header>
     </>
