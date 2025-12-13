@@ -72,55 +72,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-white py-12 px-4">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 py-8 md:py-12 px-4">
       <div className="w-full max-w-md">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your Prokrishi account</p>
+        <div className="text-center mb-8 md:mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 mb-4 md:mb-6 shadow-lg">
+            <LogIn className="w-8 h-8 md:w-10 md:h-10 text-white" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">Welcome Back</h1>
+          <p className="text-base md:text-lg text-gray-600">Sign in to your Prokrishi account</p>
         </div>
 
         {/* Login Form */}
-        <Card padding="lg">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <Card padding="lg" variant="elevated" className="shadow-xl border-0">
+          <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
             {/* Email or Phone Input */}
             <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Email or Phone Number
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
                 <Input
                   id="email"
                   name="email"
                   type="text"
-                  placeholder="you@example.com or +880 1234 567890"
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="pl-10"
+                  className="pl-12 pr-4 py-3 md:py-3.5 text-base"
                   autoComplete="username"
+                  inputMode="email"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">You can sign in with email or phone number</p>
+              <p className="text-xs text-gray-500 mt-2">You can sign in with email or phone number</p>
             </div>
 
             {/* Password Input */}
             <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
                   required
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-2.5 bg-gray-50 rounded-lg focus:ring-2 focus:ring-[var(--primary-green)] focus:bg-white outline-none"
+                  className="w-full pl-12 pr-12 py-3 md:py-3.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:bg-white outline-none transition-all text-base min-h-[48px]"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -129,18 +138,21 @@ export default function LoginPage() {
 
             {/* Error Message */}
             {(formError || error) && (
-              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-fade-in">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">Login Failed</p>
-                  <p className="text-sm text-red-600 mt-1">{formError || error}</p>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-800 mb-1">Login Failed</p>
+                  <p className="text-sm text-red-700">{formError || error}</p>
                 </div>
               </div>
             )}
 
             {/* Forgot Password */}
-            <div className="flex justify-end">
-              <Link href="/forgot-password" className="text-sm text-[var(--primary-green)] hover:text-[var(--primary-green)]/80 font-medium">
+            <div className="flex justify-end pt-2">
+              <Link 
+                href="/forgot-password" 
+                className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold transition-colors underline-offset-2 hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
@@ -150,35 +162,54 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               isLoading={loading}
-              className="w-full"
+              className="w-full bg-gradient-to-r from-emerald-700 to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white font-semibold py-3.5 md:py-4 text-base shadow-lg hover:shadow-xl transition-all duration-200 min-h-[52px]"
               size="lg"
             >
-              <LogIn className="w-5 h-5 mr-2" />
-              Sign In
+              {!loading && <LogIn className="w-5 h-5 mr-2" />}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-6 md:my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">New to Prokrishi?</span>
+              <span className="px-4 bg-white text-gray-500 font-medium">New to Prokrishi?</span>
             </div>
           </div>
 
           {/* Register Link */}
-          <Link href="/register">
-            <Button variant="outline" className="w-full" size="lg">
+          <Link href="/register" className="block">
+            <button 
+              type="button"
+              className="w-full font-bold py-3.5 md:py-4 px-6 text-base rounded-xl transition-all duration-200 min-h-[52px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 active:scale-95 touch-manipulation shadow-md hover:shadow-lg"
+              style={{ 
+                border: '2px solid #047857',
+                color: '#047857',
+                backgroundColor: '#ffffff'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#ecfdf5';
+                e.currentTarget.style.borderColor = '#065f46';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.borderColor = '#047857';
+              }}
+            >
               Create an Account
-            </Button>
+            </button>
           </Link>
         </Card>
 
         {/* Additional Info */}
-        <p className="text-center text-xs text-gray-500 mt-6">
-          By signing in, you agree to our Terms of Service and Privacy Policy
+        <p className="text-center text-xs md:text-sm text-gray-500 mt-6 md:mt-8 px-4">
+          By signing in, you agree to our{" "}
+          <Link href="/terms" className="text-emerald-700 hover:underline font-medium">Terms of Service</Link>
+          {" "}and{" "}
+          <Link href="/terms" className="text-emerald-700 hover:underline font-medium">Privacy Policy</Link>
         </p>
       </div>
     </div>
