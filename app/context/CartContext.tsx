@@ -234,7 +234,7 @@ export function CartProvider({ children }: CartProviderProps) {
           // Load from backend first (non-blocking)
           try {
             const response = await getCart();
-            if (response.cart && response.cart.items) {
+            if (response.cart && response.cart.items && response.cart.items.length > 0) {
               // Convert backend cart items to frontend format
               const convertedCart: CartItem[] = response.cart.items.map((item) => {
                 const backendItem = item as BackendCartItem;
@@ -256,6 +256,10 @@ export function CartProvider({ children }: CartProviderProps) {
               });
               setCart(convertedCart);
               setLoading(false); // Set loading to false immediately after cart loads
+              
+              // Clear localStorage since backend has the source of truth
+              const localCartKey = "cart";
+              localStorage.removeItem(localCartKey);
               
               // Sync localStorage cart in background (non-blocking)
               if (wasGuest && storedLocalCart) {
@@ -314,6 +318,58 @@ export function CartProvider({ children }: CartProviderProps) {
               }
               return; // Exit early - cart loaded
             } else {
+              // Backend cart is empty - check localStorage as backup
+              // This handles cases where API sync failed but items were saved locally
+              const localCartKey = "cart";
+              const stored = typeof window !== "undefined" ? localStorage.getItem(localCartKey) : null;
+              if (stored) {
+                try {
+                  const localCartItems = JSON.parse(stored) as CartItem[];
+                  if (Array.isArray(localCartItems) && localCartItems.length > 0) {
+                    logger.info("Backend cart empty but localStorage has items - syncing in background");
+                    setCart(localCartItems); // Show localStorage items immediately
+                    setLoading(false);
+                    
+                    // Sync localStorage items to backend in background
+                    syncLocalCartToBackend(localCartItems).then((syncResults) => {
+                      if (syncResults.success > 0) {
+                        // Reload cart from backend after sync
+                        getCart().then((response) => {
+                          if (response.cart && response.cart.items && response.cart.items.length > 0) {
+                            const convertedCart: CartItem[] = response.cart.items.map((item) => {
+                              const backendItem = item as BackendCartItem;
+                              const product = typeof backendItem.product === 'string' 
+                                ? { _id: backendItem.product } as Product
+                                : backendItem.product;
+                              const variantId = typeof backendItem.variant?.variantId === 'object' 
+                                ? backendItem.variant.variantId._id 
+                                : backendItem.variant?.variantId || backendItem.variant?._id;
+                              return {
+                                ...product,
+                                id: product._id || product.id,
+                                _id: product._id,
+                                quantity: backendItem.quantity,
+                                price: backendItem.price || product.price,
+                                variantId,
+                                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
+                              } as CartItem;
+                            });
+                            setCart(convertedCart);
+                            localStorage.removeItem(localCartKey);
+                          }
+                        }).catch((error) => {
+                          logger.error("Error reloading cart after sync:", error);
+                        });
+                      }
+                    }).catch((error) => {
+                      logger.error("Error syncing localStorage cart to backend:", error);
+                    });
+                    return;
+                  }
+                } catch (parseError) {
+                  logger.error("Error parsing localStorage cart:", parseError);
+                }
+              }
               setCart([]);
               setLoading(false);
             }
@@ -361,10 +417,11 @@ export function CartProvider({ children }: CartProviderProps) {
     setPreviousUser(user);
   }, [user, syncLocalCartToBackend, previousUser]);
 
-  // Save cart to localStorage for guest users (don't sync to backend here to avoid too many API calls)
+  // Save cart to localStorage for both guest and logged-in users (as backup)
   useEffect(() => {
-    if (!loading && !user) {
-      // Save to localStorage for guest users
+    if (!loading) {
+      // Save to localStorage as backup for both guest and logged-in users
+      // For logged-in users, this ensures items persist if API sync fails
       try {
         localStorage.setItem("cart", JSON.stringify(cart));
       } catch (error) {
@@ -373,7 +430,7 @@ export function CartProvider({ children }: CartProviderProps) {
     }
     // Note: Backend sync happens in addToCart, updateQuantity, removeFromCart functions
     // to avoid too many API calls
-  }, [cart, loading, user]);
+  }, [cart, loading]);
 
   const addToCart = useCallback(async (product: Product, qty = 1, variantId?: string) => {
     try {
@@ -455,13 +512,17 @@ export function CartProvider({ children }: CartProviderProps) {
       });
       setIsSidebarOpen(true);
 
-      // Sync with backend in background (non-blocking) if user is logged in
+      // Sync with backend (non-blocking but track completion) if user is logged in
       if (user) {
-        addToCartAPI(id, qty, variantId).catch((error) => {
-          logger.error("Error adding to cart via API (will retry on next operation):", error);
-          // Don't revert optimistic update - user already sees the item
-          // The cart will sync on next operation or page reload
-        });
+        addToCartAPI(id, qty, variantId)
+          .then(() => {
+            logger.info("Successfully synced item to backend cart");
+          })
+          .catch((error) => {
+            logger.error("Error adding to cart via API:", error);
+            // Item is in localStorage as backup, will be synced on next page load
+            // Don't revert optimistic update - user already sees the item
+          });
       }
     } catch (error) {
       logger.error("Error adding to cart:", error);
@@ -492,12 +553,16 @@ export function CartProvider({ children }: CartProviderProps) {
         }),
       );
 
-      // Sync with backend in background (non-blocking) if user is logged in
+      // Sync with backend (non-blocking but track completion) if user is logged in
       if (user) {
-        updateCartItemAPI(id, quantity, variantId).catch((error) => {
-          logger.error("Error updating cart via API (will retry on next operation):", error);
-          // Don't revert optimistic update - user already sees the change
-        });
+        updateCartItemAPI(id, quantity, variantId)
+          .then(() => {
+            logger.info("Successfully updated item in backend cart");
+          })
+          .catch((error) => {
+            logger.error("Error updating cart via API:", error);
+            // Item is in localStorage as backup, will be synced on next page load
+          });
       }
     } catch (error) {
       logger.error("Error updating quantity:", error);
@@ -515,12 +580,16 @@ export function CartProvider({ children }: CartProviderProps) {
         }),
       );
 
-      // Sync with backend in background (non-blocking) if user is logged in
+      // Sync with backend (non-blocking but track completion) if user is logged in
       if (user) {
-        removeCartItemAPI(id, variantId).catch((error) => {
-          logger.error("Error removing from cart via API (will retry on next operation):", error);
-          // Don't revert optimistic update - user already sees the item removed
-        });
+        removeCartItemAPI(id, variantId)
+          .then(() => {
+            logger.info("Successfully removed item from backend cart");
+          })
+          .catch((error) => {
+            logger.error("Error removing from cart via API:", error);
+            // Item is in localStorage as backup, will be synced on next page load
+          });
       }
     } catch (error) {
       logger.error("Error removing from cart:", error);
