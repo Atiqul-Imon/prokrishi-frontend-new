@@ -221,19 +221,24 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
     
     // NestJS TransformInterceptor wraps response structure:
     // { success: true, data: { user, accessToken, refreshToken }, message: "...", timestamp: "..." }
-    // The actual login data is nested in response.data
-    const responseData = (response as any).data;
+    // apiRequest already extracts res.data, so response is the wrapped structure
+    // Try response.data first (nested), fallback to response (direct) for compatibility
+    const responseData = (response as any).data || response;
     
-    if (!responseData) {
-      console.error("Login response missing data field:", response);
-      throw new Error("Invalid login response structure");
-    }
-    
-    // Extract tokens and user data from nested data object
-    const accessToken = responseData.accessToken;
-    const refreshToken = responseData.refreshToken;
-    const user = responseData.user;
+    // Extract tokens and user data - try nested first, then direct
+    const accessToken = responseData.accessToken || (response as any).accessToken;
+    const refreshToken = responseData.refreshToken || (response as any).refreshToken;
+    const user = responseData.user || (response as any).user;
     const message = (response as any).message || responseData.message || "Login successful";
+    
+    if (!accessToken || !user) {
+      console.error("Login response missing required fields:", {
+        hasAccessToken: !!accessToken,
+        hasUser: !!user,
+        responseStructure: response
+      });
+      throw new Error("Login response missing access token or user data");
+    }
     
     // Store tokens in localStorage
     if (accessToken && typeof window !== "undefined") {
