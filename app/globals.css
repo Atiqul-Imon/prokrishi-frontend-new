@@ -29,7 +29,7 @@
 
 /* Font configuration for Bangla and English */
 :root {
-  --font-english: var(--font-roboto), system-ui, -apple-system, sans-serif;
+  --font-english: var(--font-roboto), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-bangla: "Kalpurush", sans-serif;
 }
 
@@ -48,7 +48,8 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-roboto), "Kalpurush", system-ui, -apple-system, sans-serif;
+  /* Default to Roboto for English - only apply Kalpurush via lang attributes or classes */
+  font-family: var(--font-english);
   font-size: 18px; /* Increased base font size for better readability */
   line-height: 1.6;
   text-rendering: optimizeLegibility;
@@ -170,17 +171,31 @@ button, a, input[type="button"], input[type="submit"], [role="button"] {
 /* Explicitly apply Kalpurush for Bangla text using lang attribute */
 [lang="bn"],
 [lang="bn-BD"] {
-  font-family: var(--font-bangla);
+  font-family: var(--font-bangla) !important;
   font-size: 1em; /* Same size as English for balance */
   line-height: 1.6; /* Standard line spacing */
 }
 
 /* Apply Roboto for English text - ensure normal size */
+/* Default body already uses English font, but this ensures explicit English content uses it */
 [lang="en"],
 [lang="en-US"],
 [lang="en-GB"] {
-  font-family: var(--font-english);
+  font-family: var(--font-english) !important;
   font-size: 1em; /* Normal size */
+}
+
+/* Ensure all text elements default to English font unless explicitly marked as Bangla */
+p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, label, li, td, th {
+  font-family: var(--font-english);
+}
+
+/* Override for Bangla elements - these have higher specificity */
+[lang="bn"],
+[lang="bn-BD"],
+.bangla-text,
+.bangla-adjusted {
+  font-family: var(--font-bangla) !important;
 }
 
 /* Utility class for Bangla text */
