@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import CheckoutProgress from "@/components/CheckoutProgress";
+import { MapPin, Package, Truck } from "lucide-react";
 import type { CartItem, SizeCategory } from "@/types/models";
 
 type Zone = "inside_dhaka" | "outside_dhaka" | null;
@@ -417,7 +418,7 @@ function CheckoutContent() {
   const checkoutSteps = ["Zone", "Address", "Review"];
 
   return (
-    <div className="min-h-screen bg-white py-8 pb-24 md:pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50/50 to-white py-8 pb-24 md:pb-20">
       <div className="w-full mx-auto px-4 xl:max-w-[90%] 2xl:max-w-[70%]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <div>
@@ -447,31 +448,45 @@ function CheckoutContent() {
           <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-4">
               {/* Delivery Zone */}
-              <Card padding="lg" variant="elevated" className="shadow-md">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
-                  <h2 className="text-xl font-bold text-gray-900">Delivery Zone</h2>
+              <Card padding="lg" variant="elevated" className="shadow-lg border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md">
+                    <MapPin className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Delivery Zone</h2>
                 </div>
                 {fishProducts.length > 0 && (
-                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800 font-medium">
-                      ⚠️ Fish products can only be delivered to Inside Dhaka
+                  <div className="mb-5 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl shadow-sm">
+                    <p className="text-sm text-amber-800 font-semibold flex items-center gap-2">
+                      <span className="text-lg">⚠️</span>
+                      Fish products can only be delivered to Inside Dhaka
                     </p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
-                    onClick={() => setSelectedZone("inside_dhaka")}
-                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
+                    onClick={() => {
+                      setSelectedZone("inside_dhaka");
+                      setMessage(null);
+                    }}
+                    className={`group relative rounded-xl px-5 py-5 text-base font-semibold transition-all duration-300 shadow-md min-h-[44px] touch-manipulation active:scale-95 overflow-hidden ${
                       selectedZone === "inside_dhaka"
-                        ? "bg-green-50 text-green-800 ring-2 ring-green-500 ring-offset-2"
-                        : "hover:bg-green-50/50 bg-white hover:shadow-md"
+                        ? "bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-800 ring-2 ring-emerald-500 ring-offset-2 shadow-lg scale-[1.02]"
+                        : "hover:bg-gradient-to-br hover:from-emerald-50/50 hover:to-green-50/50 bg-white hover:shadow-lg border border-gray-200"
                     }`}
                   >
-                    <div className="text-lg font-bold">Inside Dhaka</div>
-                    <div className="text-sm font-normal text-gray-600 mt-1">
-                      From ৳80
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className={`w-4 h-4 ${selectedZone === "inside_dhaka" ? "text-emerald-700" : "text-gray-500"}`} />
+                        <div className="text-lg font-extrabold">Inside Dhaka</div>
+                      </div>
+                      <div className={`text-sm font-medium mt-1 ${selectedZone === "inside_dhaka" ? "text-emerald-700" : "text-gray-600"}`}>
+                        From ৳80
+                      </div>
                     </div>
+                    {selectedZone === "inside_dhaka" && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    )}
                   </button>
                   <button
                     onClick={() => {
@@ -480,27 +495,35 @@ function CheckoutContent() {
                         return;
                       }
                       setSelectedZone("outside_dhaka");
-                      setMessage(null); // Clear any zone-related messages
+                      setMessage(null);
                     }}
                     disabled={fishProducts.length > 0}
-                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all duration-200 shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
+                    className={`group relative rounded-xl px-5 py-5 text-base font-semibold transition-all duration-300 shadow-md min-h-[44px] touch-manipulation active:scale-95 overflow-hidden ${
                       fishProducts.length > 0
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
                         : selectedZone === "outside_dhaka"
-                        ? "bg-green-50 text-green-800 ring-2 ring-green-500 ring-offset-2"
-                        : "hover:bg-green-50/50 bg-white hover:shadow-md"
+                        ? "bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-800 ring-2 ring-emerald-500 ring-offset-2 shadow-lg scale-[1.02]"
+                        : "hover:bg-gradient-to-br hover:from-emerald-50/50 hover:to-green-50/50 bg-white hover:shadow-lg border border-gray-200"
                     }`}
                   >
-                    <div className="text-lg font-bold">Outside Dhaka</div>
-                    <div className="text-sm font-normal text-gray-600 mt-1">
-                      From ৳150
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck className={`w-4 h-4 ${selectedZone === "outside_dhaka" ? "text-emerald-700" : "text-gray-500"}`} />
+                        <div className="text-lg font-extrabold">Outside Dhaka</div>
+                      </div>
+                      <div className={`text-sm font-medium mt-1 ${selectedZone === "outside_dhaka" ? "text-emerald-700" : "text-gray-600"}`}>
+                        From ৳150
+                      </div>
+                      {fishProducts.length > 0 && (
+                        <div className="text-xs text-red-600 mt-1.5 font-medium">Not available for fish</div>
+                      )}
                     </div>
-                    {fishProducts.length > 0 && (
-                      <div className="text-xs text-red-600 mt-1 font-normal">Not available for fish</div>
+                    {selectedZone === "outside_dhaka" && !fishProducts.length && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     )}
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 font-medium border border-gray-200/50">
                   {fishProducts.length > 0 
                     ? "Fish products require Inside Dhaka delivery. Regular products can be delivered anywhere."
                     : "Shipping calculated based on product weight. Fish and regular items are handled automatically."}
@@ -508,10 +531,12 @@ function CheckoutContent() {
               </Card>
 
               {/* Shipping Address */}
-              <Card padding="lg" variant="elevated" className="shadow-md">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
-                  <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+              <Card padding="lg" variant="elevated" className="shadow-lg border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md">
+                    <Package className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Shipping Address</h2>
                 </div>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -599,23 +624,25 @@ function CheckoutContent() {
               </Card>
 
               {/* Payment Method */}
-              <Card padding="lg" variant="elevated" className="shadow-md">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-amber-500 rounded-full"></div>
-                  <h2 className="text-xl font-bold text-gray-900">Payment Method</h2>
+              <Card padding="lg" variant="elevated" className="shadow-lg border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md">
+                    <Package className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Payment Method</h2>
                 </div>
-                <div className="bg-green-50 border-2 border-green-200 rounded-xl px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl px-5 py-5 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
                       <span className="text-2xl">💵</span>
                     </div>
                     <div>
-                      <div className="font-bold text-green-800 text-lg">Cash on Delivery</div>
-                      <div className="text-sm text-green-700 mt-1">Pay when your order is delivered</div>
+                      <div className="font-extrabold text-emerald-800 text-lg">Cash on Delivery</div>
+                      <div className="text-sm text-emerald-700 mt-1 font-medium">Pay when your order is delivered</div>
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 mt-3">
+                <p className="text-sm text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 mt-4 font-medium border border-gray-200/50">
                   We currently accept Cash on Delivery (COD) only. Payment will be collected when your order arrives.
                 </p>
               </Card>
@@ -623,43 +650,43 @@ function CheckoutContent() {
 
             {/* Order Summary */}
             <div className="lg:sticky lg:top-4 h-fit">
-              <Card padding="lg" variant="elevated" className="shadow-lg hidden md:block">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+              <Card padding="lg" variant="elevated" className="shadow-xl border border-gray-100 hidden md:block">
+                <h2 className="text-xl font-extrabold text-gray-900 mb-6 tracking-tight">Order Summary</h2>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2">
-                    <p className="text-base text-gray-600">Items</p>
-                    <p className="text-base font-semibold text-gray-900">{cart.length}</p>
+                  <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                    <p className="text-base text-gray-600 font-medium">Items</p>
+                    <p className="text-base font-bold text-gray-900">{cart.length}</p>
                   </div>
                   {regularProducts.length > 0 && (
-                    <div className="flex items-center justify-between py-2">
-                      <p className="text-sm text-gray-500">Regular Products</p>
-                      <p className="text-sm font-medium text-gray-700">{regularProducts.length}</p>
+                    <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                      <p className="text-sm text-gray-500 font-medium">Regular Products</p>
+                      <p className="text-sm font-semibold text-gray-700">{regularProducts.length}</p>
                     </div>
                   )}
                   {fishProducts.length > 0 && (
-                    <div className="flex items-center justify-between py-2">
-                      <p className="text-sm text-gray-500">Fish Products</p>
-                      <p className="text-sm font-medium text-gray-700">{fishProducts.length}</p>
+                    <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                      <p className="text-sm text-gray-500 font-medium">Fish Products</p>
+                      <p className="text-sm font-semibold text-gray-700">{fishProducts.length}</p>
                     </div>
                   )}
-                  <div className="flex items-center justify-between py-2">
-                    <p className="text-base text-gray-600">Subtotal</p>
-                    <p className="text-lg font-bold text-gray-900">{formatCurrency(cartTotal)}</p>
+                  <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                    <p className="text-base text-gray-600 font-medium">Subtotal</p>
+                    <p className="text-lg font-extrabold text-gray-900">{formatCurrency(cartTotal)}</p>
                   </div>
-                  <div className="flex items-center justify-between py-2">
-                    <p className="text-base text-gray-600">Shipping</p>
-                    <p className="text-lg font-bold text-gray-900">
+                  <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                    <p className="text-base text-gray-600 font-medium">Shipping</p>
+                    <p className="text-lg font-extrabold text-gray-900">
                       {selectedZone ? (
                         formatCurrency(shippingFee)
                       ) : (
-                        <span className="text-gray-400">Select zone</span>
+                        <span className="text-gray-400 font-normal">Select zone</span>
                       )}
                     </p>
                   </div>
                   <div className="pt-4 border-t-2 border-gray-200">
-                    <div className="flex items-center justify-between text-xl font-bold text-gray-900 mb-4">
+                    <div className="flex items-center justify-between text-xl font-extrabold text-gray-900 mb-4">
                       <p>Total</p>
-                      <p className="text-green-600">
+                      <p className="text-emerald-600">
                         {formatCurrency(total)}
                       </p>
                     </div>
@@ -678,14 +705,14 @@ function CheckoutContent() {
                   <Button
                     variant="primary"
                     size="lg"
-                    className="w-full text-base py-3 mt-2"
+                    className="w-full text-base py-3 mt-2 shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={handlePlaceOrder}
                     disabled={isSubmitting || !selectedZone || cart.length === 0}
                     isLoading={isSubmitting}
                   >
                     Place Order
                   </Button>
-                  <p className="text-xs text-gray-500 text-center">Secure checkout • Free returns</p>
+                  <p className="text-xs text-gray-500 text-center font-medium mt-2">Secure checkout • Free returns</p>
                 </div>
               </Card>
             </div>
@@ -694,19 +721,19 @@ function CheckoutContent() {
 
         {/* Sticky Checkout Summary & Button - Mobile Only */}
         {cart.length > 0 && (
-          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg">
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between mb-2">
+          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-xl font-bold text-emerald-700">
+                  <p className="text-xs text-gray-500 mb-0.5 font-medium">Total</p>
+                  <p className="text-xl font-extrabold text-emerald-700 tracking-tight">
                     {formatCurrency(total)}
                   </p>
                 </div>
                 <Button
                   variant="primary"
                   size="lg"
-                  className="flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px]"
+                  className="flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px] shadow-lg hover:shadow-xl transition-shadow"
                   onClick={handlePlaceOrder}
                   disabled={isSubmitting || !selectedZone || cart.length === 0}
                   isLoading={isSubmitting}
@@ -714,7 +741,7 @@ function CheckoutContent() {
                   Place Order
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 text-center">Secure checkout</p>
+              <p className="text-xs text-gray-500 text-center font-medium">Secure checkout</p>
             </div>
           </div>
         )}
