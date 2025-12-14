@@ -63,26 +63,50 @@ export default function ImageKitImage({
   let optimizedSrc = '';
 
   if (isValidImageUrl(src)) {
-    if (imageType === 'product') {
-      optimizedSrc = getProductImageUrl(src, size);
-    } else if (imageType === 'custom') {
-      optimizedSrc = getImageKitUrl(src, {
-        width,
-        height,
-        quality,
-        format,
-        crop: 'maintain_ratio',
-        focus: 'auto',
-      });
-    } else if (imageType === 'category') {
-      // Category images don't support 'thumbnail', use 'small' instead
-      const categorySize = size === 'thumbnail' ? 'small' : size === 'large' ? 'large' : 'medium';
-      optimizedSrc = getCategoryImageUrl(src, categorySize);
-    } else {
+    try {
+      // If it's already an ImageKit URL and no specific transformations needed, use as-is
+      const isAlreadyImageKit = src && (src.includes('ik.imagekit.io') || src.includes('imagekit.io'));
+      
+      if (isAlreadyImageKit && imageType === 'product' && size === 'medium') {
+        // For product images that are already ImageKit URLs, use as-is for now
+        // We can add transformations later if needed
+        optimizedSrc = src as string;
+      } else if (imageType === 'product') {
+        optimizedSrc = getProductImageUrl(src, size);
+      } else if (imageType === 'custom') {
+        optimizedSrc = getImageKitUrl(src, {
+          width,
+          height,
+          quality,
+          format,
+          crop: 'maintain_ratio',
+          focus: 'auto',
+        });
+      } else if (imageType === 'category') {
+        // Category images don't support 'thumbnail', use 'small' instead
+        const categorySize = size === 'thumbnail' ? 'small' : size === 'large' ? 'large' : 'medium';
+        optimizedSrc = getCategoryImageUrl(src, categorySize);
+      } else {
+        optimizedSrc = src as string;
+      }
+      
+      // Fallback to original URL if transformation resulted in empty string
+      if (!optimizedSrc && src) {
+        console.warn('ImageKit transformation returned empty, using original URL:', src);
+        optimizedSrc = src as string;
+      }
+    } catch (error) {
+      // If transformation fails, use original URL
+      console.warn('ImageKit transformation failed, using original URL:', error, src);
       optimizedSrc = src as string;
     }
   } else if (fallback && isValidImageUrl(fallback)) {
     optimizedSrc = fallback;
+  } else {
+    // Log when src is invalid
+    if (src) {
+      console.warn('Invalid image URL:', src);
+    }
   }
 
   // If no valid image, show placeholder
@@ -110,7 +134,7 @@ export default function ImageKitImage({
       className={className}
       width={width}
       height={height}
-      quality={quality || (size === 'thumbnail' ? 75 : size === 'small' ? 80 : size === 'medium' ? 85 : 90)}
+      quality={quality || (size === 'thumbnail' ? 70 : size === 'small' ? 75 : size === 'medium' ? 80 : 85)}
       {...props}
     />
   );

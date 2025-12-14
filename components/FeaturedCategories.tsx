@@ -6,7 +6,7 @@ import ImageKitImage from "@/components/ui/ImageKitImage";
 import { getFeaturedCategories } from "@/app/utils/api";
 import { Category } from "@/types/models";
 
-const CategoryCard = memo(({ category }: { category: Category }) => (
+const CategoryCard = memo(({ category, isFirst }: { category: Category; isFirst?: boolean }) => (
   <Link
     href={`/products/category/${category._id}`}
     className="group block text-center p-3 sm:p-4 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
@@ -19,10 +19,11 @@ const CategoryCard = memo(({ category }: { category: Category }) => (
           fill
           sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
           className="object-cover group-hover:scale-110 transition-transform duration-300"
-          loading="lazy"
+          loading={isFirst ? "eager" : "lazy"}
+          priority={isFirst}
           imageType="category"
           size="medium"
-          quality={85}
+          quality={75}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
@@ -100,8 +101,8 @@ export default function FeaturedCategories() {
           Shop by Category
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4 md:gap-6 justify-center">
-          {categories.map((category) => (
-            <CategoryCard key={category._id} category={category} />
+          {categories.map((category, index) => (
+            <CategoryCard key={category._id} category={category} isFirst={index === 0} />
           ))}
         </div>
       </div>

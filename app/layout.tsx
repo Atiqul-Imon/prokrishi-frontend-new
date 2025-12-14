@@ -49,6 +49,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-[var(--background)] text-[var(--foreground)]">
+      <head>
+        {/* Preconnect to ImageKit CDN for faster image loading */}
+        <link rel="preconnect" href="https://ik.imagekit.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://ik.imagekit.io" />
+      </head>
       <body className={`${roboto.variable} antialiased`}>
         <SkipLinks />
         <KeyboardNavigation />

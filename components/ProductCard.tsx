@@ -92,7 +92,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
                 loading="lazy"
                 imageType="product"
                 size="medium"
-                quality={85}
+                quality={80}
               />
               
               {/* Secondary Image (shown on hover when multiple images exist) */}
@@ -106,7 +106,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
                   loading="lazy"
                   imageType="product"
                   size="medium"
-                  quality={85}
+                  quality={80}
                 />
               )}
             </>
