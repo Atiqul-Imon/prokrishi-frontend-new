@@ -54,8 +54,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (form.password.length < 4) {
+      setError("Password must be at least 4 characters long");
       setLoading(false);
       return;
     }
@@ -109,8 +109,8 @@ export default function RegisterPage() {
   const getPasswordStrength = () => {
     const len = form.password.length;
     if (len === 0) return null;
-    if (len < 6) return { text: "Weak", color: "text-red-600", width: "33%" };
-    if (len < 10) return { text: "Medium", color: "text-amber-600", width: "66%" };
+    if (len < 4) return { text: "Too Short", color: "text-red-600", width: "25%" };
+    if (len < 8) return { text: "Good", color: "text-amber-600", width: "66%" };
     return { text: "Strong", color: "text-green-600", width: "100%" };
   };
 

@@ -133,7 +133,7 @@ export function getValidationError(field: string, rule: string): string {
     },
     password: {
       required: "Password is required",
-      minLength: "Password must be at least 8 characters",
+      minLength: "Password must be at least 4 characters",
     },
     name: {
       required: "Name is required",

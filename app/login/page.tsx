@@ -77,8 +77,8 @@ export default function LoginPage() {
       email = normalizePhone(email);
     }
 
-    if (password.length < 6) {
-      setFormError("Password must be at least 6 characters long.");
+    if (password.length < 4) {
+      setFormError("Password must be at least 4 characters long.");
       return;
     }
 
