@@ -13,7 +13,6 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import CheckoutProgress from "@/components/CheckoutProgress";
 import type { CartItem, SizeCategory } from "@/types/models";
@@ -40,8 +39,6 @@ function CheckoutContent() {
   const { user } = useAuth();
 
   const [selectedZone, setSelectedZone] = useState<Zone>(null);
-  const [shippingFee, setShippingFee] = useState(0);
-  const [shippingLoading, setShippingLoading] = useState(false);
   const selectedPayment = "cod"; // Only COD is available
   const [address, setAddress] = useState({
     name: user?.name || "",
@@ -62,74 +59,26 @@ function CheckoutContent() {
   const fishProducts = useMemo(() => cart.filter((i) => isFish(i)), [cart]);
   const regularProducts = useMemo(() => cart.filter((i) => !isFish(i)), [cart]);
 
-  // Auto-select Inside Dhaka if fish products are in cart
+  // Auto-select Inside Dhaka if fish products are in cart (silent, no message)
   useEffect(() => {
     if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
       setSelectedZone("inside_dhaka");
-      setMessage(null); // Clear any previous messages
+      // Don't clear messages here - let user see any important messages
     }
   }, [fishProducts.length, selectedZone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch shipping quote when zone is selected and cart has items
-  useEffect(() => {
-    const fetchShippingQuote = async () => {
-      if (!selectedZone || cart.length === 0) {
-        setShippingFee(0);
-        return;
-      }
-      
-      // If fish products are in cart, force Inside Dhaka
-      if (fishProducts.length > 0) {
-        if (selectedZone !== "inside_dhaka") {
-          setSelectedZone("inside_dhaka");
-          return; // Will re-trigger this effect with correct zone
-        }
-      }
+  // Calculate shipping fee silently based on zone (no API call, instant calculation)
+  // Use fallback rates for instant UI updates, backend will calculate accurate rate on order placement
+  const shippingFee = useMemo(() => {
+    if (!selectedZone || cart.length === 0) {
+      return 0;
+    }
+    // Use standard rates for instant calculation
+    // Backend will calculate accurate rate based on weight when placing order
+    return selectedZone === "inside_dhaka" ? 80 : 150;
+  }, [selectedZone, cart.length]);
 
-      // Always use placeholder address for quote calculation
-      // Shipping cost is based on zone and product weight, not the specific address
-      // Actual address is only needed when placing the order, not for quote calculation
-      const placeholderAddress = {
-        address: selectedZone === "inside_dhaka" ? "Dhaka" : "Outside Dhaka",
-        ...(selectedZone === "outside_dhaka" && {
-          division: "Dhaka",
-          district: "Dhaka",
-          upazila: "Dhaka",
-        }),
-      };
-
-      try {
-        setShippingLoading(true);
-        const quote = await getShippingQuote({
-          orderItems: cart.map((item) => ({
-            product: item.id || item._id,
-            quantity: item.quantity,
-            variantId: item.variantId,
-          })),
-          shippingAddress: {
-            address: placeholderAddress.address,
-            ...(placeholderAddress.division && {
-              division: placeholderAddress.division,
-              district: placeholderAddress.district,
-              upazila: placeholderAddress.upazila,
-            }),
-          },
-          shippingZone: selectedZone,
-        });
-        setShippingFee(quote.shippingFee || 0);
-      } catch (err) {
-        logger.warn("Failed to get shipping quote, using fallback rates:", err);
-        // Fallback to flat rates if quote fails
-        setShippingFee(selectedZone === "inside_dhaka" ? 80 : 150);
-      } finally {
-        setShippingLoading(false);
-      }
-    };
-
-    fetchShippingQuote();
-  }, [selectedZone, cart.length, fishProducts.length]); // Only depend on zone and cart, not address fields
-
-  const total = cartTotal + shippingFee;
+  const total = useMemo(() => cartTotal + shippingFee, [cartTotal, shippingFee]);
 
   async function handlePlaceOrder() {
     setMessage(null);
@@ -521,7 +470,7 @@ function CheckoutContent() {
                   >
                     <div className="text-lg font-bold">Inside Dhaka</div>
                     <div className="text-sm font-normal text-gray-600 mt-1">
-                      {shippingLoading && selectedZone === "inside_dhaka" ? "Calculating..." : "From ৳80"}
+                      From ৳80
                     </div>
                   </button>
                   <button
@@ -531,9 +480,10 @@ function CheckoutContent() {
                         return;
                       }
                       setSelectedZone("outside_dhaka");
+                      setMessage(null); // Clear any zone-related messages
                     }}
                     disabled={fishProducts.length > 0}
-                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
+                    className={`rounded-xl px-5 py-4 text-base font-semibold transition-all duration-200 shadow-sm min-h-[44px] touch-manipulation active:scale-95 ${
                       fishProducts.length > 0
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
                         : selectedZone === "outside_dhaka"
@@ -543,14 +493,7 @@ function CheckoutContent() {
                   >
                     <div className="text-lg font-bold">Outside Dhaka</div>
                     <div className="text-sm font-normal text-gray-600 mt-1">
-                      {shippingLoading && selectedZone === "outside_dhaka" ? (
-                        <span className="flex items-center gap-1">
-                          <LoadingSpinner size="sm" />
-                          Calculating...
-                        </span>
-                      ) : (
-                        "From ৳150"
-                      )}
+                      From ৳150
                     </div>
                     {fishProducts.length > 0 && (
                       <div className="text-xs text-red-600 mt-1 font-normal">Not available for fish</div>
@@ -706,15 +649,10 @@ function CheckoutContent() {
                   <div className="flex items-center justify-between py-2">
                     <p className="text-base text-gray-600">Shipping</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {shippingLoading ? (
-                        <span className="flex items-center gap-2 text-gray-400">
-                          <LoadingSpinner size="sm" />
-                          Calculating...
-                        </span>
-                      ) : selectedZone ? (
+                      {selectedZone ? (
                         formatCurrency(shippingFee)
                       ) : (
-                        <span className="text-red-500">Select zone</span>
+                        <span className="text-gray-400">Select zone</span>
                       )}
                     </p>
                   </div>
@@ -722,14 +660,7 @@ function CheckoutContent() {
                     <div className="flex items-center justify-between text-xl font-bold text-gray-900 mb-4">
                       <p>Total</p>
                       <p className="text-green-600">
-                        {shippingLoading ? (
-                          <span className="flex items-center gap-2 text-gray-400">
-                            <LoadingSpinner size="sm" />
-                            Calculating...
-                          </span>
-                        ) : (
-                          formatCurrency(total)
-                        )}
+                        {formatCurrency(total)}
                       </p>
                     </div>
                   </div>
@@ -749,7 +680,7 @@ function CheckoutContent() {
                     size="lg"
                     className="w-full text-base py-3 mt-2"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting || !selectedZone || cart.length === 0 || shippingLoading}
+                    disabled={isSubmitting || !selectedZone || cart.length === 0}
                     isLoading={isSubmitting}
                   >
                     Place Order
@@ -769,11 +700,7 @@ function CheckoutContent() {
                 <div>
                   <p className="text-sm text-gray-600">Total</p>
                   <p className="text-xl font-bold text-emerald-700">
-                    {shippingLoading ? (
-                      <span className="text-gray-400">Calculating...</span>
-                    ) : (
-                      formatCurrency(total)
-                    )}
+                    {formatCurrency(total)}
                   </p>
                 </div>
                 <Button
@@ -781,7 +708,7 @@ function CheckoutContent() {
                   size="lg"
                   className="flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px]"
                   onClick={handlePlaceOrder}
-                  disabled={isSubmitting || !selectedZone || cart.length === 0 || shippingLoading}
+                  disabled={isSubmitting || !selectedZone || cart.length === 0}
                   isLoading={isSubmitting}
                 >
                   Place Order
