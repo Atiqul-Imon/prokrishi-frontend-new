@@ -153,3 +153,6 @@ export function meetsWCAGAA(foreground: string, background: string, isLargeText 
   return isLargeText ? ratio >= 3 : ratio >= 4.5;
 }
 
+
+
+

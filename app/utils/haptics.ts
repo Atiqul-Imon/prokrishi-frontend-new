@@ -59,3 +59,6 @@ export function isHapticAvailable(): boolean {
   return typeof window !== 'undefined' && 'vibrate' in navigator;
 }
 
+
+
+
