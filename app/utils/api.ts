@@ -211,13 +211,14 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
  */
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   try {
+    console.log("loginUser: Sending request to /user/login", { email: data.email, passwordLength: data.password?.length });
     const response = await apiRequest<any>("/user/login", {
       method: "POST",
       data,
     });
     
     // Log response for debugging
-    console.log("Login API Response:", response);
+    console.log("loginUser: API Response received:", response);
     
     // NestJS TransformInterceptor wraps response structure:
     // { success: true, data: { user, accessToken, refreshToken }, message: "...", timestamp: "..." }
@@ -225,14 +226,24 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
     // Try response.data first (nested), fallback to response (direct) for compatibility
     const responseData = (response as any).data || response;
     
+    console.log("loginUser: Extracted responseData:", responseData);
+    
     // Extract tokens and user data - try nested first, then direct
     const accessToken = responseData.accessToken || (response as any).accessToken;
     const refreshToken = responseData.refreshToken || (response as any).refreshToken;
     const user = responseData.user || (response as any).user;
     const message = (response as any).message || responseData.message || "Login successful";
     
+    console.log("loginUser: Extracted values:", {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      hasUser: !!user,
+      userRole: user?.role,
+      userName: user?.name
+    });
+    
     if (!accessToken || !user) {
-      console.error("Login response missing required fields:", {
+      console.error("loginUser: Missing required fields:", {
         hasAccessToken: !!accessToken,
         hasUser: !!user,
         responseStructure: response
@@ -243,20 +254,22 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
     // Store tokens in localStorage
     if (accessToken && typeof window !== "undefined") {
       localStorage.setItem("accessToken", accessToken);
-      console.log("Access token stored in localStorage");
+      console.log("loginUser: Access token stored in localStorage");
     } else {
-      console.error("No access token in response:", response);
+      console.error("loginUser: No access token in response:", response);
     }
     
     if (refreshToken && typeof window !== "undefined") {
       localStorage.setItem("refreshToken", refreshToken);
+      console.log("loginUser: Refresh token stored in localStorage");
     }
     
     if (!user) {
-      console.error("No user data in response:", response);
+      console.error("loginUser: No user data in response:", response);
       throw new Error("Login response missing user data");
     }
     
+    console.log("loginUser: Returning success response");
     return {
       success: (response as any).success !== false,
       message,

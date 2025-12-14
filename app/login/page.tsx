@@ -83,6 +83,7 @@ export default function LoginPage() {
     }
 
     try {
+      console.log("Login attempt:", { email, passwordLength: password.length });
       const res = await login({ email, password });
       console.log("Login response:", res);
       
@@ -91,12 +92,17 @@ export default function LoginPage() {
         // The AuthContext will update the user state, triggering a re-render
         // and the redirect logic at the top of the component will handle it
         // This ensures user state is properly set before redirect
+        console.log("Login successful, waiting for redirect...");
       } else {
-        setFormError(res.message || "Login failed. Please check your credentials.");
+        const errorMsg = res.message || "Login failed. Please check your credentials.";
+        console.error("Login failed:", errorMsg);
+        setFormError(errorMsg);
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      setFormError(error.message || "Login failed. Please check your credentials.");
+      const errorMsg = error.message || "Login failed. Please check your credentials.";
+      console.error("Error details:", { message: errorMsg, error });
+      setFormError(errorMsg);
     }
   }
 
