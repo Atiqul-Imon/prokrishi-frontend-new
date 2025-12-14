@@ -27,7 +27,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-lg transition-all",
+          "rounded-lg transition-all focus:outline-none focus:ring-0 focus:border-0",
           variants[variant],
           paddings[padding],
           className

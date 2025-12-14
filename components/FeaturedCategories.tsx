@@ -9,7 +9,7 @@ import { Category } from "@/types/models";
 const CategoryCard = memo(({ category, isFirst }: { category: Category; isFirst?: boolean }) => (
   <Link
     href={`/products/category/${category._id}`}
-    className="group block text-center p-3 sm:p-4 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300"
+    className="group block text-center p-3 sm:p-4 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-0 focus:border-0"
   >
     <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-2 sm:mb-3 overflow-hidden rounded-xl border border-gray-200 group-hover:border-emerald-500 group-hover:shadow-md transition-all duration-300 bg-white">
       {category.image ? (

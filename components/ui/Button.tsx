@@ -24,19 +24,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 touch-manipulation"; // Added active:scale-95 for touch feedback and touch-manipulation for better mobile performance
+      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-0 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 touch-manipulation"; // Removed all focus borders and rings
 
     const variants = {
       primary:
-        "bg-[var(--primary-green)] text-white hover:bg-[var(--primary-green)]/90 focus:ring-[var(--primary-green)]",
+        "bg-[var(--primary-green)] text-white hover:bg-[var(--primary-green)]/90 focus:ring-0",
       secondary:
-        "bg-[var(--primary-amber)] text-white hover:bg-[var(--primary-amber)]/90 focus:ring-[var(--primary-amber)]",
+        "bg-[var(--primary-amber)] text-white hover:bg-[var(--primary-amber)]/90 focus:ring-0",
       outline:
-        "text-[var(--primary-green)] hover:bg-[var(--primary-green)]/10 focus:ring-[var(--primary-green)]",
+        "text-[var(--primary-green)] hover:bg-[var(--primary-green)]/10 focus:ring-0",
       ghost:
-        "text-gray-700 hover:bg-gray-100 focus:ring-gray-300",
+        "text-gray-700 hover:bg-gray-100 focus:ring-0",
       danger:
-        "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+        "bg-red-600 text-white hover:bg-red-700 focus:ring-0",
     };
 
     const sizes = {

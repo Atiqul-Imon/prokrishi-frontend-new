@@ -70,6 +70,24 @@ button, a, input[type="button"], input[type="submit"], [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
+  /* Remove all borders on focus/click */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove borders from all clickable elements */
+button:focus,
+button:active,
+a:focus,
+a:active,
+Link:focus,
+Link:active,
+[role="button"]:focus,
+[role="button"]:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Better touch feedback */
@@ -249,30 +267,39 @@ p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, label,
   white-space: normal;
 }
 
-/* Accessibility: Focus visible styles */
-*:focus-visible {
-  outline: 2px solid var(--primary-green);
-  outline-offset: 2px;
+/* Remove all focus outlines - no borders on buttons, cards, or logos */
+*:focus,
+*:focus-visible,
+*:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* Enhanced focus styles for better visibility */
+/* Remove focus rings and outlines from all interactive elements */
+button:focus,
 button:focus-visible,
+button:active,
+a:focus,
 a:focus-visible,
+a:active,
+input:focus,
 input:focus-visible,
+select:focus,
 select:focus-visible,
+textarea:focus,
 textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 3px solid var(--primary-green);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.2);
-}
-
-/* Focus styles for interactive elements */
+[tabindex]:focus,
+[tabindex]:focus-visible,
+[role="button"]:focus,
 [role="button"]:focus-visible,
+[role="link"]:focus,
 [role="link"]:focus-visible,
+[role="menuitem"]:focus,
 [role="menuitem"]:focus-visible {
-  outline: 3px solid var(--primary-green);
-  outline-offset: 3px;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Accessibility: Reduced motion support */
@@ -317,6 +344,18 @@ a {
   text-decoration: none;
 }
 
+/* Remove all focus borders from links */
+a:focus,
+a:focus-visible,
+a:active,
+Link:focus,
+Link:focus-visible,
+Link:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--border);
@@ -348,7 +387,7 @@ a {
 }
 .input-field:focus {
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+  box-shadow: none; /* Removed focus shadow */
 }
 
 /* Accessibility: Ensure sufficient color contrast */

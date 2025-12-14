@@ -74,7 +74,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
 
   return (
     <article className={`group relative rounded-xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300 h-full flex flex-col ${className}`} aria-label={`Product: ${name}`}>
-      <Link href={`/products/${_id}`} className="block flex-shrink-0 relative" aria-label={`View details for ${name}`}>
+      <Link href={`/products/${_id}`} className="block flex-shrink-0 relative focus:outline-none focus:ring-0 focus:border-0" aria-label={`View details for ${name}`}>
         <div className="relative overflow-hidden aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100">
           {primaryImage ? (
             <>
@@ -177,7 +177,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             aria-disabled={!inStock}
             className={`group/btn relative w-full font-semibold py-1.5 md:py-2 lg:py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[40px] touch-manipulation tracking-tight ${
               inStock
-                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
+                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-0"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
             }`}
           >

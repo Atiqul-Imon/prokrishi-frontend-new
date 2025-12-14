@@ -241,7 +241,7 @@ export default function Header() {
         <div className="w-full mx-auto px-4 lg:px-6 xl:max-w-[85%] 2xl:max-w-[60%]">
           <div className="flex items-center justify-between h-16 gap-2">
             {/* Left: Logo */}
-            <Link href="/" className="flex items-center flex-shrink-0 group">
+            <Link href="/" className="flex items-center flex-shrink-0 group focus:outline-none focus:ring-0 focus:border-0">
               <div className="relative h-14 md:h-16 w-auto">
                 <Image
                   src="/logo/prokrishihublogo.png"
