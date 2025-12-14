@@ -540,13 +540,30 @@ export async function getCategoryById(id: string): Promise<CategoryResponse> {
 }
 
 export async function getAllCategories(): Promise<{ success: boolean; categories: Category[] }> {
-  const response = await apiRequest<{ success: boolean; categories: Category[] }>("/category");
-  // NestJS returns { success: true, data: { message, categories } }
+  const response = await apiRequest<{ success?: boolean; data?: Category[] | { categories?: Category[] }; categories?: Category[]; message?: string }>("/category");
+  // NestJS TransformInterceptor returns { success: true, data: [categories array], message: '...' }
+  // OR if the controller returns { message: '...', categories: [...] }, it becomes { success: true, data: [...], message: '...' }
   // Return in format expected by frontend: { categories: [...] }
-  const typedResponse = response as { success?: boolean; data?: { categories: Category[] }; categories?: Category[] };
+  const typedResponse = response as { success?: boolean; data?: Category[] | { categories?: Category[] }; categories?: Category[]; message?: string };
+  
+  let categories: Category[] = [];
+  
+  // Check if data is directly the categories array
+  if (Array.isArray(typedResponse.data)) {
+    categories = typedResponse.data;
+  }
+  // Check if data is an object with categories property
+  else if (typedResponse.data && typeof typedResponse.data === 'object' && 'categories' in typedResponse.data) {
+    categories = (typedResponse.data as { categories?: Category[] }).categories || [];
+  }
+  // Check if categories is directly on the response
+  else if (Array.isArray(typedResponse.categories)) {
+    categories = typedResponse.categories;
+  }
+  
   return {
     success: typedResponse.success ?? true,
-    categories: typedResponse.data?.categories || typedResponse.categories || [],
+    categories,
   };
 }
 
