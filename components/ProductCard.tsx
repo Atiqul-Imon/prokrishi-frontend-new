@@ -169,7 +169,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             disabled={!inStock}
             aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
             aria-disabled={!inStock}
-            className={`group/btn relative w-full font-semibold py-2 md:py-2 lg:py-2.5 px-3 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[44px] touch-manipulation ${
+            className={`group/btn relative w-full font-semibold py-1.5 md:py-2 lg:py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[40px] touch-manipulation tracking-tight ${
               inStock
                 ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
@@ -181,7 +181,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             )}
             
             {/* Text - same for both in stock and out of stock */}
-            <span className="relative z-10">Add to Cart</span>
+            <span className="relative z-10 font-medium">Add to Cart</span>
           </button>
         </div>
       </div>
