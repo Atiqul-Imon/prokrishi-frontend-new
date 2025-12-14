@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, memo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import ImageKitImage from "@/components/ui/ImageKitImage";
 import { getFeaturedCategories } from "@/app/utils/api";
 import { Category } from "@/types/models";
 
@@ -13,13 +13,16 @@ const CategoryCard = memo(({ category }: { category: Category }) => (
   >
     <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-2 sm:mb-3 overflow-hidden rounded-xl border border-gray-200 group-hover:border-emerald-500 group-hover:shadow-md transition-all duration-300 bg-white">
       {category.image ? (
-        <Image
+        <ImageKitImage
           src={category.image}
           alt={category.name}
           fill
           sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
           className="object-cover group-hover:scale-110 transition-transform duration-300"
           loading="lazy"
+          imageType="category"
+          size="medium"
+          quality={85}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">

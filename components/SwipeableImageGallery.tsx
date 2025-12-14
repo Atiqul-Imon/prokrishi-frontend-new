@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
+import ImageKitImage from "@/components/ui/ImageKitImage";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SwipeableImageGalleryProps {
@@ -98,7 +98,7 @@ export default function SwipeableImageGallery({
               key={idx}
               className="min-w-full h-full relative flex-shrink-0"
             >
-              <Image
+              <ImageKitImage
                 src={img}
                 alt={`${alt} ${idx + 1}`}
                 fill
@@ -112,6 +112,9 @@ export default function SwipeableImageGallery({
                 draggable={false}
                 priority={idx === 0}
                 loading={idx === 0 ? "eager" : "lazy"}
+                imageType="product"
+                size="large"
+                quality={90}
               />
             </div>
           ))}
@@ -133,7 +136,7 @@ export default function SwipeableImageGallery({
               }`}
               aria-label={`View image ${idx + 1}`}
             >
-              <Image
+              <ImageKitImage
                 src={img}
                 alt={`${alt} ${idx + 1}`}
                 fill
@@ -141,6 +144,9 @@ export default function SwipeableImageGallery({
                 className="object-cover"
                 draggable={false}
                 loading="lazy"
+                imageType="product"
+                size="thumbnail"
+                quality={75}
               />
             </button>
           ))}

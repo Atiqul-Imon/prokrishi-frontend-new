@@ -4,23 +4,34 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
   
-  // Optimize images with WebP/AVIF support
+  // ImageKit CDN configuration
+  // Disable Vercel image optimization - using ImageKit instead
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'ik.imagekit.io',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.imagekit.io',
+      },
+      {
+        protocol: 'https',
+        hostname: '**', // Allow all HTTPS for external images
       },
       {
         protocol: 'http',
-        hostname: '**',
+        hostname: '**', // Allow HTTP for local development
       },
     ],
+    // Disable Next.js image optimization - ImageKit handles optimization
+    unoptimized: true,
+    // Keep formats for fallback
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    unoptimized: false,
+    minimumCacheTTL: 31536000, // 1 year - ImageKit handles caching
   },
   
   // Enable compression

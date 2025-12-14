@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import ImageKitImage from "@/components/ui/ImageKitImage";
 import { useCart } from "@/app/context/CartContext";
 import { Product } from "@/types/models";
 import { formatCurrency } from "@/app/utils";
@@ -79,7 +79,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
           {primaryImage ? (
             <>
               {/* Primary Image */}
-              <Image
+              <ImageKitImage
                 src={primaryImage}
                 alt={name}
                 fill
@@ -90,17 +90,23 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
                     : "group-hover:scale-105 group-hover:brightness-110"
                 }`}
                 loading="lazy"
+                imageType="product"
+                size="medium"
+                quality={85}
               />
               
               {/* Secondary Image (shown on hover when multiple images exist) */}
               {hasMultipleImages && secondaryImage && (
-                <Image
+                <ImageKitImage
                   src={secondaryImage}
                   alt={`${name} - view 2`}
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover object-center opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out absolute inset-0"
                   loading="lazy"
+                  imageType="product"
+                  size="medium"
+                  quality={85}
                 />
               )}
             </>
