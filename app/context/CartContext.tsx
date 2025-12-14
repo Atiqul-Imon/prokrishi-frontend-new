@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 import type { CartContextType } from "@/types/context";
-import type { CartItem, Product } from "@/types/models";
+import type { CartItem, Product, User } from "@/types/models";
 import { useAuth } from "./AuthContext";
 import { getCart, addToCart as addToCartAPI, updateCartItem as updateCartItemAPI, removeCartItem as removeCartItemAPI, clearCartBackend } from "../utils/api";
 import { logger } from "../utils/logger";
@@ -61,7 +61,164 @@ export function CartProvider({ children }: CartProviderProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const { user } = useAuth();
+  const [previousUser, setPreviousUser] = useState<User | null>(null);
+
+  // Sync localStorage cart to backend when user logs in
+  const syncLocalCartToBackend = useCallback(async (localCartItems: CartItem[]): Promise<{ success: number; failed: number; errors: string[] }> => {
+    if (!user || localCartItems.length === 0) {
+      return { success: 0, failed: 0, errors: [] };
+    }
+
+    setSyncing(true);
+    const results = { success: 0, failed: 0, errors: [] as string[] };
+
+    try {
+      // First, get current backend cart to check for existing items
+      let backendCart: CartItem[] = [];
+      try {
+        const response = await getCart();
+        if (response.cart && response.cart.items) {
+          backendCart = response.cart.items.map((item) => {
+            const backendItem = item as BackendCartItem;
+            const product = typeof backendItem.product === 'string' 
+              ? { _id: backendItem.product } as Product
+              : backendItem.product;
+            const variantId = typeof backendItem.variant?.variantId === 'object' 
+              ? backendItem.variant.variantId._id 
+              : backendItem.variant?.variantId || backendItem.variant?._id;
+            return {
+              ...product,
+              id: product._id || product.id,
+              _id: product._id,
+              quantity: backendItem.quantity,
+              price: backendItem.price || product.price,
+              variantId,
+              variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
+            } as CartItem;
+          });
+        }
+      } catch (error) {
+        logger.error("Error fetching backend cart for sync:", error);
+      }
+
+      // Sync each localStorage item to backend
+      // Use Promise.allSettled to handle partial failures gracefully
+      // Process in batches to avoid overwhelming the API
+      const BATCH_SIZE = 5;
+      const batches: CartItem[][] = [];
+      for (let i = 0; i < localCartItems.length; i += BATCH_SIZE) {
+        batches.push(localCartItems.slice(i, i + BATCH_SIZE));
+      }
+
+      for (const batch of batches) {
+        const syncPromises = batch.map(async (item) => {
+          try {
+            const productId = item.id || item._id;
+            if (!productId) {
+              throw new Error("Product ID missing");
+            }
+
+            // Check if item already exists in backend cart
+            const existingItem = backendCart.find((backendItem) => {
+              const backendItemId = backendItem.id || backendItem._id;
+              const backendVariantId = backendItem.variantId;
+              
+              if (backendItemId !== productId) return false;
+              
+              // For fish products or products with variants, match variant ID
+              if (item.isFishProduct || item.hasVariants) {
+                return backendVariantId === item.variantId;
+              }
+              
+              // For regular products without variants, match if both have no variant
+              return !backendVariantId && !item.variantId;
+            });
+
+            if (existingItem) {
+              // Item exists in backend - merge quantities intelligently
+              const newQuantity = existingItem.quantity + item.quantity;
+              try {
+                await updateCartItemAPI(productId, newQuantity, item.variantId);
+                results.success++;
+                logger.info(`Merged cart item: ${productId}, new quantity: ${newQuantity}`);
+                // Update backendCart to reflect the change
+                const updatedItem = backendCart.find((bi) => {
+                  const biId = bi.id || bi._id;
+                  const biVariantId = bi.variantId;
+                  return biId === productId && biVariantId === item.variantId;
+                });
+                if (updatedItem) {
+                  updatedItem.quantity = newQuantity;
+                }
+              } catch (error: any) {
+                // If merge fails (e.g., stock limit), try adding remaining quantity
+                const remainingQty = item.quantity;
+                if (remainingQty > 0) {
+                  try {
+                    await addToCartAPI(productId, remainingQty, item.variantId);
+                    results.success++;
+                    logger.info(`Added remaining quantity after merge failed: ${productId}`);
+                  } catch (retryError: any) {
+                    results.failed++;
+                    const errorMsg = retryError?.message || "Failed to sync item";
+                    results.errors.push(`${item.name || productId}: ${errorMsg}`);
+                    logger.error(`Failed to sync cart item: ${productId}`, retryError);
+                  }
+                } else {
+                  results.failed++;
+                  const errorMsg = error?.message || "Stock limit reached";
+                  results.errors.push(`${item.name || productId}: ${errorMsg}`);
+                  logger.error(`Failed to merge cart item: ${productId}`, error);
+                }
+              }
+            } else {
+              // Item doesn't exist in backend - add it
+              try {
+                await addToCartAPI(productId, item.quantity, item.variantId);
+                results.success++;
+                logger.info(`Synced new cart item: ${productId}`);
+              } catch (error: any) {
+                results.failed++;
+                const errorMsg = error?.message || "Failed to sync item";
+                // Only log user-friendly errors (not technical ones)
+                if (errorMsg.includes("stock") || errorMsg.includes("available") || errorMsg.includes("not found")) {
+                  results.errors.push(`${item.name || productId}: ${errorMsg}`);
+                }
+                logger.error(`Failed to sync cart item: ${productId}`, error);
+              }
+            }
+          } catch (error: any) {
+            results.failed++;
+            const errorMsg = error?.message || "Unexpected error";
+            results.errors.push(`${item.name || item.id || "Unknown item"}: ${errorMsg}`);
+            logger.error("Error syncing cart item:", error);
+          }
+        });
+
+        // Wait for batch to complete before processing next batch (with timeout per batch)
+        await Promise.race([
+          Promise.allSettled(syncPromises),
+          new Promise((resolve) => setTimeout(resolve, 5000)), // 5 second timeout per batch
+        ]);
+        
+        // Small delay between batches to avoid rate limiting
+        if (batches.indexOf(batch) < batches.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+
+      logger.info(`Cart sync completed: ${results.success} succeeded, ${results.failed} failed`);
+    } catch (error) {
+      logger.error("Error during cart sync:", error);
+      results.errors.push("Cart sync encountered an unexpected error");
+    } finally {
+      setSyncing(false);
+    }
+
+    return results;
+  }, [user]);
 
   // Load cart from backend if user is logged in, otherwise from localStorage
   useEffect(() => {
@@ -69,7 +226,43 @@ export function CartProvider({ children }: CartProviderProps) {
       setLoading(true);
       try {
         if (user) {
-          // Load from backend
+          // User just logged in - check if we need to sync localStorage cart
+          const wasGuest = !previousUser && user;
+          const localCartKey = "cart";
+          const storedLocalCart = typeof window !== "undefined" ? localStorage.getItem(localCartKey) : null;
+          
+          if (wasGuest && storedLocalCart) {
+            try {
+              const localCartItems = JSON.parse(storedLocalCart) as CartItem[];
+              if (Array.isArray(localCartItems) && localCartItems.length > 0) {
+                // Sync localStorage cart to backend
+                logger.info(`Syncing ${localCartItems.length} items from localStorage to backend`);
+                const syncResults = await syncLocalCartToBackend(localCartItems);
+                
+                // Clear localStorage only if sync was successful (at least some items synced)
+                if (syncResults.success > 0) {
+                  localStorage.removeItem(localCartKey);
+                  logger.info("Cleared localStorage cart after successful sync");
+                  
+                  // Show user feedback if there were any failures
+                  if (syncResults.failed > 0 && typeof window !== "undefined") {
+                    // Use a non-intrusive notification
+                    console.warn(
+                      `Cart sync: ${syncResults.success} items synced, ${syncResults.failed} items couldn't be added. ` +
+                      `Some items may be unavailable or out of stock.`
+                    );
+                  }
+                } else {
+                  // All items failed to sync - keep localStorage cart
+                  logger.warn("All cart items failed to sync, keeping localStorage cart");
+                }
+              }
+            } catch (error) {
+              logger.error("Error parsing or syncing localStorage cart:", error);
+            }
+          }
+
+          // Load from backend (after sync)
           try {
             const response = await getCart();
             if (response.cart && response.cart.items) {
@@ -93,26 +286,50 @@ export function CartProvider({ children }: CartProviderProps) {
                 } as CartItem;
               });
               setCart(convertedCart);
+            } else {
+              setCart([]);
             }
           } catch (error) {
             logger.error("Error loading cart from backend:", error);
             // Fallback to localStorage if backend fails
             const stored = typeof window !== "undefined" ? localStorage.getItem("cart") : null;
-            if (stored) setCart(JSON.parse(stored) as CartItem[]);
+            if (stored) {
+              try {
+                setCart(JSON.parse(stored) as CartItem[]);
+              } catch (parseError) {
+                logger.error("Error parsing localStorage cart:", parseError);
+                setCart([]);
+              }
+            } else {
+              setCart([]);
+            }
           }
         } else {
           // Load from localStorage for guest users
           const stored = typeof window !== "undefined" ? localStorage.getItem("cart") : null;
-          if (stored) setCart(JSON.parse(stored) as CartItem[]);
+          if (stored) {
+            try {
+              setCart(JSON.parse(stored) as CartItem[]);
+            } catch (error) {
+              logger.error("Error parsing localStorage cart:", error);
+              setCart([]);
+            }
+          } else {
+            setCart([]);
+          }
         }
       } catch (error) {
         logger.error("Error loading cart:", error);
+        setCart([]);
       } finally {
         setLoading(false);
       }
     }
     loadCart();
-  }, [user]);
+    
+    // Update previousUser to track login state changes
+    setPreviousUser(user);
+  }, [user, syncLocalCartToBackend, previousUser]);
 
   // Save cart to localStorage for guest users (don't sync to backend here to avoid too many API calls)
   useEffect(() => {
@@ -394,6 +611,7 @@ export function CartProvider({ children }: CartProviderProps) {
     () => ({
       cart,
       loading,
+      syncing,
       addToCart,
       updateQuantity,
       removeFromCart,
@@ -405,7 +623,7 @@ export function CartProvider({ children }: CartProviderProps) {
       openSidebar,
       closeSidebar,
     }),
-    [cart, loading, cartTotal, cartCount, isSidebarOpen, getItemDisplayQuantity, addToCart, updateQuantity, removeFromCart, clearCart, openSidebar, closeSidebar],
+    [cart, loading, syncing, cartTotal, cartCount, isSidebarOpen, getItemDisplayQuantity, addToCart, updateQuantity, removeFromCart, clearCart, openSidebar, closeSidebar],
   );
 
   return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;
