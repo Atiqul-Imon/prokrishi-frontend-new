@@ -231,38 +231,7 @@ export function CartProvider({ children }: CartProviderProps) {
           const localCartKey = "cart";
           const storedLocalCart = typeof window !== "undefined" ? localStorage.getItem(localCartKey) : null;
           
-          if (wasGuest && storedLocalCart) {
-            try {
-              const localCartItems = JSON.parse(storedLocalCart) as CartItem[];
-              if (Array.isArray(localCartItems) && localCartItems.length > 0) {
-                // Sync localStorage cart to backend
-                logger.info(`Syncing ${localCartItems.length} items from localStorage to backend`);
-                const syncResults = await syncLocalCartToBackend(localCartItems);
-                
-                // Clear localStorage only if sync was successful (at least some items synced)
-                if (syncResults.success > 0) {
-                  localStorage.removeItem(localCartKey);
-                  logger.info("Cleared localStorage cart after successful sync");
-                  
-                  // Show user feedback if there were any failures
-                  if (syncResults.failed > 0 && typeof window !== "undefined") {
-                    // Use a non-intrusive notification
-                    console.warn(
-                      `Cart sync: ${syncResults.success} items synced, ${syncResults.failed} items couldn't be added. ` +
-                      `Some items may be unavailable or out of stock.`
-                    );
-                  }
-                } else {
-                  // All items failed to sync - keep localStorage cart
-                  logger.warn("All cart items failed to sync, keeping localStorage cart");
-                }
-              }
-            } catch (error) {
-              logger.error("Error parsing or syncing localStorage cart:", error);
-            }
-          }
-
-          // Load from backend (after sync)
+          // Load from backend first (non-blocking)
           try {
             const response = await getCart();
             if (response.cart && response.cart.items) {
@@ -286,8 +255,67 @@ export function CartProvider({ children }: CartProviderProps) {
                 } as CartItem;
               });
               setCart(convertedCart);
+              setLoading(false); // Set loading to false immediately after cart loads
+              
+              // Sync localStorage cart in background (non-blocking)
+              if (wasGuest && storedLocalCart) {
+                try {
+                  const localCartItems = JSON.parse(storedLocalCart) as CartItem[];
+                  if (Array.isArray(localCartItems) && localCartItems.length > 0) {
+                    // Sync in background - don't block UI
+                    syncLocalCartToBackend(localCartItems).then((syncResults) => {
+                      // Clear localStorage only if sync was successful
+                      if (syncResults.success > 0) {
+                        localStorage.removeItem(localCartKey);
+                        logger.info("Cleared localStorage cart after successful sync");
+                        
+                        // Reload cart after sync to get merged items
+                        getCart().then((response) => {
+                          if (response.cart && response.cart.items) {
+                            const convertedCart: CartItem[] = response.cart.items.map((item) => {
+                              const backendItem = item as BackendCartItem;
+                              const product = typeof backendItem.product === 'string' 
+                                ? { _id: backendItem.product } as Product
+                                : backendItem.product;
+                              const variantId = typeof backendItem.variant?.variantId === 'object' 
+                                ? backendItem.variant.variantId._id 
+                                : backendItem.variant?.variantId || backendItem.variant?._id;
+                              return {
+                                ...product,
+                                id: product._id || product.id,
+                                _id: product._id,
+                                quantity: backendItem.quantity,
+                                price: backendItem.price || product.price,
+                                variantId,
+                                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
+                              } as CartItem;
+                            });
+                            setCart(convertedCart);
+                          }
+                        }).catch((error) => {
+                          logger.error("Error reloading cart after sync:", error);
+                        });
+                      }
+                      
+                      // Show user feedback if there were any failures
+                      if (syncResults.failed > 0 && typeof window !== "undefined") {
+                        console.warn(
+                          `Cart sync: ${syncResults.success} items synced, ${syncResults.failed} items couldn't be added. ` +
+                          `Some items may be unavailable or out of stock.`
+                        );
+                      }
+                    }).catch((error) => {
+                      logger.error("Error syncing localStorage cart:", error);
+                    });
+                  }
+                } catch (error) {
+                  logger.error("Error parsing localStorage cart:", error);
+                }
+              }
+              return; // Exit early - cart loaded
             } else {
               setCart([]);
+              setLoading(false);
             }
           } catch (error) {
             logger.error("Error loading cart from backend:", error);
@@ -303,6 +331,8 @@ export function CartProvider({ children }: CartProviderProps) {
             } else {
               setCart([]);
             }
+            setLoading(false);
+            return;
           }
         } else {
           // Load from localStorage for guest users
@@ -317,11 +347,11 @@ export function CartProvider({ children }: CartProviderProps) {
           } else {
             setCart([]);
           }
+          setLoading(false);
         }
       } catch (error) {
         logger.error("Error loading cart:", error);
         setCart([]);
-      } finally {
         setLoading(false);
       }
     }
@@ -349,46 +379,13 @@ export function CartProvider({ children }: CartProviderProps) {
     try {
       const id = product.id || product._id;
       
-      // If user is logged in, sync with backend
-      if (user) {
-        try {
-          await addToCartAPI(id, qty, variantId);
-          // Reload cart from backend
-          const response = await getCart();
-          if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item) => {
-              const backendItem = item as BackendCartItem;
-              const prod = typeof backendItem.product === 'string' 
-                ? { _id: backendItem.product } as Product
-                : backendItem.product;
-              const variantId = typeof backendItem.variant?.variantId === 'object' 
-                ? backendItem.variant.variantId._id 
-                : backendItem.variant?.variantId || backendItem.variant?._id;
-              return {
-                ...prod,
-                id: prod._id || prod.id,
-                _id: prod._id,
-                quantity: backendItem.quantity,
-                price: backendItem.price || prod.price,
-                variantId,
-                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
-              } as CartItem;
-            });
-            setCart(convertedCart);
-          }
-        } catch (error) {
-          logger.error("Error adding to cart via API:", error);
-          // Fallback to local state update
-        }
-      }
+      // Optimistic update - update UI immediately for better UX
+      const measurementInfo = getMeasurementInfo(product, variantId);
+      const isFishProduct =
+        product.isFishProduct === true ||
+        (product.sizeCategories && Array.isArray(product.sizeCategories) && product.sizeCategories.length > 0);
 
-      // Update local state (works for both logged in and guest users)
       setCart((prev) => {
-        const measurementInfo = getMeasurementInfo(product, variantId);
-        const isFishProduct =
-          product.isFishProduct === true ||
-          (product.sizeCategories && Array.isArray(product.sizeCategories) && product.sizeCategories.length > 0);
-
         const idx = prev.findIndex((item) => {
           const itemId = item.id || item._id;
           const itemVariantId = item.variantId;
@@ -457,6 +454,15 @@ export function CartProvider({ children }: CartProviderProps) {
         return [...prev, newItem];
       });
       setIsSidebarOpen(true);
+
+      // Sync with backend in background (non-blocking) if user is logged in
+      if (user) {
+        addToCartAPI(id, qty, variantId).catch((error) => {
+          logger.error("Error adding to cart via API (will retry on next operation):", error);
+          // Don't revert optimistic update - user already sees the item
+          // The cart will sync on next operation or page reload
+        });
+      }
     } catch (error) {
       logger.error("Error adding to cart:", error);
     }
@@ -469,41 +475,7 @@ export function CartProvider({ children }: CartProviderProps) {
         return;
       }
 
-      // If user is logged in, sync with backend
-      if (user) {
-        try {
-          await updateCartItemAPI(id, quantity, variantId);
-          // Reload cart from backend
-          const response = await getCart();
-          if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item) => {
-              const backendItem = item as BackendCartItem;
-              const prod = typeof backendItem.product === 'string' 
-                ? { _id: backendItem.product } as Product
-                : backendItem.product;
-              const variantId = typeof backendItem.variant?.variantId === 'object' 
-                ? backendItem.variant.variantId._id 
-                : backendItem.variant?.variantId || backendItem.variant?._id;
-              return {
-                ...prod,
-                id: prod._id || prod.id,
-                _id: prod._id,
-                quantity: backendItem.quantity,
-                price: backendItem.price || prod.price,
-                variantId,
-                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
-              } as CartItem;
-            });
-            setCart(convertedCart);
-            return;
-          }
-        } catch (error) {
-          logger.error("Error updating cart via API:", error);
-          // Fallback to local state update
-        }
-      }
-
-      // Update local state
+      // Optimistic update - update UI immediately
       setCart((prev) =>
         prev.map((item) => {
           const itemId = item.id || item._id;
@@ -519,6 +491,14 @@ export function CartProvider({ children }: CartProviderProps) {
           return item;
         }),
       );
+
+      // Sync with backend in background (non-blocking) if user is logged in
+      if (user) {
+        updateCartItemAPI(id, quantity, variantId).catch((error) => {
+          logger.error("Error updating cart via API (will retry on next operation):", error);
+          // Don't revert optimistic update - user already sees the change
+        });
+      }
     } catch (error) {
       logger.error("Error updating quantity:", error);
     }
@@ -526,49 +506,22 @@ export function CartProvider({ children }: CartProviderProps) {
 
   const removeFromCart = useCallback(async (id: string, variantId?: string) => {
     try {
-      // If user is logged in, sync with backend
-      if (user) {
-        try {
-          await removeCartItemAPI(id, variantId);
-          // Reload cart from backend
-          const response = await getCart();
-          if (response.cart && response.cart.items) {
-            const convertedCart: CartItem[] = response.cart.items.map((item) => {
-              const backendItem = item as BackendCartItem;
-              const prod = typeof backendItem.product === 'string' 
-                ? { _id: backendItem.product } as Product
-                : backendItem.product;
-              const variantId = typeof backendItem.variant?.variantId === 'object' 
-                ? backendItem.variant.variantId._id 
-                : backendItem.variant?.variantId || backendItem.variant?._id;
-              return {
-                ...prod,
-                id: prod._id || prod.id,
-                _id: prod._id,
-                quantity: backendItem.quantity,
-                price: backendItem.price || prod.price,
-                variantId,
-                variantSnapshot: backendItem.variant as CartItem['variantSnapshot'],
-              } as CartItem;
-            });
-            setCart(convertedCart);
-            return;
-          }
-        } catch (error) {
-          logger.error("Error removing from cart via API:", error);
-          // Fallback to local state update
-        }
-      }
-
-      // Update local state
+      // Optimistic update - update UI immediately
       setCart((prev) =>
         prev.filter((item) => {
           const itemId = item.id || item._id;
           const itemVariantId = item.variantId;
-          if (itemId !== id) return true;
-          return itemVariantId !== variantId;
+          return !(itemId === id && itemVariantId === variantId);
         }),
       );
+
+      // Sync with backend in background (non-blocking) if user is logged in
+      if (user) {
+        removeCartItemAPI(id, variantId).catch((error) => {
+          logger.error("Error removing from cart via API (will retry on next operation):", error);
+          // Don't revert optimistic update - user already sees the item removed
+        });
+      }
     } catch (error) {
       logger.error("Error removing from cart:", error);
     }
