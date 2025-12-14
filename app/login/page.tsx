@@ -8,6 +8,7 @@ import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { isValidEmail, isValidPhone } from "@/app/utils/validation";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,19 +31,50 @@ export default function LoginPage() {
     setFormError("");
   }
 
+  // Normalize phone number for backend (remove +, spaces, dashes, and normalize formats)
+  function normalizePhone(phone: string): string {
+    // Remove all non-digit characters
+    let digits = phone.replace(/\D/g, "");
+    
+    // Normalize Bangladeshi phone numbers:
+    // +8801712152055 or 8801712152055 -> 01712152055 (remove country code, add leading 0)
+    // 01712152055 -> 01712152055 (keep as is)
+    if (digits.length === 13 && digits.startsWith("880")) {
+      // Remove country code 880 and add leading 0
+      digits = "0" + digits.substring(3);
+    } else if (digits.length === 12 && digits.startsWith("88")) {
+      // Remove country code 88 and add leading 0
+      digits = "0" + digits.substring(2);
+    } else if (digits.length === 10 && digits.startsWith("1")) {
+      // Add leading 0 if missing
+      digits = "0" + digits;
+    }
+    
+    return digits;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
-    const { email, password } = form;
+    let { email, password } = form;
 
     if (!email || !password) {
       setFormError("Email and password are required.");
       return;
     }
 
-    if (!email.includes("@") && !email.startsWith("+")) {
+    // Validate email or phone number format
+    const isEmail = isValidEmail(email);
+    const isPhone = isValidPhone(email);
+    
+    if (!isEmail && !isPhone) {
       setFormError("Please enter a valid email address or phone number.");
       return;
+    }
+
+    // Normalize phone number if it's a phone (not email)
+    if (isPhone && !isEmail) {
+      email = normalizePhone(email);
     }
 
     if (password.length < 6) {
@@ -50,7 +82,7 @@ export default function LoginPage() {
       return;
     }
 
-    const res = await login(form);
+    const res = await login({ email, password });
     if (res.success) {
       if (user?.role === "admin" || user?.role === "super_admin") {
         router.replace("/admin");
