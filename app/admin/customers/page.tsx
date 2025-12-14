@@ -24,9 +24,24 @@ export default function AdminCustomersPage() {
         method: "GET",
         params,
       });
-      setCustomers(result.users || []);
-      setTotalPages(result.pagination?.totalPages || 1);
+      
+      // Backend returns: { success: true, message: "...", data: users[], pagination: {...} }
+      // Transform interceptor may wrap it, so check both result.data and direct properties
+      console.log("API Response:", result); // Debug log
+      
+      const users = result.data || result.users || [];
+      const pagination = result.pagination || result.data?.pagination;
+      
+      if (!Array.isArray(users)) {
+        console.error("Users is not an array:", users);
+        setCustomers([]);
+      } else {
+        setCustomers(users);
+      }
+      
+      setTotalPages(pagination?.totalPages || 1);
     } catch (err: any) {
+      console.error("Error fetching customers:", err);
       setError(err.message || "Failed to load customers");
     } finally {
       setLoading(false);
@@ -72,8 +87,12 @@ export default function AdminCustomersPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-semibold">Error loading customers</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+          <p className="text-red-500 text-xs mt-2">
+            Please check: 1) You are logged in as admin, 2) API is running, 3) Check browser console for details
+          </p>
         </div>
       )}
 
