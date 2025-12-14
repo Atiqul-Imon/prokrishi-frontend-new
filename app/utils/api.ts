@@ -210,25 +210,59 @@ export async function registerUser(data: RegisterRequest): Promise<RegisterRespo
  * Login user.
  */
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const response = await apiRequest<LoginResponse>("/user/login", {
-    method: "POST",
-    data,
-  });
-  // NestJS returns { success: true, data: { user, accessToken, refreshToken, message } }
-  const responseData = response.data || response;
-  if (responseData.accessToken) {
-    localStorage.setItem("accessToken", responseData.accessToken);
+  try {
+    const response = await apiRequest<any>("/user/login", {
+      method: "POST",
+      data,
+    });
+    
+    // Log response for debugging
+    console.log("Login API Response:", response);
+    
+    // NestJS TransformInterceptor wraps response structure:
+    // { success: true, data: { user, accessToken, refreshToken }, message: "...", timestamp: "..." }
+    // The actual login data is nested in response.data
+    const responseData = (response as any).data;
+    
+    if (!responseData) {
+      console.error("Login response missing data field:", response);
+      throw new Error("Invalid login response structure");
+    }
+    
+    // Extract tokens and user data from nested data object
+    const accessToken = responseData.accessToken;
+    const refreshToken = responseData.refreshToken;
+    const user = responseData.user;
+    const message = (response as any).message || responseData.message || "Login successful";
+    
+    // Store tokens in localStorage
+    if (accessToken && typeof window !== "undefined") {
+      localStorage.setItem("accessToken", accessToken);
+      console.log("Access token stored in localStorage");
+    } else {
+      console.error("No access token in response:", response);
+    }
+    
+    if (refreshToken && typeof window !== "undefined") {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
+    
+    if (!user) {
+      console.error("No user data in response:", response);
+      throw new Error("Login response missing user data");
+    }
+    
+    return {
+      success: (response as any).success !== false,
+      message,
+      user,
+      accessToken: accessToken || "",
+      refreshToken: refreshToken || "",
+    };
+  } catch (error: any) {
+    console.error("Login error:", error);
+    throw error;
   }
-  if (responseData.refreshToken) {
-    localStorage.setItem("refreshToken", responseData.refreshToken);
-  }
-  return {
-    success: response.success || true,
-    message: responseData.message,
-    user: responseData.user,
-    accessToken: responseData.accessToken,
-    refreshToken: responseData.refreshToken,
-  };
 }
 
 /**

@@ -22,13 +22,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       try {
         if (typeof window !== "undefined" && localStorage.getItem("accessToken")) {
-          const data = await fetchProfile();
-          setUser(data.user);
+          try {
+            const data = await fetchProfile();
+            setUser(data.user);
+            console.log("AuthContext: User loaded from token:", data.user);
+          } catch (error) {
+            console.error("AuthContext: Failed to fetch profile, clearing tokens:", error);
+            // Token might be invalid, clear it
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            setUser(null);
+          }
         } else {
           setUser(null);
         }
         setError(null);
-      } catch {
+      } catch (error) {
+        console.error("AuthContext: Error loading user:", error);
         setUser(null);
       }
       setLoading(false);
@@ -56,11 +66,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
+      console.log("AuthContext: Attempting login with:", { email: form.email, passwordLength: form.password?.length });
       const data = await loginUser(form);
+      console.log("AuthContext: Login response received:", data);
+      
+      if (!data.user) {
+        throw new Error("Login response missing user data");
+      }
+      
       setUser(data.user);
+      console.log("AuthContext: User state updated:", data.user);
       setLoading(false);
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err) {
+      console.error("AuthContext: Login error:", err);
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
       setLoading(false);

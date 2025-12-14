@@ -82,15 +82,21 @@ export default function LoginPage() {
       return;
     }
 
-    const res = await login({ email, password });
-    if (res.success) {
-      if (user?.role === "admin" || user?.role === "super_admin") {
-        router.replace("/admin");
+    try {
+      const res = await login({ email, password });
+      console.log("Login response:", res);
+      
+      if (res.success) {
+        // Don't redirect here - let the component's user check handle it
+        // The AuthContext will update the user state, triggering a re-render
+        // and the redirect logic at the top of the component will handle it
+        // This ensures user state is properly set before redirect
       } else {
-        router.replace("/");
+        setFormError(res.message || "Login failed. Please check your credentials.");
       }
-    } else {
-      setFormError(res.message || "Login failed. Please check your credentials.");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setFormError(error.message || "Login failed. Please check your credentials.");
     }
   }
 
