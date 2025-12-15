@@ -85,17 +85,27 @@ function ProductsContent() {
       
       // Normalize regular products - ensure stock field is set correctly
       const normalizedRegularProducts = (regularProductsRes.products || []).map((product: any) => {
-        // For products with variants, use variantSummary.totalStock
-        if (product.hasVariants && product.variantSummary?.totalStock !== undefined) {
-          return {
-            ...product,
-            stock: product.variantSummary.totalStock,
-          };
+        let calculatedStock = 0;
+        
+        // For products with variants, calculate stock from variants
+        if (product.hasVariants && product.variants && product.variants.length > 0) {
+          // Use variantSummary if available (from backend calculation)
+          if (product.variantSummary?.totalStock !== undefined) {
+            calculatedStock = product.variantSummary.totalStock;
+          } else {
+            // Fallback: calculate from variants directly
+            calculatedStock = product.variants
+              .filter((v: any) => v.status === 'active')
+              .reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+          }
+        } else {
+          // For products without variants, use stock field directly
+          calculatedStock = product.stock ?? 0;
         }
-        // For products without variants, use stock field directly (or 0 if missing)
+        
         return {
           ...product,
-          stock: product.stock ?? 0,
+          stock: calculatedStock,
         };
       });
       

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getCategoryById, getAllProducts } from "@/app/utils/api";
+import { getCategoryById, getAllProducts, getAllCategories } from "@/app/utils/api";
+import { fishProductApi } from "@/app/utils/fishApi";
 import { logger } from "@/app/utils/logger";
 import { handleApiError } from "@/app/utils/errorHandler";
 import ProductGrid from "@/components/ProductGrid";
@@ -33,32 +34,172 @@ export default function ProductsByCategoryPage() {
           setCategory(categoryRes.category);
         }
 
-        // Fetch products filtered by category
+        const categoryName = categoryRes.category?.name || "";
+        const categorySlug = categoryRes.category?.slug || "";
+        
+        // Get all categories to find fish category ID (more reliable than name matching)
+        let fishCategoryId: string | null = null;
+        try {
+          const allCategoriesRes = await getAllCategories();
+          if (allCategoriesRes.success && allCategoriesRes.categories) {
+            const fishCategory = allCategoriesRes.categories.find((cat: any) => {
+              const name = (cat.name || "").toLowerCase().trim();
+              const slug = (cat.slug || "").toLowerCase().trim();
+              return (
+                name === "মাছ" ||
+                name.includes("মাছ") ||
+                name === "machh" ||
+                name === "fish" ||
+                name.includes("fish") ||
+                slug === "machh" ||
+                slug === "fish" ||
+                slug.includes("fish")
+              );
+            });
+            if (fishCategory) {
+              fishCategoryId = fishCategory._id;
+            }
+          }
+        } catch (catErr) {
+          logger.warn("Failed to fetch all categories for fish detection:", catErr);
+        }
+        
+        // Check if this is the fish category - use ID match (most reliable) or name match
+        const normalizedCategoryName = categoryName.toLowerCase().trim();
+        const isFishCategory = 
+          fishCategoryId === categoryId ||
+          categoryName === "মাছ" || 
+          normalizedCategoryName === "মাছ" ||
+          normalizedCategoryName === "machh" || 
+          normalizedCategoryName === "fish" ||
+          normalizedCategoryName.includes("মাছ") ||
+          normalizedCategoryName.includes("fish") ||
+          categorySlug === "machh" ||
+          categorySlug === "fish" ||
+          categorySlug.includes("fish");
+        
+        logger.debug("Category page - Category:", {
+          id: categoryId,
+          name: categoryName,
+          slug: categorySlug,
+          fishCategoryId,
+          isFishCategory,
+        });
+
+        // Fetch regular products filtered by category
         const productRes = await getAllProducts({
           category: categoryId as string,
           limit: 100, // Get more products for category page
         });
 
+        let allProducts: Product[] = [];
+
+        // Normalize regular products - ensure stock field is set correctly
         if (productRes.products) {
-          // Normalize products - ensure stock field is set correctly
           const normalizedProducts = productRes.products.map((product: any) => {
-            // For products with variants, use variantSummary.totalStock
-            if (product.hasVariants && product.variantSummary?.totalStock !== undefined) {
-              return {
-                ...product,
-                stock: product.variantSummary.totalStock,
-              };
+            let calculatedStock = 0;
+            
+            // For products with variants, calculate stock from variants
+            if (product.hasVariants && product.variants && product.variants.length > 0) {
+              // Use variantSummary if available (from backend calculation)
+              if (product.variantSummary?.totalStock !== undefined) {
+                calculatedStock = product.variantSummary.totalStock;
+              } else {
+                // Fallback: calculate from variants directly
+                calculatedStock = product.variants
+                  .filter((v: any) => v.status === 'active')
+                  .reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+              }
+            } else {
+              // For products without variants, use stock field directly
+              calculatedStock = product.stock ?? 0;
             }
-            // For products without variants, use stock field directly (or 0 if missing)
+            
             return {
               ...product,
-              stock: product.stock ?? 0,
+              stock: calculatedStock,
             };
           });
-          setProducts(normalizedProducts);
-        } else {
-          setProducts([]);
+          allProducts = normalizedProducts;
         }
+
+        // If this is the fish category, also fetch fish products
+        if (isFishCategory) {
+          try {
+            // Try with the category ID first, then without filter if no results
+            const categoryToUse = fishCategoryId || categoryId;
+            logger.debug("Fetching fish products for category:", categoryToUse);
+            
+            let fishRes = await fishProductApi.getAll({
+              category: categoryToUse as string,
+              limit: 100,
+              status: "active",
+            });
+
+            // If no products found with category filter, try without filter to see if there are any fish products
+            if (!fishRes.fishProducts || fishRes.fishProducts.length === 0) {
+              logger.debug("No fish products found with category filter, trying without filter");
+              fishRes = await fishProductApi.getAll({
+                limit: 100,
+                status: "active",
+              });
+              logger.debug("Fish products without category filter:", {
+                count: fishRes.fishProducts?.length || 0,
+              });
+            }
+
+            logger.debug("Fish products response:", {
+              count: fishRes.fishProducts?.length || 0,
+              hasProducts: !!(fishRes.fishProducts && fishRes.fishProducts.length > 0),
+            });
+
+            if (fishRes.fishProducts && fishRes.fishProducts.length > 0) {
+              // Transform fish products to match Product type
+              const transformedFishProducts: Product[] = fishRes.fishProducts.map((fishProduct: any) => {
+                // Use priceRange.min as the base price, or first size category price
+                const basePrice = fishProduct.priceRange?.min || 
+                  (fishProduct.sizeCategories && fishProduct.sizeCategories.length > 0 
+                    ? fishProduct.sizeCategories[0].pricePerKg 
+                    : 0);
+
+                // Calculate total stock from active size categories
+                const totalStock = fishProduct.availableStock || 
+                  (fishProduct.sizeCategories || []).reduce((sum: number, sc: any) => {
+                    return sum + (sc.status === 'active' ? (sc.stock || 0) : 0);
+                  }, 0);
+
+                return {
+                  _id: fishProduct._id,
+                  name: fishProduct.name,
+                  description: fishProduct.description,
+                  shortDescription: fishProduct.shortDescription,
+                  price: basePrice,
+                  stock: totalStock,
+                  image: fishProduct.image,
+                  category: fishProduct.category || categoryRes.category,
+                  isFishProduct: true,
+                  sizeCategories: fishProduct.sizeCategories || [],
+                  priceRange: fishProduct.priceRange,
+                  status: fishProduct.status,
+                  isFeatured: fishProduct.isFeatured,
+                  slug: fishProduct.slug,
+                  sku: fishProduct.sku,
+                  tags: fishProduct.tags,
+                  // Set hasVariants to false since fish products use sizeCategories
+                  hasVariants: false,
+                };
+              });
+
+              // Combine regular products and fish products
+              allProducts = [...allProducts, ...transformedFishProducts];
+            }
+          } catch (fishErr) {
+            // Log error but don't fail the whole page if fish products fail to load
+            logger.warn("Error fetching fish products for category page:", fishErr);
+          }
+        }
+
+        setProducts(allProducts);
       } catch (err) {
         setError(handleApiError(err, "loading products"));
         logger.error("Error fetching data for category page:", err);

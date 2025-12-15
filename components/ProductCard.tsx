@@ -51,8 +51,15 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
     if (isFishProduct && sizeCategories) {
       return sizeCategories.some(cat => (cat.stock || 0) > 0 && cat.status === 'active');
     }
+    // For products with variants, check if any variant has stock
+    if (product.hasVariants && product.variants && product.variants.length > 0) {
+      return product.variants.some((variant: any) => 
+        (variant.stock || 0) > 0 && variant.status === 'active'
+      );
+    }
+    // For products without variants, check the stock field
     return (stock || 0) > 0;
-  }, [stock, isFishProduct, sizeCategories]);
+  }, [stock, isFishProduct, sizeCategories, product.hasVariants, product.variants]);
 
   const measurementText = measurement && unit ? `${measurement} ${unit}` : null;
   

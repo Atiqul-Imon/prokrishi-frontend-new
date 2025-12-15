@@ -1182,19 +1182,40 @@ export async function getUserFishOrders(): Promise<{ success: boolean; orders: O
 // Get featured products
 export async function getFeaturedProducts(): Promise<ProductsResponse> {
   const timestamp = Date.now();
-  const response = await apiRequest<ProductsResponse>(`/product/featured?t=${timestamp}`);
-  // NestJS returns { success: true, data: { message, products } }
-  // Return in format expected by frontend: { products: [...] }
+  const response = await apiRequest<any>(`/product/featured?t=${timestamp}`);
+  
+  // NestJS TransformInterceptor wraps response:
+  // Controller returns: { message, products: [...], success: true }
+  // Interceptor transforms to: { success: true, data: { products: [...], success: true }, message, timestamp }
+  // OR if single field: { success: true, data: [...], message, timestamp }
+  
+  let products: any[] = [];
+  
+  // Try different response structures
+  if (Array.isArray(response.data)) {
+    // If data is directly an array
+    products = response.data;
+  } else if (response.data?.products && Array.isArray(response.data.products)) {
+    // If data contains products array
+    products = response.data.products;
+  } else if (Array.isArray(response.products)) {
+    // If products is at top level
+    products = response.products;
+  } else if (response.data && typeof response.data === 'object' && 'products' in response.data) {
+    // Nested structure
+    products = (response.data as any).products || [];
+  }
+  
   return {
     success: response.success || true,
-    products: response.data?.products || response.products || [],
+    products: products,
     pagination: response.pagination || {
       currentPage: 1,
       totalPages: 1,
-      totalProducts: response.data?.products?.length || 0,
+      totalProducts: products.length || 0,
       hasNextPage: false,
       hasPrevPage: false,
-      limit: response.data?.products?.length || 0,
+      limit: products.length || 0,
     },
   };
 }

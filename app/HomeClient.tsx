@@ -48,7 +48,58 @@ export default function HomeClient() {
       try {
         setLoading(true);
         const data = await getFeaturedProducts();
-        setFeaturedProducts(data.products || []);
+        
+        // Debug: Log raw response
+        logger.debug("Featured products raw response:", {
+          productCount: data.products?.length || 0,
+          firstProduct: data.products?.[0] ? {
+            name: data.products[0].name,
+            stock: data.products[0].stock,
+            hasVariants: data.products[0].hasVariants,
+            variantSummary: data.products[0].variantSummary,
+            variants: data.products[0].variants?.length || 0,
+          } : null,
+        });
+        
+        // Normalize products - ensure stock field is set correctly
+        const normalizedProducts = (data.products || []).map((product: any) => {
+          let calculatedStock = 0;
+          
+          // Check if product has variants (check both hasVariants flag and actual variants array)
+          const hasVariants = product.hasVariants || (product.variants && Array.isArray(product.variants) && product.variants.length > 0);
+          
+          if (hasVariants && product.variants && product.variants.length > 0) {
+            // Use variantSummary if available (from backend calculation)
+            if (product.variantSummary?.totalStock !== undefined && product.variantSummary.totalStock > 0) {
+              calculatedStock = product.variantSummary.totalStock;
+            } else {
+              // Fallback: calculate from variants directly (only count active variants)
+              calculatedStock = product.variants
+                .filter((v: any) => v && (v.status === 'active' || !v.status))
+                .reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
+            }
+          } else {
+            // For products without variants, use stock field directly
+            calculatedStock = Number(product.stock) || 0;
+          }
+          
+          logger.debug("Product stock normalization:", {
+            name: product.name,
+            hasVariants: product.hasVariants,
+            hasVariantsCalculated: hasVariants,
+            variantCount: product.variants?.length || 0,
+            variantSummary: product.variantSummary?.totalStock,
+            originalStock: product.stock,
+            calculatedStock,
+          });
+          
+          return {
+            ...product,
+            stock: calculatedStock,
+            hasVariants: hasVariants, // Ensure hasVariants is set correctly
+          };
+        });
+        setFeaturedProducts(normalizedProducts);
       } catch (err) {
         logger.error("Error loading featured products:", err);
         setError("Failed to load featured products");
@@ -198,3 +249,4 @@ export default function HomeClient() {
     </div>
   );
 }
+
