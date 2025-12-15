@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import { CheckCircle, ShoppingBag, ArrowRight, Package } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+import { useCart } from "@/app/context/CartContext";
+import { logger } from "@/app/utils/logger";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export default function OrderSuccessPage({ searchParams }: Props) {
-  const [isAnimated, setIsAnimated] = useState(false);
+  // Initialize animation state to true for immediate animation on mount
+  const [isAnimated] = useState(true);
   const orderIdParam = searchParams?.orderId;
   const orderId = Array.isArray(orderIdParam) ? orderIdParam[0] : orderIdParam || "";
+  const { cart, clearCart } = useCart();
 
   useEffect(() => {
-    // Trigger animation on mount
-    setIsAnimated(true);
-  }, []);
+    // Safety check: Clear cart if it still has items (handles edge cases)
+    // This ensures cart is cleared even if checkout didn't complete the clearing
+    if (cart && cart.length > 0) {
+      logger.info("Cart still has items on success page, clearing now");
+      clearCart().catch((error) => {
+        logger.error("Error clearing cart on success page:", error);
+      });
+    }
+  }, [cart, clearCart]);
 
   // Calculate estimated delivery (2-3 days for Inside Dhaka, 4-5 days for Outside)
   const estimatedDelivery = "2-3 business days";

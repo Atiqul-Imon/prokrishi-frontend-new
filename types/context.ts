@@ -22,7 +22,7 @@ export interface CartContextType {
   addToCart: (product: Product, qty?: number, variantId?: string) => void;
   updateQuantity: (id: string, quantity: number, variantId?: string) => void;
   removeFromCart: (id: string, variantId?: string) => void;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   getItemDisplayQuantity: (item: CartItem) => { value: number; unit?: string; displayText: string };
   isSidebarOpen: boolean;
   openSidebar: () => void;

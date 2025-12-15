@@ -598,17 +598,37 @@ export function CartProvider({ children }: CartProviderProps) {
 
   const clearCart = useCallback(async () => {
     try {
-      // If user is logged in, sync with backend
+      // Clear frontend state immediately for better UX
+      setCart([]);
+      
+      // Clear localStorage as backup (works for both logged-in and guest users)
+      try {
+        localStorage.removeItem("cart");
+        logger.info("LocalStorage cart cleared");
+      } catch (localStorageError) {
+        logger.error("Error clearing localStorage cart:", localStorageError);
+      }
+      
+      // If user is logged in, also clear backend cart
       if (user) {
         try {
           await clearCartBackend();
+          logger.info("Backend cart cleared successfully");
         } catch (error) {
           logger.error("Error clearing cart via API:", error);
+          // Don't throw - frontend state and localStorage are already cleared
+          // This ensures cart is cleared even if backend call fails
         }
       }
-      setCart([]);
     } catch (error) {
       logger.error("Error clearing cart:", error);
+      // Ensure cart state is cleared even if there's an error
+      setCart([]);
+      try {
+        localStorage.removeItem("cart");
+      } catch (localStorageError) {
+        logger.error("Error clearing localStorage cart in error handler:", localStorageError);
+      }
     }
   }, [user]);
 

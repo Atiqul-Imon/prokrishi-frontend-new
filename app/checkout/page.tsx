@@ -371,7 +371,23 @@ function CheckoutContent() {
 
       // Only COD is available, so proceed directly to success
 
-      clearCart();
+      // Clear cart after successful order - await to ensure it completes
+      // This works for both logged-in users (clears backend) and guest users (clears localStorage)
+      try {
+        await clearCart();
+        logger.info("Cart cleared successfully after order placement");
+      } catch (clearError) {
+        // Log error but don't block redirect - cart clearing is best effort
+        // Frontend state is already cleared, and localStorage will be cleared as backup
+        logger.error("Error clearing cart after order (non-blocking):", clearError);
+        // Ensure localStorage is cleared as backup even if API call fails
+        try {
+          localStorage.removeItem("cart");
+        } catch (localStorageError) {
+          logger.error("Error clearing localStorage cart:", localStorageError);
+        }
+      }
+      
       setMessage("Order placed successfully.");
       
       if (orderIds.length > 0) {
