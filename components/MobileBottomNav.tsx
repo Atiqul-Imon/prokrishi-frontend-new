@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
+import { useFishCart } from "@/app/context/FishCartContext";
 import { Home, ShoppingBag, User } from "lucide-react";
 import { triggerHaptic, HapticType } from "@/app/utils/haptics";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { cartCount } = useCart();
+  const { fishCart } = useFishCart();
+  const fishCartCount = fishCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const totalCartCount = cartCount + fishCartCount;
 
   // Don't show on admin routes
   if (pathname?.startsWith("/admin")) {
@@ -27,7 +31,7 @@ export default function MobileBottomNav() {
       icon: ShoppingBag,
       label: "Cart",
       active: pathname === "/cart",
-      badge: cartCount > 0 ? cartCount : null,
+      badge: totalCartCount > 0 ? totalCartCount : null,
     },
     {
       href: "/account",

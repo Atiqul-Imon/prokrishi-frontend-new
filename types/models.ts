@@ -98,6 +98,7 @@ export interface FishCartItem {
   fishProduct: FishProduct | string;
   sizeCategoryId: string;
   sizeCategoryLabel: string;
+  quantity?: number;
   pricePerKg: number;
 }
 

@@ -447,7 +447,35 @@ export default function ProductDetailPage() {
             {isFishProduct && (
               <Card padding="lg" variant="elevated" className="hidden md:block">
                 <div className="space-y-4">
-                  {!selectedSizeCategory && (
+                  {/* Quantity Selector - Only show if has size categories */}
+                  {sizeCategories.length > 0 && selectedSizeCategory && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Quantity
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleQuantityChange(-1)}
+                          disabled={quantity <= 1}
+                          className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                        >
+                          <Minus className="w-5 h-5" />
+                        </button>
+                        <div className="flex-1 px-4 py-3 md:py-2 rounded-lg bg-gray-50 text-center min-h-[44px] flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-900">{quantity}</span>
+                        </div>
+                        <button
+                          onClick={() => handleQuantityChange(1)}
+                          disabled={!inStock}
+                          className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {sizeCategories.length > 0 && !selectedSizeCategory && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <p className="text-sm text-amber-800 font-medium">
                         Please select a size category to add to cart
@@ -455,41 +483,47 @@ export default function ProductDetailPage() {
                     </div>
                   )}
 
-                  {selectedSizeCategory && (
-                    <>
-                      {/* Add to Cart Button */}
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="w-full font-bold text-lg py-4"
-                        onClick={() => {
-                          if (selectedSizeCategory && product) {
-                            addToFishCart(product as FishProduct, selectedSizeCategory._id);
-                          }
-                        }}
-                        disabled={!selectedSizeCategory || !inStock}
-                      >
-                        {inStock ? "Add to Cart" : "Out of Stock"}
-                      </Button>
-
-                      {/* Bangla Note */}
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <p className="text-xs text-gray-600 italic">
-                          মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
-                        </p>
-                      </div>
-
-                      {/* Inside Dhaka Restriction */}
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <div className="flex items-start gap-2">
-                          <Package className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-amber-800">
-                            মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
-                          </p>
-                        </div>
-                      </div>
-                    </>
+                  {/* Add to Cart Button */}
+                  {sizeCategories.length > 0 ? (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full font-bold text-lg py-4"
+                      onClick={() => {
+                        if (product && selectedSizeCategory) {
+                          addToFishCart(product as FishProduct, selectedSizeCategory._id, quantity);
+                        }
+                      }}
+                      disabled={!selectedSizeCategory || !inStock}
+                    >
+                      {inStock ? "Add to Cart" : "Out of Stock"}
+                    </Button>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <p className="text-sm text-amber-800 font-medium">
+                        This fish product is sold by weight. Please contact us to place an order.
+                      </p>
+                    </div>
                   )}
+
+                  {/* Bangla Note - Only show for fish products with size categories */}
+                  {sizeCategories.length > 0 && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <p className="text-xs text-gray-600 italic">
+                        মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Inside Dhaka Restriction */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <Package className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-amber-800">
+                        মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </Card>
             )}
@@ -543,35 +577,93 @@ export default function ProductDetailPage() {
         )}
 
         {/* Fish Product Mobile Add to Cart */}
-        {isFishProduct && selectedSizeCategory && (
+        {isFishProduct && (
           <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
             <div className="flex items-center gap-4 max-w-6xl mx-auto">
               <div className="flex-1">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    {selectedSizeCategory.label}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {formatCurrency(selectedSizeCategory.pricePerKg)}/kg
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {inStock ? "In stock" : "Out of stock"}
-                </p>
+                {sizeCategories.length > 0 ? (
+                  <>
+                    {selectedSizeCategory ? (
+                      <>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-bold text-gray-900">
+                            {selectedSizeCategory.label}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatCurrency(selectedSizeCategory.pricePerKg)}/kg
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {inStock ? "In stock" : "Out of stock"}
+                        </p>
+                        {sizeCategories.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1 italic">
+                            মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm text-amber-800 font-medium">
+                        Please select a size category
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {formatCurrency(price)}
+                      </span>
+                      <span className="text-sm text-gray-500">/ kg</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {inStock ? "In stock" : "Out of stock"}
+                    </p>
+                  </>
+                )}
               </div>
-              <Button
-                variant="primary"
-                size="lg"
-                className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
-                onClick={() => {
-                  if (selectedSizeCategory && product) {
-                    addToFishCart(product as FishProduct, selectedSizeCategory._id);
-                  }
-                }}
-                disabled={!selectedSizeCategory || !inStock}
-              >
-                {inStock ? "Add to Cart" : "Out of Stock"}
-              </Button>
+              <div className="flex items-center gap-2">
+                {sizeCategories.length > 0 && selectedSizeCategory && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      disabled={quantity <= 1}
+                      className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm font-bold text-gray-900 min-w-[24px] text-center">{quantity}</span>
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      disabled={!inStock}
+                      className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                {sizeCategories.length > 0 ? (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
+                    onClick={() => {
+                      if (product && selectedSizeCategory) {
+                        addToFishCart(product as FishProduct, selectedSizeCategory._id, quantity);
+                      }
+                    }}
+                    disabled={!selectedSizeCategory || !inStock}
+                  >
+                    {inStock ? "Add to Cart" : "Out of Stock"}
+                  </Button>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                    <p className="text-xs text-amber-800 font-medium text-center">
+                      Contact us to order
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -13,13 +13,15 @@ interface BackendFishCartItem {
   sizeCategoryId: string | { _id: string };
   sizeCategoryLabel: string;
   pricePerKg: number;
+  quantity?: number;
 }
 
 interface FishCartContextType {
   fishCart: FishCartItem[];
   loading: boolean;
   syncing?: boolean;
-  addToFishCart: (fishProduct: FishProduct, sizeCategoryId: string) => Promise<void>;
+  addToFishCart: (fishProduct: FishProduct, sizeCategoryId: string, quantity?: number) => Promise<void>;
+  updateFishCartQuantity: (fishProductId: string, sizeCategoryId: string, quantity: number) => Promise<void>;
   removeFromFishCart: (fishProductId: string, sizeCategoryId: string) => Promise<void>;
   clearFishCart: () => Promise<void>;
   isSidebarOpen: boolean;
@@ -159,6 +161,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                   sizeCategoryId,
                   sizeCategoryLabel: backendItem.sizeCategoryLabel,
                   pricePerKg: backendItem.pricePerKg,
+                  quantity: (backendItem as any).quantity || 1,
                 } as FishCartItem;
               });
               setFishCart(convertedFishCart);
@@ -319,7 +322,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
     }
   }, [fishCart, loading]);
 
-  const addToFishCart = useCallback(async (fishProduct: FishProduct, sizeCategoryId: string) => {
+  const addToFishCart = useCallback(async (fishProduct: FishProduct, sizeCategoryId: string, quantity: number = 1) => {
     try {
       const fishProductId = fishProduct._id || fishProduct.id;
       if (!fishProductId) {
@@ -333,34 +336,40 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
       }
 
       // Optimistic update - update UI immediately
-      const newItem: FishCartItem = {
-        fishProduct,
-        sizeCategoryId,
-        sizeCategoryLabel: sizeCategory.label,
-        pricePerKg: sizeCategory.pricePerKg,
-      };
-
       setFishCart((prev) => {
         // Check if item already exists (same fish product + same size category)
-        const exists = prev.some((item) => {
+        const existingIndex = prev.findIndex((item) => {
           const itemFishProductId = typeof item.fishProduct === 'string' 
             ? item.fishProduct 
             : (item.fishProduct._id || item.fishProduct.id);
           return itemFishProductId === fishProductId && item.sizeCategoryId === sizeCategoryId;
         });
 
-        if (exists) {
-          // Item already exists - don't add duplicate
-          return prev;
+        if (existingIndex > -1) {
+          // Item already exists - increment quantity
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            quantity: (updated[existingIndex].quantity || 1) + quantity,
+          };
+          return updated;
         }
 
+        // Add new item with quantity
+        const newItem: FishCartItem = {
+          fishProduct,
+          sizeCategoryId,
+          sizeCategoryLabel: sizeCategory.label,
+          pricePerKg: sizeCategory.pricePerKg,
+          quantity: quantity,
+        };
         return [...prev, newItem];
       });
       setIsSidebarOpen(true);
 
       // Sync with backend (non-blocking) if user is logged in
       if (user) {
-        addToFishCartAPI(fishProductId, sizeCategoryId)
+        addToFishCartAPI(fishProductId, sizeCategoryId, quantity)
           .then(() => {
             logger.info("Successfully synced fish product to backend fish cart");
           })
@@ -370,6 +379,43 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
       }
     } catch (error) {
       logger.error("Error adding to fish cart:", error);
+    }
+  }, [user]);
+
+  const updateFishCartQuantity = useCallback(async (fishProductId: string, sizeCategoryId: string, quantity: number) => {
+    try {
+      if (quantity <= 0) {
+        // If quantity is 0 or less, remove the item
+        await removeFromFishCart(fishProductId, sizeCategoryId);
+        return;
+      }
+
+      // Optimistic update
+      setFishCart((prev) =>
+        prev.map((item) => {
+          const itemFishProductId = typeof item.fishProduct === 'string' 
+            ? item.fishProduct 
+            : (item.fishProduct._id || item.fishProduct.id);
+          if (itemFishProductId === fishProductId && item.sizeCategoryId === sizeCategoryId) {
+            return { ...item, quantity };
+          }
+          return item;
+        })
+      );
+
+      // Sync with backend if user is logged in
+      if (user) {
+        // Use addToFishCart with the new quantity - backend will handle it
+        addToFishCartAPI(fishProductId, sizeCategoryId, quantity)
+          .then(() => {
+            logger.info("Successfully updated fish cart quantity");
+          })
+          .catch((error) => {
+            logger.error("Error updating fish cart quantity via API:", error);
+          });
+      }
+    } catch (error) {
+      logger.error("Error updating fish cart quantity:", error);
     }
   }, [user]);
 
@@ -442,13 +488,14 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
       loading,
       syncing,
       addToFishCart,
+      updateFishCartQuantity,
       removeFromFishCart,
       clearFishCart,
       isSidebarOpen,
       openSidebar,
       closeSidebar,
     }),
-    [fishCart, loading, syncing, isSidebarOpen, addToFishCart, removeFromFishCart, clearFishCart, openSidebar, closeSidebar],
+    [fishCart, loading, syncing, isSidebarOpen, addToFishCart, updateFishCartQuantity, removeFromFishCart, clearFishCart, openSidebar, closeSidebar],
   );
 
   return <FishCartContext.Provider value={contextValue}>{children}</FishCartContext.Provider>;

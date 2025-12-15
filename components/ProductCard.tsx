@@ -187,7 +187,7 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             </div>
           )}
 
-          {/* Add to Cart / Select Size Button */}
+          {/* Add to Cart / Select Size / Show Details Button */}
           {isFishProduct ? (
             <Link
               href={`/products/${_id}`}
@@ -196,15 +196,20 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
                   ? "bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 shadow-md active:scale-[0.95] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-0"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm pointer-events-none"
               }`}
-              aria-label={inStock ? `Select size for ${name}` : `${name} is out of stock`}
+              aria-label={inStock ? (sizeCategories && sizeCategories.length > 0 ? `Select size for ${name}` : `View details for ${name}`) : `${name} is out of stock`}
             >
               {/* Shimmer effect on hover - only for in stock */}
               {inStock && (
                 <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               )}
               
-              {/* Text */}
-              <span className="relative z-10 font-medium">{inStock ? "Select Size" : "Out of Stock"}</span>
+              {/* Text - Show "Select Size" if has variants, "Show Details" if no variants */}
+              <span className="relative z-10 font-medium">
+                {inStock 
+                  ? (sizeCategories && sizeCategories.length > 0 ? "Select Size" : "Show Details")
+                  : "Out of Stock"
+                }
+              </span>
             </Link>
           ) : (
             <button

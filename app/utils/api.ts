@@ -1387,10 +1387,10 @@ export async function getFishCart(): Promise<FishCartResponse> {
 /**
  * Add fish product to fish cart
  */
-export async function addToFishCart(fishProductId: string, sizeCategoryId: string): Promise<FishCartResponse> {
+export async function addToFishCart(fishProductId: string, sizeCategoryId: string, quantity: number = 1): Promise<FishCartResponse> {
   return apiRequest<FishCartResponse>("/fish-cart", {
     method: "POST",
-    data: { fishProductId, sizeCategoryId },
+    data: { fishProductId, sizeCategoryId, quantity },
   });
 }
 

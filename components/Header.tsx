@@ -8,6 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Search, ShoppingBag, User, Menu, X, Settings, ChevronDown, Package, LogOut } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useCart } from "@/app/context/CartContext";
+import { useFishCart } from "@/app/context/FishCartContext";
 import { searchProducts } from "@/app/utils/api";
 import { Product } from "@/types/models";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +19,9 @@ export default function Header() {
   const pathname = usePathname();
   const { user, isAdmin, logout } = useAuth();
   const { cartCount, addToCart } = useCart();
+  const { fishCart } = useFishCart();
+  const fishCartCount = fishCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const totalCartCount = cartCount + fishCartCount;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -457,13 +461,13 @@ export default function Header() {
                 className="relative p-2 text-gray-600 hover:text-[var(--primary-green)] hover:bg-gray-50 rounded-lg transition-all duration-200 group"
               >
                 <ShoppingBag className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-                {cartCount > 0 && (
+                {totalCartCount > 0 && (
                   <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse ${
-                    cartCount > 9 
+                    totalCartCount > 9 
                       ? "px-1.5 py-0.5 min-w-[24px] h-6" 
                       : "h-5 w-5"
                   }`}>
-                    {cartCount}
+                    {totalCartCount}
                   </span>
                 )}
               </Link>
