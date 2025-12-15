@@ -6,6 +6,7 @@ import { getCategoryById, getAllProducts, getAllCategories } from "@/app/utils/a
 import { fishProductApi } from "@/app/utils/fishApi";
 import { logger } from "@/app/utils/logger";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { normalizeProducts } from "@/app/utils/productNormalizer";
 import ProductGrid from "@/components/ProductGrid";
 import { ProductGridSkeleton, Skeleton } from "@/components/ui/SkeletonLoader";
 import Link from "next/link";
@@ -94,35 +95,9 @@ export default function ProductsByCategoryPage() {
 
         let allProducts: Product[] = [];
 
-        // Normalize regular products - ensure stock field is set correctly
+        // Normalize regular products using shared utility for consistency
         if (productRes.products) {
-          const normalizedProducts = productRes.products.map((product: any) => {
-            let calculatedStock = 0;
-            
-            // Check if product has variants (check both hasVariants flag and actual variants array)
-            const hasVariants = product.hasVariants || (product.variants && Array.isArray(product.variants) && product.variants.length > 0);
-            
-            if (hasVariants && product.variants && product.variants.length > 0) {
-              // Use variantSummary if available (from backend calculation)
-              if (product.variantSummary?.totalStock !== undefined && product.variantSummary.totalStock > 0) {
-                calculatedStock = product.variantSummary.totalStock;
-              } else {
-                // Fallback: calculate from variants directly (only count active variants)
-                calculatedStock = product.variants
-                  .filter((v: any) => v && (v.status === 'active' || !v.status))
-                  .reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
-              }
-            } else {
-              // For products without variants, use stock field directly
-              calculatedStock = Number(product.stock) || 0;
-            }
-            
-            return {
-              ...product,
-              stock: calculatedStock,
-              hasVariants: hasVariants, // Ensure hasVariants is set correctly
-            };
-          });
+          const normalizedProducts = normalizeProducts(productRes.products);
           allProducts = normalizedProducts;
         }
 

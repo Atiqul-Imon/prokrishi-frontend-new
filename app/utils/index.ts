@@ -120,3 +120,6 @@ export {
   type MemoryInfo,
 } from "./memory";
 
+// Product utilities
+export { normalizeProductStock, normalizeProducts } from "./productNormalizer";
+

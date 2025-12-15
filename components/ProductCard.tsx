@@ -48,17 +48,28 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
   }, [product.variants]);
 
   const inStock = useMemo(() => {
+    // Fish products: check size categories
     if (isFishProduct && sizeCategories) {
       return sizeCategories.some(cat => (cat.stock || 0) > 0 && cat.status === 'active');
     }
-    // For products with variants, check if any variant has stock
+    
+    // Use normalized stock value (from productNormalizer utility)
+    // This ensures consistency across all pages (homepage, products page, category pages)
+    const normalizedStock = Number(stock) || 0;
+    if (normalizedStock > 0) {
+      return true;
+    }
+    
+    // Fallback: For products with variants, check if any variant has stock
+    // This is a safety check in case normalization didn't run
     if (product.hasVariants && product.variants && product.variants.length > 0) {
       return product.variants.some((variant: any) => 
-        (variant.stock || 0) > 0 && variant.status === 'active'
+        (Number(variant.stock) || 0) > 0 && (variant.status === 'active' || !variant.status)
       );
     }
-    // For products without variants, check the stock field
-    return (stock || 0) > 0;
+    
+    // Final fallback: check stock field directly
+    return normalizedStock > 0;
   }, [stock, isFishProduct, sizeCategories, product.hasVariants, product.variants]);
 
   const measurementText = measurement && unit ? `${measurement} ${unit}` : null;

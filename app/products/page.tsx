@@ -6,6 +6,7 @@ import { getAllProducts, getFeaturedCategories } from "../utils/api";
 import { fishProductApi } from "../utils/fishApi";
 import { logger } from "../utils/logger";
 import { handleApiError } from "../utils/errorHandler";
+import { normalizeProducts } from "../utils/productNormalizer";
 import type { Product, Category, FishProduct } from "@/types/models";
 import ProductGrid from "@/components/ProductGrid";
 import { ProductGridSkeleton } from "@/components/ui/SkeletonLoader";
@@ -83,31 +84,8 @@ function ProductsContent() {
         order: sortOrder,
       });
       
-      // Normalize regular products - ensure stock field is set correctly
-      const normalizedRegularProducts = (regularProductsRes.products || []).map((product: any) => {
-        let calculatedStock = 0;
-        
-        // For products with variants, calculate stock from variants
-        if (product.hasVariants && product.variants && product.variants.length > 0) {
-          // Use variantSummary if available (from backend calculation)
-          if (product.variantSummary?.totalStock !== undefined) {
-            calculatedStock = product.variantSummary.totalStock;
-          } else {
-            // Fallback: calculate from variants directly
-            calculatedStock = product.variants
-              .filter((v: any) => v.status === 'active')
-              .reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
-          }
-        } else {
-          // For products without variants, use stock field directly
-          calculatedStock = product.stock ?? 0;
-        }
-        
-        return {
-          ...product,
-          stock: calculatedStock,
-        };
-      });
+      // Normalize regular products using shared utility for consistency
+      const normalizedRegularProducts = normalizeProducts(regularProductsRes.products || []);
       
       // Fetch fish products (only if no category filter or category is fish)
       let fishProducts: Product[] = [];
