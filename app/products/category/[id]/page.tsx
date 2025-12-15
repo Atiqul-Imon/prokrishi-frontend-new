@@ -99,25 +99,28 @@ export default function ProductsByCategoryPage() {
           const normalizedProducts = productRes.products.map((product: any) => {
             let calculatedStock = 0;
             
-            // For products with variants, calculate stock from variants
-            if (product.hasVariants && product.variants && product.variants.length > 0) {
+            // Check if product has variants (check both hasVariants flag and actual variants array)
+            const hasVariants = product.hasVariants || (product.variants && Array.isArray(product.variants) && product.variants.length > 0);
+            
+            if (hasVariants && product.variants && product.variants.length > 0) {
               // Use variantSummary if available (from backend calculation)
-              if (product.variantSummary?.totalStock !== undefined) {
+              if (product.variantSummary?.totalStock !== undefined && product.variantSummary.totalStock > 0) {
                 calculatedStock = product.variantSummary.totalStock;
               } else {
-                // Fallback: calculate from variants directly
+                // Fallback: calculate from variants directly (only count active variants)
                 calculatedStock = product.variants
-                  .filter((v: any) => v.status === 'active')
-                  .reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+                  .filter((v: any) => v && (v.status === 'active' || !v.status))
+                  .reduce((sum: number, v: any) => sum + (Number(v.stock) || 0), 0);
               }
             } else {
               // For products without variants, use stock field directly
-              calculatedStock = product.stock ?? 0;
+              calculatedStock = Number(product.stock) || 0;
             }
             
             return {
               ...product,
               stock: calculatedStock,
+              hasVariants: hasVariants, // Ensure hasVariants is set correctly
             };
           });
           allProducts = normalizedProducts;
