@@ -1353,3 +1353,71 @@ export async function clearCartBackend(): Promise<ApiResponse> {
   });
 }
 
+// ==================== Fish Cart API ====================
+
+export interface FishCartItem {
+  _id?: string;
+  fishProduct: Product | string;
+  sizeCategoryId: string;
+  sizeCategoryLabel: string;
+  pricePerKg: number;
+}
+
+export interface FishCartResponse {
+  success: boolean;
+  message?: string;
+  cart?: {
+    _id?: string;
+    user: string;
+    items: FishCartItem[];
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+/**
+ * Get user's fish cart from backend
+ */
+export async function getFishCart(): Promise<FishCartResponse> {
+  return apiRequest<FishCartResponse>("/fish-cart", {
+    method: "GET",
+  });
+}
+
+/**
+ * Add fish product to fish cart
+ */
+export async function addToFishCart(fishProductId: string, sizeCategoryId: string): Promise<FishCartResponse> {
+  return apiRequest<FishCartResponse>("/fish-cart", {
+    method: "POST",
+    data: { fishProductId, sizeCategoryId },
+  });
+}
+
+/**
+ * Remove fish product from fish cart
+ */
+export async function removeFromFishCart(fishProductId: string, sizeCategoryId: string): Promise<FishCartResponse> {
+  return apiRequest<FishCartResponse>(`/fish-cart/${fishProductId}/${sizeCategoryId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Clear fish cart
+ */
+export async function clearFishCartBackend(): Promise<ApiResponse> {
+  return apiRequest<ApiResponse>("/fish-cart", {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Validate fish cart
+ */
+export async function validateFishCart(): Promise<{ success: boolean; isValid: boolean; items: any[] }> {
+  return apiRequest("/fish-cart/validate", {
+    method: "POST",
+  });
+}
+

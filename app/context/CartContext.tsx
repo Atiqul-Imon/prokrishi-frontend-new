@@ -120,6 +120,12 @@ export function CartProvider({ children }: CartProviderProps) {
               throw new Error("Product ID missing");
             }
 
+            // Skip fish products - they should be synced via FishCartContext
+            if (item.isFishProduct || (item.sizeCategories && Array.isArray(item.sizeCategories) && item.sizeCategories.length > 0)) {
+              logger.warn(`Skipping fish product ${productId} - should use FishCartContext`);
+              return; // Skip this item in map
+            }
+
             // Check if item already exists in backend cart
             const existingItem = backendCart.find((backendItem) => {
               const backendItemId = backendItem.id || backendItem._id;
@@ -127,8 +133,8 @@ export function CartProvider({ children }: CartProviderProps) {
               
               if (backendItemId !== productId) return false;
               
-              // For fish products or products with variants, match variant ID
-              if (item.isFishProduct || item.hasVariants) {
+              // For products with variants, match variant ID
+              if (item.hasVariants) {
                 return backendVariantId === item.variantId;
               }
               
@@ -436,18 +442,24 @@ export function CartProvider({ children }: CartProviderProps) {
     try {
       const id = product.id || product._id;
       
-      // Optimistic update - update UI immediately for better UX
-      const measurementInfo = getMeasurementInfo(product, variantId);
+      // Reject fish products - they should use FishCartContext instead
       const isFishProduct =
         product.isFishProduct === true ||
         (product.sizeCategories && Array.isArray(product.sizeCategories) && product.sizeCategories.length > 0);
+      
+      if (isFishProduct) {
+        logger.warn("Attempted to add fish product to regular cart. Use FishCartContext instead.");
+        return;
+      }
+      
+      // Optimistic update - update UI immediately for better UX
+      const measurementInfo = getMeasurementInfo(product, variantId);
 
       setCart((prev) => {
         const idx = prev.findIndex((item) => {
           const itemId = item.id || item._id;
           const itemVariantId = item.variantId;
           if (itemId !== id) return false;
-          if (isFishProduct) return itemVariantId === variantId;
           if (product.hasVariants) return itemVariantId === variantId;
           return !itemVariantId;
         });
@@ -468,31 +480,9 @@ export function CartProvider({ children }: CartProviderProps) {
           totalMeasurement: measurementInfo ? measurementInfo.measurement * qty : qty,
           unitWeightKg: product.unitWeightKg,
           measurementIncrement: measurementInfo?.measurementIncrement,
-          ...(product.isFishProduct !== undefined && { isFishProduct: product.isFishProduct }),
-          ...(product.sizeCategories !== undefined && { sizeCategories: product.sizeCategories }),
         };
 
-        if (isFishProduct && variantId && product.sizeCategories) {
-          const sizeCategory = product.sizeCategories.find((sc) => sc._id === variantId);
-          if (sizeCategory) {
-            newItem.variantId = variantId;
-            newItem.variantSnapshot = {
-              _id: sizeCategory._id,
-              label: sizeCategory.label,
-              price: sizeCategory.pricePerKg,
-              stock: sizeCategory.stock || 0,
-              measurement: 1,
-              unit: "kg",
-              status: sizeCategory.status,
-              isDefault: sizeCategory.isDefault,
-            };
-            newItem.price = sizeCategory.pricePerKg;
-            newItem.stock = sizeCategory.stock || 0;
-            newItem.measurement = 1;
-            newItem.unit = "kg";
-            newItem.measurementIncrement = sizeCategory.measurementIncrement ?? 0.25;
-          }
-        } else if (product.hasVariants && variantId) {
+        if (product.hasVariants && variantId) {
           const variant = product.variants?.find((v) => v._id === variantId);
           if (variant) {
             newItem.variantId = variantId;

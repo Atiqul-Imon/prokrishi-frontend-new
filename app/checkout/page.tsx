@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import { useFishCart } from "../context/FishCartContext";
 import { useAuth } from "../context/AuthContext";
 import { placeOrder, getShippingQuote, validateCartApi } from "../utils/api";
 import { fishOrderApi } from "../utils/fishApi";
@@ -37,6 +38,7 @@ interface OrderResponse {
 
 function CheckoutContent() {
   const { cart, cartTotal, clearCart } = useCart();
+  const { fishCart, clearFishCart } = useFishCart();
   const { user } = useAuth();
 
   const [selectedZone, setSelectedZone] = useState<Zone>(null);
@@ -53,31 +55,23 @@ function CheckoutContent() {
   const [message, setMessage] = useState<string | null>(null);
   const [validationChanges, setValidationChanges] = useState<string | null>(null);
 
-  const isFish = (item: CartItem): boolean =>
-    Boolean(item?.isFishProduct === true ||
-    (item?.sizeCategories && Array.isArray(item.sizeCategories) && item.sizeCategories.length > 0));
-
-  const fishProducts = useMemo(() => cart.filter((i) => isFish(i)), [cart]);
-  const regularProducts = useMemo(() => cart.filter((i) => !isFish(i)), [cart]);
-
-  // Auto-select Inside Dhaka if fish products are in cart (silent, no message)
+  // Auto-select Inside Dhaka if fish products are in cart and disable Outside Dhaka option
   useEffect(() => {
-    if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
+    if (fishCart.length > 0 && selectedZone !== "inside_dhaka") {
       setSelectedZone("inside_dhaka");
-      // Don't clear messages here - let user see any important messages
     }
-  }, [fishProducts.length, selectedZone]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fishCart.length, selectedZone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate shipping fee silently based on zone (no API call, instant calculation)
   // Use fallback rates for instant UI updates, backend will calculate accurate rate on order placement
   const shippingFee = useMemo(() => {
-    if (!selectedZone || cart.length === 0) {
+    if (!selectedZone || (cart.length === 0 && fishCart.length === 0)) {
       return 0;
     }
     // Use standard rates for instant calculation
     // Backend will calculate accurate rate based on weight when placing order
     return selectedZone === "inside_dhaka" ? 80 : 150;
-  }, [selectedZone, cart.length]);
+  }, [selectedZone, cart.length, fishCart.length]);
 
   const total = useMemo(() => cartTotal + shippingFee, [cartTotal, shippingFee]);
 
@@ -90,8 +84,8 @@ function CheckoutContent() {
     }
     
     // Fish products can only be ordered to Inside Dhaka
-    if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
-      setMessage("Fish products can only be delivered to Inside Dhaka. Please select 'Inside Dhaka' or remove fish products from your cart.");
+    if (fishCart.length > 0 && selectedZone !== "inside_dhaka") {
+      setMessage("মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে। দয়া করে 'Inside Dhaka' নির্বাচন করুন।");
       return;
     }
     
@@ -131,8 +125,8 @@ function CheckoutContent() {
             };
 
       // Final validation: Fish products require Inside Dhaka
-      if (fishProducts.length > 0 && selectedZone !== "inside_dhaka") {
-        setMessage("Fish products can only be delivered to Inside Dhaka. Please select 'Inside Dhaka' as your delivery zone.");
+      if (fishCart.length > 0 && selectedZone !== "inside_dhaka") {
+        setMessage("মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে। দয়া করে 'Inside Dhaka' নির্বাচন করুন।");
         setIsSubmitting(false);
         return;
       }
@@ -188,16 +182,8 @@ function CheckoutContent() {
         setValidationChanges(msg);
       }
 
-      // Calculate totals separately for regular and fish products
-      const regularProductsTotal = regularProducts.reduce(
-        (sum, item) => {
-          const price = item.variantSnapshot?.price || item.price || 0;
-          const quantity = item.quantity || 0;
-          return sum + (Number(price) || 0) * (Number(quantity) || 0);
-        },
-        0
-      );
-      const fishProductsTotal = fishProducts.reduce(
+      // Calculate totals for regular products only (fish products have no price calculation)
+      const regularProductsTotal = cart.reduce(
         (sum, item) => {
           const price = item.variantSnapshot?.price || item.price || 0;
           const quantity = item.quantity || 0;
@@ -206,12 +192,9 @@ function CheckoutContent() {
         0
       );
 
-      // Validate that we have valid totals
-      if (regularProducts.length > 0 && regularProductsTotal <= 0) {
+      // Validate that we have valid totals for regular products
+      if (cart.length > 0 && regularProductsTotal <= 0) {
         throw new Error("Invalid product prices detected. Please refresh the page and try again.");
-      }
-      if (fishProducts.length > 0 && fishProductsTotal <= 0) {
-        throw new Error("Invalid fish product prices detected. Please refresh the page and try again.");
       }
 
       // Use validated total if available, otherwise use calculated totals
@@ -230,7 +213,7 @@ function CheckoutContent() {
       // Ensure adjustment is valid (not NaN or Infinity)
       const safeValidationAdjustment = Number.isFinite(validationAdjustment) ? validationAdjustment : 1;
 
-      if (regularProducts.length > 0) {
+      if (cart.length > 0) {
         const regularOrderTotalPrice = regularProductsTotal * safeValidationAdjustment;
 
         // Validate totalPrice before sending
@@ -248,7 +231,7 @@ function CheckoutContent() {
         }
 
         const regularOrderData = {
-          orderItems: regularProducts.map((item) => ({
+          orderItems: cart.map((item) => ({
             product: item.id || item._id,
             name: item.name,
             quantity: item.quantity,
@@ -277,65 +260,35 @@ function CheckoutContent() {
         regularOrderId = regularRes._id || regularRes.order?._id || regularRes.data?.order?._id || null;
       }
 
-      if (fishProducts.length > 0) {
-        const fishOrderItems = fishProducts.map((item: CartItem) => {
-          let sizeCategoryId = item.variantId || (item.variantSnapshot as { _id?: string })?._id;
-          if (!sizeCategoryId && item.sizeCategories && Array.isArray(item.sizeCategories)) {
-            const def =
-              item.sizeCategories.find((sc: SizeCategory) => sc.isDefault) || item.sizeCategories[0];
-            if (def) sizeCategoryId = def._id;
+      if (fishCart.length > 0) {
+        // Convert fish cart items to order items (no requestedWeight, no totalPrice)
+        const fishOrderItems = fishCart.map((item) => {
+          const fishProductId = typeof item.fishProduct === 'string' 
+            ? item.fishProduct 
+            : (item.fishProduct._id || item.fishProduct.id);
+          
+          if (!fishProductId || !item.sizeCategoryId) {
+            throw new Error(`Invalid fish cart item: missing fishProduct or sizeCategoryId`);
           }
-          if (!sizeCategoryId) throw new Error(`Size category missing for ${item.name}`);
+
           return {
-            fishProduct: item.id || item._id,
-            sizeCategoryId,
-            requestedWeight: item.quantity,
-            notes: item.name,
+            fishProduct: fishProductId,
+            sizeCategoryId: item.sizeCategoryId,
+            // requestedWeight is optional - set to 0 for cart-based orders (price will be calculated later)
+            requestedWeight: 0,
+            notes: 'মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে',
           };
         });
 
-        // Use the pre-calculated fish products total, adjusted by validation if needed
-        const fishOrderTotalPrice = fishProductsTotal * safeValidationAdjustment;
-
-        // Validate totalPrice before sending
-        if (!Number.isFinite(fishOrderTotalPrice) || fishOrderTotalPrice <= 0) {
-          logger.error("Invalid fish order total price:", {
-            fishProductsTotal,
-            safeValidationAdjustment,
-            fishOrderTotalPrice,
-            cartTotal,
-            validatedTotal,
-          });
-          throw new Error(
-            "Invalid fish order total calculated. Please refresh the page and try again. If the problem persists, contact support."
-          );
-        }
-
-        // Don't calculate shipping fee or totalAmount - let backend calculate it
-        // Backend will calculate shipping fee based on zone and add it to totalPrice to get totalAmount
-        // This ensures server-authoritative pricing and prevents mismatches
-
-        // Ensure shipping zone is set correctly for fish products
-        const finalFishZone = selectedZone || "inside_dhaka";
-        
-        // Validate fish order items before sending
-        for (const item of fishOrderItems) {
-          if (!item.fishProduct || !item.sizeCategoryId) {
-            throw new Error(`Invalid fish order item: missing fishProduct or sizeCategoryId`);
-          }
-          if (!item.requestedWeight || item.requestedWeight <= 0) {
-            throw new Error(`Invalid requested weight for ${item.notes || 'fish product'}`);
-          }
-        }
-
+        // Fish orders are created without total price (totalPrice: 0)
+        // Price will be calculated later based on actual weight
         const fishOrderData = {
           orderItems: fishOrderItems,
           shippingAddress,
           paymentMethod: selectedPayment === "cod" ? "Cash on Delivery" : "Online Payment",
-          totalPrice: fishOrderTotalPrice,
-          // Don't send totalAmount - backend calculates it (totalPrice + shippingFee)
-          // Don't send shippingFee - backend calculates it based on zone
-          shippingZone: finalFishZone,
+          totalPrice: 0, // No price calculation - will be determined later based on actual weight
+          shippingZone: "inside_dhaka" as const, // Always inside_dhaka for fish products
+          notes: "মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে",
           ...(!user
             ? {
                 guestInfo: {
@@ -371,20 +324,22 @@ function CheckoutContent() {
 
       // Only COD is available, so proceed directly to success
 
-      // Clear cart after successful order - await to ensure it completes
-      // This works for both logged-in users (clears backend) and guest users (clears localStorage)
+      // Clear both carts after successful order - await to ensure it completes
       try {
-        await clearCart();
-        logger.info("Cart cleared successfully after order placement");
+        await Promise.all([
+          clearCart(),
+          clearFishCart(),
+        ]);
+        logger.info("Carts cleared successfully after order placement");
       } catch (clearError) {
         // Log error but don't block redirect - cart clearing is best effort
-        // Frontend state is already cleared, and localStorage will be cleared as backup
-        logger.error("Error clearing cart after order (non-blocking):", clearError);
+        logger.error("Error clearing carts after order (non-blocking):", clearError);
         // Ensure localStorage is cleared as backup even if API call fails
         try {
           localStorage.removeItem("cart");
+          localStorage.removeItem("fishCart");
         } catch (localStorageError) {
-          logger.error("Error clearing localStorage cart:", localStorageError);
+          logger.error("Error clearing localStorage carts:", localStorageError);
         }
       }
       
@@ -471,11 +426,11 @@ function CheckoutContent() {
                   </div>
                   <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Delivery Zone</h2>
                 </div>
-                {fishProducts.length > 0 && (
+                {fishCart.length > 0 && (
                   <div className="mb-5 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl shadow-sm">
                     <p className="text-sm text-amber-800 font-semibold flex items-center gap-2">
                       <span className="text-lg">⚠️</span>
-                      Fish products can only be delivered to Inside Dhaka
+                      মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
                     </p>
                   </div>
                 )}
@@ -506,16 +461,16 @@ function CheckoutContent() {
                   </button>
                   <button
                     onClick={() => {
-                      if (fishProducts.length > 0) {
-                        setMessage("Fish products can only be delivered to Inside Dhaka. Please remove fish products to order to Outside Dhaka.");
+                      if (fishCart.length > 0) {
+                        setMessage("মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে। দয়া করে 'Inside Dhaka' নির্বাচন করুন।");
                         return;
                       }
                       setSelectedZone("outside_dhaka");
                       setMessage(null);
                     }}
-                    disabled={fishProducts.length > 0}
+                    disabled={fishCart.length > 0}
                     className={`group relative rounded-xl px-5 py-5 text-base font-semibold transition-all duration-300 shadow-md min-h-[44px] touch-manipulation active:scale-95 overflow-hidden ${
-                      fishProducts.length > 0
+                      fishCart.length > 0
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
                         : selectedZone === "outside_dhaka"
                         ? "bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-800 ring-2 ring-emerald-500 ring-offset-2 shadow-lg scale-[1.02]"
@@ -530,19 +485,34 @@ function CheckoutContent() {
                       <div className={`text-sm font-medium mt-1 ${selectedZone === "outside_dhaka" ? "text-emerald-700" : "text-gray-600"}`}>
                         From ৳150
                       </div>
-                      {fishProducts.length > 0 && (
+                      {fishCart.length > 0 && (
                         <div className="text-xs text-red-600 mt-1.5 font-medium">Not available for fish</div>
                       )}
                     </div>
-                    {selectedZone === "outside_dhaka" && !fishProducts.length && (
+                    {selectedZone === "outside_dhaka" && fishCart.length === 0 && (
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     )}
                   </button>
                 </div>
+                {fishCart.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-2">
+                      <Package className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800 mb-1">
+                          মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          Fish products can only be delivered inside Dhaka city
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 font-medium border border-gray-200/50">
-                  {fishProducts.length > 0 
+                  {fishCart.length > 0 
                     ? "Fish products require Inside Dhaka delivery. Regular products can be delivered anywhere."
-                    : "Shipping calculated based on product weight. Fish and regular items are handled automatically."}
+                    : "Shipping calculated based on product weight."}
                 </p>
               </Card>
 
@@ -671,24 +641,37 @@ function CheckoutContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
                     <p className="text-base text-gray-600 font-medium">Items</p>
-                    <p className="text-base font-bold text-gray-900">{cart.length}</p>
+                    <p className="text-base font-bold text-gray-900">{cart.length + fishCart.length}</p>
                   </div>
-                  {regularProducts.length > 0 && (
+                  {cart.length > 0 && (
                     <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
                       <p className="text-sm text-gray-500 font-medium">Regular Products</p>
-                      <p className="text-sm font-semibold text-gray-700">{regularProducts.length}</p>
+                      <p className="text-sm font-semibold text-gray-700">{cart.length}</p>
                     </div>
                   )}
-                  {fishProducts.length > 0 && (
-                    <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
-                      <p className="text-sm text-gray-500 font-medium">Fish Products</p>
-                      <p className="text-sm font-semibold text-gray-700">{fishProducts.length}</p>
-                    </div>
+                  {fishCart.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
+                        <p className="text-sm text-gray-500 font-medium">Fish Products</p>
+                        <p className="text-sm font-semibold text-gray-700">{fishCart.length}</p>
+                      </div>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-xs text-gray-600 italic">
+                          মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                        </p>
+                      </div>
+                    </>
                   )}
                   <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
                     <p className="text-base text-gray-600 font-medium">Subtotal</p>
                     <p className="text-lg font-extrabold text-gray-900">{formatCurrency(cartTotal)}</p>
                   </div>
+                  {fishCart.length > 0 && (
+                    <div className="flex items-center justify-between py-2 px-2 rounded-lg">
+                      <p className="text-sm text-gray-500 font-medium">Fish Products</p>
+                      <p className="text-sm font-semibold text-gray-500 italic">Price to be determined</p>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
                     <p className="text-base text-gray-600 font-medium">Shipping</p>
                     <p className="text-lg font-extrabold text-gray-900">
@@ -723,7 +706,7 @@ function CheckoutContent() {
                     size="lg"
                     className="w-full text-base py-3 mt-2 shadow-lg hover:shadow-xl transition-all duration-200"
                     onClick={handlePlaceOrder}
-                    disabled={isSubmitting || !selectedZone || cart.length === 0}
+                    disabled={isSubmitting || !selectedZone || (cart.length === 0 && fishCart.length === 0)}
                     isLoading={isSubmitting}
                   >
                     Place Order
@@ -736,7 +719,7 @@ function CheckoutContent() {
         )}
 
         {/* Sticky Checkout Summary & Button - Mobile Only */}
-        {cart.length > 0 && (
+        {(cart.length > 0 || fishCart.length > 0) && (
           <div className="fixed bottom-16 left-0 right-0 z-[10001] md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-2xl">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between mb-3">
@@ -745,17 +728,22 @@ function CheckoutContent() {
                   <p className="text-xl font-extrabold text-emerald-700 tracking-tight">
                     {formatCurrency(total)}
                   </p>
+                  {fishCart.length > 0 && (
+                    <p className="text-xs text-gray-500 italic mt-0.5">
+                      মাছের দাম পরে জানানো হবে
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (!isSubmitting && selectedZone && cart.length > 0) {
+                    if (!isSubmitting && selectedZone && (cart.length > 0 || fishCart.length > 0)) {
                       handlePlaceOrder();
                     }
                   }}
-                  disabled={isSubmitting || !selectedZone || cart.length === 0}
+                  disabled={isSubmitting || !selectedZone || (cart.length === 0 && fishCart.length === 0)}
                   className={`
                     flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px] 
                     shadow-lg hover:shadow-xl transition-shadow touch-manipulation

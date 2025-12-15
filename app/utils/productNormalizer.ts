@@ -63,3 +63,4 @@ export function normalizeProducts(products: any[]): Product[] {
   return products.map((product) => normalizeProductStock(product));
 }
 
+

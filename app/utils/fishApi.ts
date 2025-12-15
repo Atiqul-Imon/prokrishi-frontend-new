@@ -189,7 +189,7 @@ export const fishOrderApi = {
     orderItems: Array<{
       fishProduct: string;
       sizeCategoryId: string;
-      requestedWeight: number;
+      requestedWeight?: number;
       notes?: string;
     }>;
     shippingAddress: {
@@ -202,7 +202,8 @@ export const fishOrderApi = {
       postalCode?: string;
     };
     paymentMethod?: string;
-    totalPrice: number;
+    totalPrice?: number;
+    shippingZone?: 'inside_dhaka' | 'outside_dhaka';
     guestInfo?: {
       name: string;
       email?: string;

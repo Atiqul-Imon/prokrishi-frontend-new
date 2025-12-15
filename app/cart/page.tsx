@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useCart } from "../context/CartContext";
+import { useFishCart } from "../context/FishCartContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -12,8 +13,9 @@ import { formatCurrency } from "@/app/utils";
 
 function CartContent() {
   const { cart, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { fishCart, removeFromFishCart, clearFishCart } = useFishCart();
 
-  const hasItems = cart.length > 0;
+  const hasItems = cart.length > 0 || fishCart.length > 0;
 
   const summary = useMemo(() => {
     return {
@@ -40,15 +42,30 @@ function CartContent() {
               </div>
             </div>
             {hasItems && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearCart}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50/80 transition-all duration-200 border border-red-200/50 hover:border-red-300 rounded-lg"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear Cart
-              </Button>
+              <div className="flex gap-2">
+                {cart.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearCart}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50/80 transition-all duration-200 border border-red-200/50 hover:border-red-300 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear Regular Cart
+                  </Button>
+                )}
+                {fishCart.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFishCart}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50/80 transition-all duration-200 border border-red-200/50 hover:border-red-300 rounded-lg"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear Fish Cart
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -79,10 +96,12 @@ function CartContent() {
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             {/* Cart Items */}
             <div className="space-y-4">
-              <div className="mb-2">
-                <h2 className="text-lg font-semibold text-gray-900">Cart Items ({cartCount})</h2>
-              </div>
-              {cart.map((item) => (
+              {cart.length > 0 && (
+                <>
+                  <div className="mb-2">
+                    <h2 className="text-lg font-semibold text-gray-900">Regular Products ({cart.length})</h2>
+                  </div>
+                  {cart.map((item) => (
                 <Card key={`${item.id || item._id}-${item.variantId || "default"}`} padding="lg" variant="elevated" className="hover:shadow-xl transition-all duration-300 w-full max-w-full overflow-hidden border border-gray-100 hover:border-emerald-200">
                   <div className="flex gap-3 sm:gap-4 md:gap-5 w-full max-w-full">
                     {/* Item Image */}
@@ -160,7 +179,83 @@ function CartContent() {
                     </div>
                   </div>
                 </Card>
-              ))}
+                  ))}
+                </>
+              )}
+
+              {/* Fish Cart Items */}
+              {fishCart.length > 0 && (
+                <>
+                  <div className="mb-2 mt-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Fish Products ({fishCart.length})</h2>
+                  </div>
+                  {fishCart.map((item) => {
+                    const fishProductId = typeof item.fishProduct === 'string' 
+                      ? item.fishProduct 
+                      : (item.fishProduct._id || item.fishProduct.id || '');
+                    if (!fishProductId) return null; // Skip if no ID
+                    
+                    const fishProductImage = typeof item.fishProduct === 'string' 
+                      ? undefined 
+                      : (item.fishProduct.image || item.fishProduct.images?.[0]);
+                    const fishProductName = typeof item.fishProduct === 'string' 
+                      ? 'Fish Product' 
+                      : (item.fishProduct.name || 'Fish Product');
+                    return (
+                      <Card key={`${fishProductId}-${item.sizeCategoryId}`} padding="lg" variant="elevated" className="hover:shadow-xl transition-all duration-300 w-full max-w-full overflow-hidden border border-amber-100 hover:border-amber-200">
+                        <div className="flex gap-3 sm:gap-4 md:gap-5 w-full max-w-full">
+                          {/* Item Image */}
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-24 md:h-24 lg:w-28 lg:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 shadow-md ring-1 ring-gray-200/50">
+                            {fishProductImage ? (
+                              <img
+                                src={fishProductImage}
+                                alt={fishProductName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                                No Image
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Item Details */}
+                          <div className="flex-1 min-w-0 max-w-full overflow-hidden pr-1 sm:pr-0">
+                            <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1 sm:mb-1.5 leading-tight break-words overflow-wrap-anywhere">
+                              {fishProductName}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2 break-words overflow-wrap-anywhere">
+                              {item.sizeCategoryLabel} — {formatCurrency(item.pricePerKg)}/kg
+                            </p>
+                            <Badge variant="warning" size="sm" className="mb-2 sm:mb-3">
+                              🐟 Fish Product
+                            </Badge>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 mb-2">
+                              <p className="text-xs text-gray-600 italic">
+                                মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                              </p>
+                            </div>
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-2">
+                              <p className="text-xs text-amber-800">
+                                মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
+                              </p>
+                            </div>
+                            <div className="flex items-center justify-end mt-3 sm:mt-4">
+                              <button
+                                onClick={() => removeFromFishCart(fishProductId, item.sizeCategoryId)}
+                                className="group/remove text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium transition-all duration-200 min-h-[36px] sm:min-h-[44px] px-2 sm:px-3 py-1 rounded-md hover:bg-red-50 touch-manipulation active:scale-95 inline-flex items-center gap-1"
+                              >
+                                <X className="w-3 h-3 opacity-0 group-hover/remove:opacity-100 transition-opacity" />
+                                <span>Remove</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </>
+              )}
             </div>
 
             {/* Sticky Order Summary - Mobile */}
@@ -173,6 +268,11 @@ function CartContent() {
                       <p className="text-xl font-extrabold text-emerald-700 tracking-tight">
                         {formatCurrency(summary.subtotal)}
                       </p>
+                      {fishCart.length > 0 && (
+                        <p className="text-xs text-gray-500 italic mt-0.5">
+                          + {fishCart.length} fish product(s) - price to be determined
+                        </p>
+                      )}
                     </div>
                     <Link href="/checkout" className="flex-shrink-0">
                       <Button variant="primary" size="lg" className="font-bold text-base px-6 py-3 min-h-[44px] shadow-lg hover:shadow-xl transition-shadow">
@@ -191,13 +291,38 @@ function CartContent() {
                 <h2 className="text-xl font-extrabold text-gray-900 mb-6 tracking-tight">Order Summary</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-gray-50/50 transition-colors">
-                    <p className="text-base text-gray-600 font-medium">Items ({cartCount})</p>
-                    <p className="text-base font-bold text-gray-900">{cartCount}</p>
+                    <p className="text-base text-gray-600 font-medium">Items ({cartCount + fishCart.length})</p>
+                    <p className="text-base font-bold text-gray-900">{cartCount + fishCart.length}</p>
                   </div>
+                  {cart.length > 0 && (
+                    <div className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-gray-50/50 transition-colors">
+                      <p className="text-base text-gray-600 font-medium">Regular Products</p>
+                      <p className="text-base font-bold text-gray-900">{cart.length}</p>
+                    </div>
+                  )}
+                  {fishCart.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-gray-50/50 transition-colors">
+                        <p className="text-base text-gray-600 font-medium">Fish Products</p>
+                        <p className="text-base font-bold text-gray-900">{fishCart.length}</p>
+                      </div>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-xs text-gray-600 italic">
+                          মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                        </p>
+                      </div>
+                    </>
+                  )}
                   <div className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-gray-50/50 transition-colors">
                     <p className="text-base text-gray-600 font-medium">Subtotal</p>
                     <p className="text-lg font-extrabold text-gray-900">{formatCurrency(summary.subtotal)}</p>
                   </div>
+                  {fishCart.length > 0 && (
+                    <div className="flex items-center justify-between py-2.5 px-1 rounded-lg">
+                      <p className="text-sm text-gray-500 font-medium">Fish Products</p>
+                      <p className="text-sm font-semibold text-gray-500 italic">Price to be determined</p>
+                    </div>
+                  )}
                   <div className="pt-4 border-t-2 border-gray-200">
                     <div className="bg-gradient-to-r from-emerald-50 via-green-50 to-amber-50 rounded-xl p-4 mb-4 ring-1 ring-emerald-100/50">
                       <p className="text-sm font-semibold text-gray-700 text-center">

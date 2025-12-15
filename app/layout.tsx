@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { FishCartProvider } from "./context/FishCartContext";
 import ConditionalLayout from "./ConditionalLayout";
 import { ErrorBoundaryWrapper } from "./components/ErrorBoundaryWrapper";
 import FontLoader from "../components/FontLoader";
@@ -68,7 +69,9 @@ export default function RootLayout({
         <ErrorBoundaryWrapper>
           <AuthProvider>
             <CartProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
+              <FishCartProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </FishCartProvider>
             </CartProvider>
           </AuthProvider>
         </ErrorBoundaryWrapper>

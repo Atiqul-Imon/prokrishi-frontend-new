@@ -90,6 +90,23 @@ export interface FishProduct extends Omit<Product, 'price' | 'stock' | 'variants
 export interface CartItem extends Product {
   quantity: number;
   totalMeasurement?: number;
+  // Note: CartItem should NOT include fish products - they use FishCartItem instead
+}
+
+export interface FishCartItem {
+  _id?: string;
+  fishProduct: FishProduct | string;
+  sizeCategoryId: string;
+  sizeCategoryLabel: string;
+  pricePerKg: number;
+}
+
+export interface FishCart {
+  _id?: string;
+  user: string;
+  items: FishCartItem[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Address {

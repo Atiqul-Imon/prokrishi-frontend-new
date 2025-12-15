@@ -187,26 +187,46 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
             </div>
           )}
 
-          {/* Add to Cart Button - Sleek Enterprise Design */}
-          <button
-            onClick={handleAddToCart}
-            disabled={!inStock}
-            aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
-            aria-disabled={!inStock}
-            className={`group/btn relative w-full font-semibold py-1.5 md:py-2 lg:py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[40px] touch-manipulation tracking-tight ${
-              inStock
-                ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-0"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
-            }`}
-          >
-            {/* Shimmer effect on hover - only for in stock */}
-            {inStock && (
-              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            )}
-            
-            {/* Text - same for both in stock and out of stock */}
-            <span className="relative z-10 font-medium">Add to Cart</span>
-          </button>
+          {/* Add to Cart / Select Size Button */}
+          {isFishProduct ? (
+            <Link
+              href={`/products/${_id}`}
+              className={`group/btn relative w-full font-semibold py-1.5 md:py-2 lg:py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[40px] touch-manipulation tracking-tight ${
+                inStock
+                  ? "bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white hover:from-amber-700 hover:via-amber-600 hover:to-amber-700 shadow-md active:scale-[0.95] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-0"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm pointer-events-none"
+              }`}
+              aria-label={inStock ? `Select size for ${name}` : `${name} is out of stock`}
+            >
+              {/* Shimmer effect on hover - only for in stock */}
+              {inStock && (
+                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              )}
+              
+              {/* Text */}
+              <span className="relative z-10 font-medium">{inStock ? "Select Size" : "Out of Stock"}</span>
+            </Link>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={!inStock}
+              aria-label={inStock ? `Add ${name} to cart` : `${name} is out of stock`}
+              aria-disabled={!inStock}
+              className={`group/btn relative w-full font-semibold py-1.5 md:py-2 lg:py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center gap-2 text-base md:text-sm lg:text-base overflow-hidden min-h-[40px] touch-manipulation tracking-tight ${
+                inStock
+                  ? "bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-700 text-white hover:from-emerald-800 hover:via-emerald-700 hover:to-emerald-800 shadow-md active:scale-[0.95] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-0"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm"
+              }`}
+            >
+              {/* Shimmer effect on hover - only for in stock */}
+              {inStock && (
+                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              )}
+              
+              {/* Text - same for both in stock and out of stock */}
+              <span className="relative z-10 font-medium">Add to Cart</span>
+            </button>
+          )}
         </div>
       </div>
     </article>

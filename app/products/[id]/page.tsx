@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { getProductById } from "../../utils/api";
 import { fishProductApi } from "../../utils/fishApi";
 import { useCart } from "../../context/CartContext";
+import { useFishCart } from "../../context/FishCartContext";
 import type { Product, FishProduct, SizeCategory } from "@/types/models";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -40,6 +41,7 @@ const CollapsibleSection = dynamic(() => import("@/components/CollapsibleSection
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
+  const { addToFishCart } = useFishCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [variantId, setVariantId] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
@@ -382,68 +384,115 @@ export default function ProductDetailPage() {
             )}
 
             {/* Quantity Selector & Add to Cart */}
-            <Card padding="lg" variant="elevated" className="hidden md:block">
-              <div className="space-y-4">
-                {/* Quantity Selector */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Quantity
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      disabled={quantity <= 1}
-                      className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                    <div className="flex-1 px-4 py-3 md:py-2 rounded-lg bg-gray-50 text-center min-h-[44px] flex items-center justify-center">
-                      <span className="text-lg font-bold text-gray-900">{quantity}</span>
-                      {unit !== "pcs" && (
-                        <span className="text-sm text-gray-500 ml-2">{unit}</span>
-                      )}
+            {!isFishProduct && (
+              <Card padding="lg" variant="elevated" className="hidden md:block">
+                <div className="space-y-4">
+                  {/* Quantity Selector */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Quantity
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="flex-1 px-4 py-3 md:py-2 rounded-lg bg-gray-50 text-center min-h-[44px] flex items-center justify-center">
+                        <span className="text-lg font-bold text-gray-900">{quantity}</span>
+                        {unit !== "pcs" && (
+                          <span className="text-sm text-gray-500 ml-2">{unit}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={!inStock || quantity >= currentStock}
+                        className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      disabled={!inStock || quantity >= currentStock}
-                      className="w-12 h-12 md:w-10 md:h-10 min-w-[44px] min-h-[44px] rounded-lg bg-gray-100 hover:bg-green-50 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-95"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
+                    {inStock && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Total: {formatCurrency(price * quantity)}
+                      </p>
+                    )}
                   </div>
-                  {inStock && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      Total: {formatCurrency(price * quantity)}
-                    </p>
-                  )}
-                </div>
 
-                {/* Add to Cart Button - Desktop Only */}
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full font-bold text-lg py-4"
-                  onClick={() => addToCart(product, quantity, variantId)}
-                  disabled={!inStock}
-                >
-                  {inStock ? "Add to Cart" : "Out of Stock"}
-                </Button>
+                  {/* Add to Cart Button - Desktop Only */}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full font-bold text-lg py-4"
+                    onClick={() => addToCart(product, quantity, variantId)}
+                    disabled={!inStock}
+                  >
+                    {inStock ? "Add to Cart" : "Out of Stock"}
+                  </Button>
 
-                {/* Shipping Info */}
-                <div className="pt-4 border-t border-gray-200 space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Truck className="w-4 h-4 text-green-600" />
-                    <span>Inside Dhaka: ৳80 · Outside Dhaka: ৳150</span>
-                  </div>
-                  {isFishProduct && (
+                  {/* Shipping Info */}
+                  <div className="pt-4 border-t border-gray-200 space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Package className="w-4 h-4 text-amber-600" />
-                      <span>Fish orders have separate delivery flow</span>
+                      <Truck className="w-4 h-4 text-green-600" />
+                      <span>Inside Dhaka: ৳80 · Outside Dhaka: ৳150</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Fish Product Add to Cart */}
+            {isFishProduct && (
+              <Card padding="lg" variant="elevated" className="hidden md:block">
+                <div className="space-y-4">
+                  {!selectedSizeCategory && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <p className="text-sm text-amber-800 font-medium">
+                        Please select a size category to add to cart
+                      </p>
                     </div>
                   )}
+
+                  {selectedSizeCategory && (
+                    <>
+                      {/* Add to Cart Button */}
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full font-bold text-lg py-4"
+                        onClick={() => {
+                          if (selectedSizeCategory && product) {
+                            addToFishCart(product as FishProduct, selectedSizeCategory._id);
+                          }
+                        }}
+                        disabled={!selectedSizeCategory || !inStock}
+                      >
+                        {inStock ? "Add to Cart" : "Out of Stock"}
+                      </Button>
+
+                      {/* Bangla Note */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <p className="text-xs text-gray-600 italic">
+                          মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
+                        </p>
+                      </div>
+
+                      {/* Inside Dhaka Restriction */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Package className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-amber-800">
+                            মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            </Card>
+              </Card>
+            )}
 
           </div>
         </div>
@@ -464,32 +513,68 @@ export default function ProductDetailPage() {
         )}
 
         {/* Sticky Add to Cart Button - Mobile Only */}
-        <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
-          <div className="flex items-center gap-4 max-w-6xl mx-auto">
-            <div className="flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(price * quantity)}
-                </span>
-                {priceType === "PER_WEIGHT" && (
-                  <span className="text-sm text-gray-500">/ {unit}</span>
-                )}
+        {!isFishProduct && (
+          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
+            <div className="flex items-center gap-4 max-w-6xl mx-auto">
+              <div className="flex-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(price * quantity)}
+                  </span>
+                  {priceType === "PER_WEIGHT" && (
+                    <span className="text-sm text-gray-500">/ {unit}</span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {inStock ? `${currentStock} ${unit} available` : "Out of stock"}
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {inStock ? `${currentStock} ${unit} available` : "Out of stock"}
-              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
+                onClick={() => addToCart(product, quantity, variantId)}
+                disabled={!inStock}
+              >
+                {inStock ? "Add to Cart" : "Out of Stock"}
+              </Button>
             </div>
-            <Button
-              variant="primary"
-              size="lg"
-              className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
-              onClick={() => addToCart(product, quantity, variantId)}
-              disabled={!inStock}
-            >
-              {inStock ? "Add to Cart" : "Out of Stock"}
-            </Button>
           </div>
-        </div>
+        )}
+
+        {/* Fish Product Mobile Add to Cart */}
+        {isFishProduct && selectedSizeCategory && (
+          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
+            <div className="flex items-center gap-4 max-w-6xl mx-auto">
+              <div className="flex-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold text-gray-900">
+                    {selectedSizeCategory.label}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {formatCurrency(selectedSizeCategory.pricePerKg)}/kg
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {inStock ? "In stock" : "Out of stock"}
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="lg"
+                className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
+                onClick={() => {
+                  if (selectedSizeCategory && product) {
+                    addToFishCart(product as FishProduct, selectedSizeCategory._id);
+                  }
+                }}
+                disabled={!selectedSizeCategory || !inStock}
+              >
+                {inStock ? "Add to Cart" : "Out of Stock"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
