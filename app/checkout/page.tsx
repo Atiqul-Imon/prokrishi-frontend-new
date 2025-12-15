@@ -737,7 +737,7 @@ function CheckoutContent() {
 
         {/* Sticky Checkout Summary & Button - Mobile Only */}
         {cart.length > 0 && (
-          <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="fixed bottom-16 left-0 right-0 z-[10001] md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-2xl">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -746,16 +746,55 @@ function CheckoutContent() {
                     {formatCurrency(total)}
                   </p>
                 </div>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px] shadow-lg hover:shadow-xl transition-shadow"
-                  onClick={handlePlaceOrder}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isSubmitting && selectedZone && cart.length > 0) {
+                      handlePlaceOrder();
+                    }
+                  }}
                   disabled={isSubmitting || !selectedZone || cart.length === 0}
-                  isLoading={isSubmitting}
+                  className={`
+                    flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px] 
+                    shadow-lg hover:shadow-xl transition-shadow touch-manipulation
+                    inline-flex items-center justify-center rounded-lg
+                    ${isSubmitting || !selectedZone || cart.length === 0
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+                      : 'bg-[var(--primary-green)] text-white hover:bg-[var(--primary-green)]/90 active:scale-95'
+                    }
+                  `}
+                  aria-label="Place Order"
                 >
-                  Place Order
-                </Button>
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    'Place Order'
+                  )}
+                </button>
               </div>
               <p className="text-xs text-gray-500 text-center font-medium">Secure checkout</p>
             </div>
