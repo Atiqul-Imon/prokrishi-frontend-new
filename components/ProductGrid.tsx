@@ -32,7 +32,7 @@ const gapClasses = {
   lg: "gap-6 md:gap-8",
 };
 
-export default function ProductGrid({
+function ProductGrid({
   products,
   columns = defaultColumns,
   gap = "md",
@@ -85,4 +85,22 @@ export default function ProductGrid({
     </div>
   );
 }
+
+// OPTIMIZED: Memoize ProductGrid to prevent unnecessary re-renders
+// Only re-renders when products array or props actually change
+export default React.memo(ProductGrid, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  // Only re-render if products array reference changes or length changes
+  // This prevents re-renders when parent re-renders with same products
+  return (
+    prevProps.products === nextProps.products &&
+    prevProps.products.length === nextProps.products.length &&
+    prevProps.columns === nextProps.columns &&
+    prevProps.gap === nextProps.gap &&
+    prevProps.showBadges === nextProps.showBadges &&
+    prevProps.className === nextProps.className &&
+    prevProps.emptyMessage === nextProps.emptyMessage &&
+    prevProps.loading === nextProps.loading
+  );
+});
 

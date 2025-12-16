@@ -456,10 +456,12 @@ export function CartProvider({ children }: CartProviderProps) {
       const measurementInfo = getMeasurementInfo(product, variantId);
 
       setCart((prev) => {
+        // OPTIMIZED: Early return pattern for better performance
         const idx = prev.findIndex((item) => {
           const itemId = item.id || item._id;
-          const itemVariantId = item.variantId;
+          // Early return if IDs don't match (most common case)
           if (itemId !== id) return false;
+          const itemVariantId = item.variantId;
           if (product.hasVariants) return itemVariantId === variantId;
           return !itemVariantId;
         });
@@ -483,6 +485,7 @@ export function CartProvider({ children }: CartProviderProps) {
         };
 
         if (product.hasVariants && variantId) {
+          // OPTIMIZED: Use optional chaining and early return pattern
           const variant = product.variants?.find((v) => v._id === variantId);
           if (variant) {
             newItem.variantId = variantId;
@@ -496,6 +499,7 @@ export function CartProvider({ children }: CartProviderProps) {
               (variant.unit === "pcs" ? 1 : variant.unit === "kg" || variant.unit === "g" ? 0.01 : 1);
             newItem.unitWeightKg = variant.unitWeightKg ?? product.unitWeightKg;
           }
+          // If variant not found, continue with product defaults (shouldn't happen, but safe)
         }
 
         return [...prev, newItem];

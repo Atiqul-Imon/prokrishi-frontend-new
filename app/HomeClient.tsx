@@ -45,65 +45,69 @@ export default function HomeClient() {
   const [fishError, setFishError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadFeaturedProducts() {
+    // OPTIMIZED: Batch API calls using Promise.all for parallel execution
+    // This reduces total load time from (time1 + time2) to max(time1, time2)
+    async function loadAllProducts() {
+      setLoading(true);
+      setFishLoading(true);
+      
       try {
-        setLoading(true);
-        const data = await getFeaturedProducts();
-        
-        // Normalize products using shared utility for consistency
-        const normalizedProducts = normalizeProducts(data.products || []);
-        setFeaturedProducts(normalizedProducts);
+        const [featuredRes, fishRes] = await Promise.allSettled([
+          getFeaturedProducts(),
+          fishProductApi.getAll({
+            limit: 100,
+            status: "active",
+            sort: "createdAt",
+            order: "desc",
+          }),
+        ]);
+
+        // Handle featured products
+        if (featuredRes.status === 'fulfilled') {
+          const normalizedProducts = normalizeProducts(featuredRes.value.products || []);
+          setFeaturedProducts(normalizedProducts);
+        } else {
+          logger.error("Error loading featured products:", featuredRes.reason);
+          setError("Failed to load featured products");
+        }
+
+        // Handle fish products
+        if (fishRes.status === 'fulfilled') {
+          const fishProductsList = fishRes.value.fishProducts || [];
+          const transformedFishProducts: Product[] = fishProductsList.map((fp: FishProduct) => ({
+            _id: fp._id,
+            name: fp.name,
+            price: (fp as any).priceRange?.min || 0,
+            stock: (fp as any).availableStock || 0,
+            image: fp.image,
+            unit: "kg",
+            measurement: 1,
+            category: fp.category,
+            isFishProduct: true,
+            priceRange: (fp as any).priceRange,
+            sizeCategories: fp.sizeCategories,
+            createdAt: (fp as any).createdAt,
+          }));
+
+          // OPTIMIZATION: Backend already sorts by createdAt desc, so no need to sort again
+          // Removed client-side sorting - backend handles it more efficiently
+
+          setFishProducts(transformedFishProducts);
+        } else {
+          logger.error("Error loading fish products:", fishRes.reason);
+          setFishError("Failed to load fish products");
+        }
       } catch (err) {
-        logger.error("Error loading featured products:", err);
-        setError("Failed to load featured products");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    async function loadFishProducts() {
-      try {
-        setFishLoading(true);
-        const response = await fishProductApi.getAll({
-          limit: 100,
-          status: "active",
-          sort: "createdAt",
-          order: "desc",
-        });
-
-        const fishProductsList = response.fishProducts || [];
-        const transformedFishProducts: Product[] = fishProductsList.map((fp: FishProduct) => ({
-          _id: fp._id,
-          name: fp.name,
-          price: (fp as any).priceRange?.min || 0,
-          stock: (fp as any).availableStock || 0,
-          image: fp.image,
-          unit: "kg",
-          measurement: 1,
-          category: fp.category,
-          isFishProduct: true,
-          priceRange: (fp as any).priceRange,
-          sizeCategories: fp.sizeCategories,
-          createdAt: (fp as any).createdAt,
-        }));
-
-        transformedFishProducts.sort((a, b) => {
-          const dateA = new Date((a as any).createdAt || 0).getTime();
-          const dateB = new Date((b as any).createdAt || 0).getTime();
-          return dateB - dateA;
-        });
-
-        setFishProducts(transformedFishProducts);
-      } catch (err) {
-        logger.error("Error loading fish products:", err);
+        logger.error("Error loading products:", err);
+        setError("Failed to load products");
         setFishError("Failed to load fish products");
       } finally {
+        setLoading(false);
         setFishLoading(false);
       }
     }
 
-    loadFeaturedProducts();
-    loadFishProducts();
+    loadAllProducts();
   }, []);
 
   return (

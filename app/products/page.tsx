@@ -69,38 +69,47 @@ function ProductsContent() {
   }, []);
 
   // Load products with filters (both regular and fish products)
+  // OPTIMIZED: Batched API calls using Promise.all for parallel execution
+  // OPTIMIZED: Memoized callback to prevent unnecessary re-creation
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Fetch regular products
-      const regularProductsRes = await getAllProducts({
-        page: currentPage,
-        limit: Math.ceil(limit / 2), // Split limit between regular and fish products
-        category: selectedCategory || undefined,
-        search: searchQuery || undefined,
-        sort: sortBy === "newest" ? undefined : sortBy,
-        order: sortOrder,
-      });
-      
-      // Normalize regular products using shared utility for consistency
-      const normalizedRegularProducts = normalizeProducts(regularProductsRes.products || []);
-      
-      // Fetch fish products (only if no category filter or category is fish)
-      let fishProducts: Product[] = [];
-      try {
-        const fishRes = await fishProductApi.getAll({
+      // OPTIMIZATION: Fetch both regular and fish products in parallel using Promise.all
+      // This reduces total load time from (time1 + time2) to max(time1, time2)
+      const [regularProductsRes, fishRes] = await Promise.allSettled([
+        getAllProducts({
+          page: currentPage,
+          limit: Math.ceil(limit / 2), // Split limit between regular and fish products
+          category: selectedCategory || undefined,
+          search: searchQuery || undefined,
+          sort: sortBy === "newest" ? undefined : sortBy,
+          order: sortOrder,
+        }),
+        fishProductApi.getAll({
           page: currentPage,
           limit: Math.ceil(limit / 2),
           status: 'active',
           search: searchQuery || undefined,
           sort: sortBy === "newest" ? "createdAt" : sortBy,
           order: sortOrder,
-        });
-        
-        // Transform fish products to match Product type
-        const fishProductsList = fishRes.fishProducts || [];
+        }),
+      ]);
+      
+      // Handle regular products
+      let normalizedRegularProducts: Product[] = [];
+      if (regularProductsRes.status === 'fulfilled') {
+        normalizedRegularProducts = normalizeProducts(regularProductsRes.value.products || []);
+      } else {
+        logger.error("Failed to load regular products:", regularProductsRes.reason);
+        setError(handleApiError(regularProductsRes.reason, "loading products"));
+      }
+      
+      // Handle fish products
+      let fishProducts: Product[] = [];
+      if (fishRes.status === 'fulfilled') {
+        const fishProductsList = fishRes.value.fishProducts || [];
         fishProducts = fishProductsList.map((fp: FishProduct) => ({
           _id: fp._id,
           name: fp.name,
@@ -115,22 +124,28 @@ function ProductsContent() {
           sizeCategories: fp.sizeCategories,
           createdAt: (fp as any).createdAt,
         }));
-      } catch (fishErr) {
-        logger.warn("Failed to load fish products:", fishErr);
+      } else {
+        logger.warn("Failed to load fish products:", fishRes.reason);
         // Continue without fish products if they fail to load
       }
       
       // Combine regular and fish products
+      // OPTIMIZATION: Backend already sorts products, but when combining two different types,
+      // we need to sort them together. This is minimal client-side sorting only when necessary.
       const allProducts = [...normalizedRegularProducts, ...fishProducts];
       
-      // Apply sorting if needed
+      // Only sort if we're combining different product types and sortBy is not "newest"
+      // For "newest", both APIs already return sorted by createdAt, so we can merge as-is
+      // For "price" and "name", we need to sort after combining because we're merging two lists
       if (sortBy === "price") {
+        // Sort by price (fish products use priceRange.min)
         allProducts.sort((a, b) => {
           const priceA = a.isFishProduct ? (a.priceRange?.min || 0) : a.price;
           const priceB = b.isFishProduct ? (b.priceRange?.min || 0) : b.price;
           return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
         });
       } else if (sortBy === "name") {
+        // Sort by name
         allProducts.sort((a, b) => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
@@ -138,13 +153,16 @@ function ProductsContent() {
             ? nameA.localeCompare(nameB)
             : nameB.localeCompare(nameA);
         });
-      } else if (sortBy === "newest") {
+      } else if (sortBy === "newest" && normalizedRegularProducts.length > 0 && fishProducts.length > 0) {
+        // For "newest", both lists are already sorted by createdAt from backend
+        // But we need to merge them in sorted order when combining
         allProducts.sort((a, b) => {
           const dateA = new Date((a as any).createdAt || 0).getTime();
           const dateB = new Date((b as any).createdAt || 0).getTime();
           return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
         });
       }
+      // If only one product type, no need to sort (already sorted by backend)
       
       // Limit to requested limit
       const limitedProducts = allProducts.slice(0, limit);

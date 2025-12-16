@@ -99,6 +99,64 @@ const appendFormDataValue = (formData: FormData, key: string, value: FormDataVal
   formData.append(key, String(value));
 };
 
+// Request deduplication: Track in-flight requests to prevent duplicate calls
+const pendingRequests = new Map<string, Promise<unknown>>();
+
+// Response cache: Cache GET requests to reduce API calls
+interface CacheEntry {
+  data: unknown;
+  timestamp: number;
+  ttl: number;
+}
+
+const responseCache = new Map<string, CacheEntry>();
+
+// Cache TTL in milliseconds (default: 2 minutes for most requests, 5 minutes for static data)
+const DEFAULT_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const STATIC_CACHE_TTL = 5 * 60 * 1000; // 5 minutes (categories, etc.)
+
+// Generate cache key from request
+function getCacheKey(path: string, options: ApiRequestOptions, token?: string): string {
+  const method = (options.method || 'GET').toUpperCase();
+  const params = options.params ? JSON.stringify(options.params) : '';
+  const data = options.data ? JSON.stringify(options.data) : '';
+  // Include token in cache key for user-specific data
+  const auth = token ? `:${token.substring(0, 10)}` : '';
+  return `${method}:${path}:${params}:${data}${auth}`;
+}
+
+// Generate request key for deduplication (same as cache key)
+function getRequestKey(path: string, options: ApiRequestOptions, token?: string): string {
+  return getCacheKey(path, options, token);
+}
+
+// Check if request should be cached (only GET requests)
+function shouldCache(method?: string): boolean {
+  return !method || method.toUpperCase() === 'GET';
+}
+
+// Check if cache entry is still valid
+function isCacheValid(entry: CacheEntry): boolean {
+  return Date.now() - entry.timestamp < entry.ttl;
+}
+
+// Get cache TTL based on endpoint
+function getCacheTTL(path: string): number {
+  // Static data gets longer cache
+  if (path.includes('/categories') || path.includes('/featured')) {
+    return STATIC_CACHE_TTL;
+  }
+  // Product lists get medium cache
+  if (path.includes('/products') && !path.includes('/product/')) {
+    return DEFAULT_CACHE_TTL;
+  }
+  // Individual products get shorter cache (stock changes)
+  if (path.includes('/product/')) {
+    return 1 * 60 * 1000; // 1 minute
+  }
+  return DEFAULT_CACHE_TTL;
+}
+
 // Create an axios instance
 const api = axios.create({
   baseURL: BASE_URL,
@@ -142,43 +200,136 @@ api.interceptors.response.use(
 );
 
 /**
- * Universal axios wrapper for API requests.
+ * Universal axios wrapper for API requests with request deduplication and response caching.
+ * 
+ * Features:
+ * - Request deduplication: Prevents duplicate simultaneous requests
+ * - Response caching: Caches GET requests to reduce API calls
+ * - Automatic cache invalidation: Based on TTL
  */
 export async function apiRequest<T = unknown>(
   path: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  try {
-    const res = await api({
-      url: path,
-      ...options,
-    });
-    return res.data as T;
-  } catch (err) {
-    const axiosError = err as AxiosErrorResponse;
-    let msg = axiosError.response?.data?.message || axiosError.message || "API Error";
-    
-    // Handle timeout errors specifically
-    if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
-      msg = "Request timeout - please try again";
+  // Get auth token for cache key
+  const token = typeof window !== "undefined" 
+    ? localStorage.getItem("accessToken") || undefined 
+    : undefined;
+
+  const requestKey = getRequestKey(path, options, token);
+  const method = (options.method || 'GET').toUpperCase();
+  const isGetRequest = method === 'GET';
+
+  // Check cache first (only for GET requests)
+  if (isGetRequest && shouldCache(method)) {
+    const cached = responseCache.get(requestKey);
+    if (cached && isCacheValid(cached)) {
+      logger.debug(`[API Cache Hit] ${path}`);
+      return cached.data as T;
     }
-    
-    // Handle network errors
-    if (axiosError.code === 'ERR_NETWORK' || !axiosError.response) {
-      msg = "Network error - please check your connection";
+    // Remove expired cache entry
+    if (cached) {
+      responseCache.delete(requestKey);
     }
-    
-    // Handle 404 errors specifically
-    if (axiosError.response?.status === 404) {
-      msg = "Product not found - it may have been deleted";
-    }
-    
-    const apiError = new Error(msg) as Error & { status?: number };
-    if (axiosError.response?.status) {
-      apiError.status = axiosError.response.status;
-    }
-    throw apiError;
   }
+
+  // Check for pending duplicate request
+  const pendingRequest = pendingRequests.get(requestKey);
+  if (pendingRequest) {
+    logger.debug(`[API Deduplication] Reusing pending request for ${path}`);
+    try {
+      return await pendingRequest as T;
+    } catch (error) {
+      // If pending request failed, remove it and continue with new request
+      pendingRequests.delete(requestKey);
+      throw error;
+    }
+  }
+
+  // Create new request
+  const requestPromise = (async () => {
+    try {
+      const res = await api({
+        url: path,
+        ...options,
+      });
+      
+      const data = res.data as T;
+
+      // Cache successful GET requests
+      if (isGetRequest && shouldCache(method) && res.status === 200) {
+        const ttl = getCacheTTL(path);
+        responseCache.set(requestKey, {
+          data,
+          timestamp: Date.now(),
+          ttl,
+        });
+        logger.debug(`[API Cache Set] ${path} (TTL: ${ttl}ms)`);
+      }
+
+      return data;
+    } catch (err) {
+      const axiosError = err as AxiosErrorResponse;
+      let msg = axiosError.response?.data?.message || axiosError.message || "API Error";
+      
+      // Handle timeout errors specifically
+      if (axiosError.code === 'ECONNABORTED' || axiosError.message?.includes('timeout')) {
+        msg = "Request timeout - please try again";
+      }
+      
+      // Handle network errors
+      if (axiosError.code === 'ERR_NETWORK' || !axiosError.response) {
+        msg = "Network error - please check your connection";
+      }
+      
+      // Handle 404 errors specifically
+      if (axiosError.response?.status === 404) {
+        msg = "Product not found - it may have been deleted";
+      }
+      
+      const apiError = new Error(msg) as Error & { status?: number };
+      if (axiosError.response?.status) {
+        apiError.status = axiosError.response.status;
+      }
+      throw apiError;
+    } finally {
+      // Remove from pending requests
+      pendingRequests.delete(requestKey);
+    }
+  })();
+
+  // Store pending request for deduplication
+  pendingRequests.set(requestKey, requestPromise);
+
+  return requestPromise as Promise<T>;
+}
+
+/**
+ * Clear response cache (useful after mutations)
+ */
+export function clearApiCache(pattern?: string): void {
+  if (!pattern) {
+    responseCache.clear();
+    logger.debug('[API Cache] Cleared all cache');
+    return;
+  }
+  
+  // Clear cache entries matching pattern
+  let cleared = 0;
+  for (const key of responseCache.keys()) {
+    if (key.includes(pattern)) {
+      responseCache.delete(key);
+      cleared++;
+    }
+  }
+  logger.debug(`[API Cache] Cleared ${cleared} entries matching pattern: ${pattern}`);
+}
+
+/**
+ * Invalidate cache for specific path
+ */
+export function invalidateApiCache(path: string): void {
+  clearApiCache(path);
 }
 
 /**

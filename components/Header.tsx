@@ -20,8 +20,9 @@ export default function Header() {
   const { user, isAdmin, logout } = useAuth();
   const { cartCount, addToCart } = useCart();
   const { fishCart } = useFishCart();
-  const fishCartCount = fishCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  const totalCartCount = cartCount + fishCartCount;
+  // OPTIMIZED: Memoize fish cart count calculation to prevent recalculation on every render
+  const fishCartCount = useMemo(() => fishCart.reduce((sum, item) => sum + (item.quantity || 1), 0), [fishCart]);
+  const totalCartCount = useMemo(() => cartCount + fishCartCount, [cartCount, fishCartCount]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
