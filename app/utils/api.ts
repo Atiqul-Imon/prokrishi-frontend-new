@@ -1322,12 +1322,37 @@ export async function getOrderDetails(orderId: string): Promise<OrderResponse> {
 // Get user orders
 export async function getUserOrders(): Promise<{ success: boolean; orders: Order[] }> {
   // NestJS uses GET /order instead of /order/user (user context from JWT)
-  // Backend returns: { message, orders, pagination } or { success: true, data: { message, orders, pagination } }
-  const response = await apiRequest<{ success?: boolean; data?: { orders?: Order[]; message?: string }; orders?: Order[]; message?: string }>("/order");
+  // Backend controller returns: { message, orders, pagination }
+  // TransformInterceptor wraps it as: { success: true, data: { orders, pagination }, message }
+  const response = await apiRequest<{ 
+    success?: boolean; 
+    data?: Order[] | { orders?: Order[]; pagination?: unknown }; 
+    orders?: Order[]; 
+    message?: string;
+    pagination?: unknown;
+  }>("/order");
+  
+  console.log("[getUserOrders] Raw API response:", JSON.stringify(response, null, 2));
   
   // Handle NestJS TransformInterceptor wrapper
-  const responseData = response.data || response;
-  const orders = responseData.orders || [];
+  // TransformInterceptor sees { message, orders, pagination } and wraps as:
+  // { success: true, data: { orders, pagination }, message }
+  let orders: Order[] = [];
+  
+  if (response.data) {
+    if (Array.isArray(response.data)) {
+      // Data is directly an array of orders
+      orders = response.data;
+    } else if (typeof response.data === 'object' && 'orders' in response.data) {
+      // Data is an object with orders property
+      orders = (response.data as { orders?: Order[] }).orders || [];
+    }
+  } else if (Array.isArray(response.orders)) {
+    // Orders at root level (fallback)
+    orders = response.orders;
+  }
+  
+  console.log("[getUserOrders] Extracted orders:", orders.length);
   
   return {
     success: response.success ?? true,
@@ -1337,12 +1362,32 @@ export async function getUserOrders(): Promise<{ success: boolean; orders: Order
 
 // Get fish orders for user
 export async function getUserFishOrders(): Promise<{ success: boolean; orders: Order[] }> {
-  // Backend returns: { message, orders, pagination } or { success: true, data: { message, orders, pagination } }
-  const response = await apiRequest<{ success?: boolean; data?: { orders?: Order[]; message?: string }; orders?: Order[]; message?: string }>("/fish/orders/user");
+  // Backend controller returns: { message, orders, pagination }
+  // TransformInterceptor wraps it as: { success: true, data: { orders, pagination }, message }
+  const response = await apiRequest<{ 
+    success?: boolean; 
+    data?: Order[] | { orders?: Order[]; pagination?: unknown }; 
+    orders?: Order[]; 
+    message?: string;
+    pagination?: unknown;
+  }>("/fish/orders/user");
+  
+  console.log("[getUserFishOrders] Raw API response:", JSON.stringify(response, null, 2));
   
   // Handle NestJS TransformInterceptor wrapper
-  const responseData = response.data || response;
-  const orders = responseData.orders || [];
+  let orders: Order[] = [];
+  
+  if (response.data) {
+    if (Array.isArray(response.data)) {
+      orders = response.data;
+    } else if (typeof response.data === 'object' && 'orders' in response.data) {
+      orders = (response.data as { orders?: Order[] }).orders || [];
+    }
+  } else if (Array.isArray(response.orders)) {
+    orders = response.orders;
+  }
+  
+  console.log("[getUserFishOrders] Extracted orders:", orders.length);
   
   return {
     success: response.success ?? true,
