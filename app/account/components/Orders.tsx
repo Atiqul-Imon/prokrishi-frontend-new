@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Package } from "lucide-react";
+import { Package, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { getUserOrders, getUserFishOrders } from "@/app/utils/api";
 import { logger } from "@/app/utils/logger";
-import { formatCurrency } from "@/app/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton, Skeleton } from "@/components/ui/SkeletonLoader";
@@ -19,14 +18,21 @@ interface OrderWithType extends Order {
 export default function Orders() {
   const [orders, setOrders] = useState<OrderWithType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
         const [regularOrders, fishOrders] = await Promise.all([
-          getUserOrders().catch(() => ({ success: false, orders: [] })),
-          getUserFishOrders().catch(() => ({ success: false, orders: [] })),
+          getUserOrders().catch((err) => {
+            logger.error("Failed to fetch regular orders:", err);
+            return { success: false, orders: [] };
+          }),
+          getUserFishOrders().catch((err) => {
+            logger.error("Failed to fetch fish orders:", err);
+            return { success: false, orders: [] };
+          }),
         ]);
 
         const allOrders: OrderWithType[] = [
@@ -39,8 +45,11 @@ export default function Orders() {
         });
 
         setOrders(allOrders);
+        setError(null);
       } catch (error) {
         logger.error("Failed to fetch orders:", error);
+        setOrders([]);
+        setError("Failed to load orders. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -73,36 +82,97 @@ export default function Orders() {
         </p>
       </div>
 
-      {/* Orders List */}
-      {orders.length === 0 ? (
+      {/* Error State */}
+      {error && !loading && (
         <Card padding="lg">
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-8 h-8 text-gray-400" />
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No orders yet
+              Error Loading Orders
             </h3>
-            <p className="text-gray-600 mb-4">
-              Start shopping to see your orders here
-            </p>
-            <Link href="/products">
-              <Button variant="primary">Start Shopping</Button>
-            </Link>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                // Retry fetching
+                const fetchOrders = async () => {
+                  try {
+                    const [regularOrders, fishOrders] = await Promise.all([
+                      getUserOrders().catch((err) => {
+                        logger.error("Failed to fetch regular orders:", err);
+                        return { success: false, orders: [] };
+                      }),
+                      getUserFishOrders().catch((err) => {
+                        logger.error("Failed to fetch fish orders:", err);
+                        return { success: false, orders: [] };
+                      }),
+                    ]);
+
+                    const allOrders: OrderWithType[] = [
+                      ...(regularOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: false })),
+                      ...(fishOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: true })),
+                    ].sort((a, b) => {
+                      const dateA = new Date(a.createdAt || new Date().toISOString()).getTime();
+                      const dateB = new Date(b.createdAt || new Date().toISOString()).getTime();
+                      return dateB - dateA;
+                    });
+
+                    setOrders(allOrders);
+                    setError(null);
+                  } catch (err) {
+                    logger.error("Failed to fetch orders:", err);
+                    setError("Failed to load orders. Please try again later.");
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchOrders();
+              }}
+            >
+              Try Again
+            </Button>
           </div>
         </Card>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard
-              key={order._id || ""}
-              order={order}
-              showDetails={true}
-              showInvoice={true}
-              showExpandableDetails={true}
-            />
-          ))}
-        </div>
+      )}
+
+      {/* Orders List */}
+      {!error && (
+        <>
+          {orders.length === 0 ? (
+            <Card padding="lg">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No orders yet
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Start shopping to see your orders here
+                </p>
+                <Link href="/products">
+                  <Button variant="primary">Start Shopping</Button>
+                </Link>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <OrderCard
+                  key={order._id || ""}
+                  order={order}
+                  showDetails={true}
+                  showInvoice={true}
+                  showExpandableDetails={true}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Order Statistics */}
