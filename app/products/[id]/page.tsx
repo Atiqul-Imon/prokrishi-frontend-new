@@ -579,7 +579,8 @@ export default function ProductDetailPage() {
         {/* Fish Product Mobile Add to Cart */}
         {isFishProduct && (
           <div className="fixed bottom-16 left-0 right-0 z-[60] md:hidden bg-white border-t border-gray-200 shadow-lg p-4">
-            <div className="flex items-center gap-4 max-w-6xl mx-auto">
+            <div className="flex flex-col gap-3 max-w-6xl mx-auto">
+              {/* Variant and Stock Info */}
               <div className="flex-1">
                 {sizeCategories.length > 0 ? (
                   <>
@@ -622,7 +623,8 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              {/* Quantity and Add to Cart Button */}
+              <div className="flex items-center gap-2 w-full">
                 {sizeCategories.length > 0 && selectedSizeCategory && (
                   <div className="flex items-center gap-2">
                     <button
@@ -646,7 +648,7 @@ export default function ProductDetailPage() {
                   <Button
                     variant="primary"
                     size="lg"
-                    className="flex-shrink-0 font-bold text-base px-4 py-2.5 min-h-[44px]"
+                    className="flex-1 font-bold text-base px-4 py-2.5 min-h-[44px]"
                     onClick={() => {
                       if (product && selectedSizeCategory) {
                         addToFishCart(product as FishProduct, selectedSizeCategory._id, quantity);
@@ -657,7 +659,7 @@ export default function ProductDetailPage() {
                     {inStock ? "Add to Cart" : "Out of Stock"}
                   </Button>
                 ) : (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg p-2">
                     <p className="text-xs text-amber-800 font-medium text-center">
                       Contact us to order
                     </p>
