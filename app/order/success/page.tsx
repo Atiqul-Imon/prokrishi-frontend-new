@@ -2,7 +2,7 @@
 
 import { CheckCircle, ShoppingBag, ArrowRight, Package } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 
 import { useCart } from "@/app/context/CartContext";
 import { logger } from "@/app/utils/logger";
@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default function OrderSuccessPage({ searchParams }: Props) {
   // Initialize animation state to true for immediate animation on mount
   const [isAnimated] = useState(true);
-  const orderIdParam = searchParams?.orderId;
+  // Unwrap the Promise using React.use() for Next.js 15+
+  const params = use(searchParams);
+  const orderIdParam = params?.orderId;
   const orderId = Array.isArray(orderIdParam) ? orderIdParam[0] : orderIdParam || "";
   const { cart, clearCart } = useCart();
 
