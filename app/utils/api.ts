@@ -1395,6 +1395,16 @@ export async function addToFishCart(fishProductId: string, sizeCategoryId: strin
 }
 
 /**
+ * Update fish cart item quantity
+ */
+export async function updateFishCartQuantity(fishProductId: string, sizeCategoryId: string, quantity: number): Promise<FishCartResponse> {
+  return apiRequest<FishCartResponse>("/fish-cart/quantity", {
+    method: "PATCH",
+    data: { fishProductId, sizeCategoryId, quantity },
+  });
+}
+
+/**
  * Remove fish product from fish cart
  */
 export async function removeFromFishCart(fishProductId: string, sizeCategoryId: string): Promise<FishCartResponse> {

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from "react";
 import type { FishCartItem, FishProduct, User, SizeCategory } from "@/types/models";
 import { useAuth } from "./AuthContext";
-import { getFishCart, addToFishCart as addToFishCartAPI, removeFromFishCart as removeFromFishCartAPI, clearFishCartBackend } from "../utils/api";
+import { getFishCart, addToFishCart as addToFishCartAPI, updateFishCartQuantity as updateFishCartQuantityAPI, removeFromFishCart as removeFromFishCartAPI, clearFishCartBackend } from "../utils/api";
 import { logger } from "../utils/logger";
 
 // Type for backend fish cart item response
@@ -408,13 +408,59 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
 
       // Sync with backend if user is logged in
       if (user) {
-        // Use addToFishCart with the new quantity - backend will handle it
-        addToFishCartAPI(fishProductId, sizeCategoryId, quantity)
-          .then(() => {
+        // Use the update quantity endpoint to set the exact quantity
+        updateFishCartQuantityAPI(fishProductId, sizeCategoryId, quantity)
+          .then((response) => {
             logger.info("Successfully updated fish cart quantity");
+            // Update local state with backend response to ensure sync
+            if (response.cart && response.cart.items) {
+              const convertedFishCart: FishCartItem[] = response.cart.items.map((item) => {
+                const backendItem = item as BackendFishCartItem;
+                const fishProduct = typeof backendItem.fishProduct === 'string' 
+                  ? { _id: backendItem.fishProduct } as FishProduct
+                  : backendItem.fishProduct;
+                const sizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
+                  ? backendItem.sizeCategoryId._id 
+                  : backendItem.sizeCategoryId;
+                return {
+                  _id: backendItem._id,
+                  fishProduct,
+                  sizeCategoryId,
+                  sizeCategoryLabel: backendItem.sizeCategoryLabel,
+                  pricePerKg: backendItem.pricePerKg,
+                  quantity: (backendItem as any).quantity || 1,
+                } as FishCartItem;
+              });
+              setFishCart(convertedFishCart);
+            }
           })
           .catch((error) => {
             logger.error("Error updating fish cart quantity via API:", error);
+            // Revert optimistic update on error
+            getFishCart().then((response) => {
+              if (response.cart && response.cart.items) {
+                const convertedFishCart: FishCartItem[] = response.cart.items.map((item) => {
+                  const backendItem = item as BackendFishCartItem;
+                  const fishProduct = typeof backendItem.fishProduct === 'string' 
+                    ? { _id: backendItem.fishProduct } as FishProduct
+                    : backendItem.fishProduct;
+                  const sizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
+                    ? backendItem.sizeCategoryId._id 
+                    : backendItem.sizeCategoryId;
+                  return {
+                    _id: backendItem._id,
+                    fishProduct,
+                    sizeCategoryId,
+                    sizeCategoryLabel: backendItem.sizeCategoryLabel,
+                    pricePerKg: backendItem.pricePerKg,
+                    quantity: (backendItem as any).quantity || 1,
+                  } as FishCartItem;
+                });
+                setFishCart(convertedFishCart);
+              }
+            }).catch((err) => {
+              logger.error("Error reverting fish cart after update failure:", err);
+            });
           });
       }
     } catch (error) {

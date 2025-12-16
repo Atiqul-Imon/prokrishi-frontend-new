@@ -13,7 +13,7 @@ import { formatCurrency } from "@/app/utils";
 
 function CartContent() {
   const { cart, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { fishCart, removeFromFishCart, clearFishCart } = useFishCart();
+  const { fishCart, updateFishCartQuantity, removeFromFishCart, clearFishCart } = useFishCart();
 
   const hasItems = cart.length > 0 || fishCart.length > 0;
 
@@ -240,14 +240,44 @@ function CartContent() {
                                 মাছ শুধুমাত্র ঢাকা শহরের ভিতরে ডেলিভারি করা হবে
                               </p>
                             </div>
-                            <div className="flex items-center justify-end mt-3 sm:mt-4">
-                              <button
-                                onClick={() => removeFromFishCart(fishProductId, item.sizeCategoryId)}
-                                className="group/remove text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium transition-all duration-200 min-h-[36px] sm:min-h-[44px] px-2 sm:px-3 py-1 rounded-md hover:bg-red-50 touch-manipulation active:scale-95 inline-flex items-center gap-1"
-                              >
-                                <X className="w-3 h-3 opacity-0 group-hover/remove:opacity-100 transition-opacity" />
-                                <span>Remove</span>
-                              </button>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mt-3 sm:mt-4">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <button
+                                  onClick={() => {
+                                    const newQuantity = Math.max(1, (item.quantity || 1) - 1);
+                                    updateFishCartQuantity(fishProductId, item.sizeCategoryId, newQuantity);
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] rounded-lg bg-gray-100 hover:bg-emerald-50 hover:border-emerald-200 border border-transparent flex items-center justify-center transition-all duration-200 shadow-sm touch-manipulation active:scale-95"
+                                  aria-label="Decrease quantity"
+                                >
+                                  <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
+                                </button>
+                                <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 text-sm sm:text-base font-bold min-w-[2.5rem] sm:min-w-[3.5rem] text-center text-gray-900 ring-1 ring-gray-200/50">
+                                  {item.quantity || 1}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    const newQuantity = (item.quantity || 1) + 1;
+                                    updateFishCartQuantity(fishProductId, item.sizeCategoryId, newQuantity);
+                                  }}
+                                  className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] rounded-lg bg-gray-100 hover:bg-emerald-50 hover:border-emerald-200 border border-transparent flex items-center justify-center transition-all duration-200 shadow-sm touch-manipulation active:scale-95"
+                                  aria-label="Increase quantity"
+                                >
+                                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
+                                </button>
+                              </div>
+                              <div className="text-right w-full sm:w-auto">
+                                <p className="text-xs sm:text-sm text-gray-500 italic mb-1 sm:mb-1.5">
+                                  Price to be determined
+                                </p>
+                                <button
+                                  onClick={() => removeFromFishCart(fishProductId, item.sizeCategoryId)}
+                                  className="group/remove text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium transition-all duration-200 min-h-[36px] sm:min-h-[44px] px-2 sm:px-3 py-1 rounded-md hover:bg-red-50 touch-manipulation active:scale-95 inline-flex items-center gap-1"
+                                >
+                                  <X className="w-3 h-3 opacity-0 group-hover/remove:opacity-100 transition-opacity" />
+                                  <span>Remove</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
