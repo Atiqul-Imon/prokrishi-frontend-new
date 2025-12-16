@@ -8,6 +8,7 @@ import { ArrowLeft, Edit, Package, Tag, DollarSign, PackageCheck, AlertCircle } 
 import { Button } from "@/components/ui/Button";
 import type { Product } from "@/types/models";
 import { handleApiError } from "@/app/utils/errorHandler";
+import { normalizeProductStock } from "@/app/utils/productNormalizer";
 
 export default function ProductDetailsPage() {
   const params = useParams();
@@ -22,7 +23,9 @@ export default function ProductDetailsPage() {
       try {
         setLoading(true);
         const result = await getProductById(productId);
-        setProduct(result.product || result);
+        const rawProduct = result.product || result;
+        // Normalize stock to ensure correct display for products with variants
+        setProduct(normalizeProductStock(rawProduct));
       } catch (err) {
         setError(handleApiError(err, "loading product"));
       } finally {
@@ -117,6 +120,82 @@ export default function ProductDetailsPage() {
               )}
             </div>
           )}
+
+          {/* Variants Section */}
+          {product.hasVariants && product.variants && product.variants.length > 0 && (
+            <div className="bg-white">
+              <h2 className="text-sm font-semibold text-slate-900 mb-4">Product Variants</h2>
+              <div className="space-y-3">
+                {product.variants.map((variant: any, index: number) => (
+                  <div
+                    key={variant._id || index}
+                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-sm font-semibold text-slate-900">
+                            {variant.label || `Variant ${index + 1}`}
+                          </h3>
+                          {variant.isDefault && (
+                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
+                              Default
+                            </span>
+                          )}
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              variant.status === "active"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {variant.status || "inactive"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Price</p>
+                            <p className="font-medium text-slate-900">
+                              ৳{variant.price?.toLocaleString() || 0}
+                            </p>
+                            {variant.salePrice && variant.salePrice < variant.price && (
+                              <p className="text-xs text-emerald-600 line-through">
+                                ৳{variant.salePrice.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Stock</p>
+                            <p
+                              className={`font-medium ${
+                                (variant.stock || 0) < 10
+                                  ? "text-red-600"
+                                  : "text-slate-900"
+                              }`}
+                            >
+                              {variant.stock || 0} {variant.unit || product.unit || "units"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Measurement</p>
+                            <p className="font-medium text-slate-900">
+                              {variant.measurement || 1} {variant.unit || product.unit || "pcs"}
+                            </p>
+                          </div>
+                          {variant.sku && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">SKU</p>
+                              <p className="font-medium text-slate-900 text-xs">{variant.sku}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -162,6 +241,11 @@ export default function ProductDetailsPage() {
                   }`}>
                     {product.stock || 0} {product.unit || "units"}
                   </p>
+                  {product.hasVariants && product.variants && product.variants.length > 0 && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      ({product.variants.length} variant{product.variants.length > 1 ? 's' : ''})
+                    </p>
+                  )}
                 </div>
               </div>
 

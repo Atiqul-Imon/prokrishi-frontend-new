@@ -6,6 +6,7 @@ import ImageKitImage from "@/components/ui/ImageKitImage";
 import { useCart } from "@/app/context/CartContext";
 import { Product } from "@/types/models";
 import { formatCurrency } from "@/app/utils";
+import { normalizeProductStock } from "@/app/utils/productNormalizer";
 import { Badge } from "@/components/ui/Badge";
 import { Package, Fish } from "lucide-react";
 
@@ -17,7 +18,9 @@ interface ProductCardProps {
 
 function ProductCard({ product, showBadges = true, className = "" }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { _id, name, price, stock, image, images, unit, measurement, isFishProduct, priceRange, sizeCategories } = product;
+  // Normalize product stock to ensure consistency (handles variantSummary.totalStock)
+  const normalizedProduct = useMemo(() => normalizeProductStock(product), [product]);
+  const { _id, name, price, stock, image, images, unit, measurement, isFishProduct, priceRange, sizeCategories } = normalizedProduct;
 
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

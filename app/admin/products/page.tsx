@@ -109,7 +109,6 @@ export default function AdminProductsPage() {
     { key: "product", label: "Product", align: "left" },
     { key: "category", label: "Category", align: "left" },
     { key: "price", label: "Price", align: "left" },
-    { key: "stock", label: "Stock", align: "left" },
     { key: "status", label: "Status", align: "left" },
     { key: "featured", label: "Featured", align: "center" },
     { key: "actions", label: "Actions", align: "right" },
@@ -225,15 +224,6 @@ export default function AdminProductsPage() {
                 <td className="px-6 py-4">
                   <span className="text-sm font-bold text-slate-900">
                     {formatCurrency(product.price)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`text-sm font-bold ${
-                      (product.stock || 0) < 10 ? "text-red-600" : "text-slate-900"
-                    }`}
-                  >
-                    {product.stock || 0}
                   </span>
                 </td>
                 <td className="px-6 py-4">
