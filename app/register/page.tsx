@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser } from "@/app/utils/api";
+import { useAuth } from "@/app/context/AuthContext";
 import { handleApiError } from "@/app/utils/errorHandler";
 import Link from "next/link";
 import { User, Mail, Phone, Lock, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register, user, loading: authLoading } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -22,6 +23,13 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect to homepage if user is already logged in (after successful registration)
+  useEffect(() => {
+    if (user && !authLoading && success) {
+      router.push("/");
+    }
+  }, [user, authLoading, success, router]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((f) => ({
@@ -75,15 +83,14 @@ export default function RegisterPage() {
         ...(form.email && form.email.trim() !== '' ? { email: form.email.trim() } : {}),
       };
       
-      const result = await registerUser(registrationData);
+      // Use AuthContext register function which handles login automatically
+      const result = await register(registrationData);
       if (result.success) {
         setSuccess(true);
         setError("");
-        setTimeout(() => {
-          router.push("/");
-        }, 2000);
+        // User is now logged in via AuthContext - useEffect will handle redirect
       } else {
-        setError("Registration failed");
+        setError(result.message || "Registration failed");
       }
     } catch (err) {
       let errorMessage = handleApiError(err, "registering user");
@@ -248,7 +255,7 @@ export default function RegisterPage() {
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-green-800 mb-1">Registration Successful!</p>
-                  <p className="text-sm text-green-700">Account created successfully. Redirecting...</p>
+                  <p className="text-sm text-green-700">Account created successfully. You are now logged in!</p>
                 </div>
               </div>
             )}
