@@ -1322,12 +1322,32 @@ export async function getOrderDetails(orderId: string): Promise<OrderResponse> {
 // Get user orders
 export async function getUserOrders(): Promise<{ success: boolean; orders: Order[] }> {
   // NestJS uses GET /order instead of /order/user (user context from JWT)
-  return apiRequest<{ success: boolean; orders: Order[] }>("/order");
+  // Backend returns: { message, orders, pagination } or { success: true, data: { message, orders, pagination } }
+  const response = await apiRequest<{ success?: boolean; data?: { orders?: Order[]; message?: string }; orders?: Order[]; message?: string }>("/order");
+  
+  // Handle NestJS TransformInterceptor wrapper
+  const responseData = response.data || response;
+  const orders = responseData.orders || [];
+  
+  return {
+    success: response.success ?? true,
+    orders: Array.isArray(orders) ? orders : [],
+  };
 }
 
 // Get fish orders for user
 export async function getUserFishOrders(): Promise<{ success: boolean; orders: Order[] }> {
-  return apiRequest<{ success: boolean; orders: Order[] }>("/fish/orders/user");
+  // Backend returns: { message, orders, pagination } or { success: true, data: { message, orders, pagination } }
+  const response = await apiRequest<{ success?: boolean; data?: { orders?: Order[]; message?: string }; orders?: Order[]; message?: string }>("/fish/orders/user");
+  
+  // Handle NestJS TransformInterceptor wrapper
+  const responseData = response.data || response;
+  const orders = responseData.orders || [];
+  
+  return {
+    success: response.success ?? true,
+    orders: Array.isArray(orders) ? orders : [],
+  };
 }
 
 // Get featured products

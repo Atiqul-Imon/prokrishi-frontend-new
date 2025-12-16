@@ -24,16 +24,23 @@ export default function Orders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         const [regularOrders, fishOrders] = await Promise.all([
           getUserOrders().catch((err) => {
             logger.error("Failed to fetch regular orders:", err);
+            console.error("Regular orders error:", err);
             return { success: false, orders: [] };
           }),
           getUserFishOrders().catch((err) => {
             logger.error("Failed to fetch fish orders:", err);
+            console.error("Fish orders error:", err);
             return { success: false, orders: [] };
           }),
         ]);
+
+        console.log("Regular orders response:", regularOrders);
+        console.log("Fish orders response:", fishOrders);
 
         const allOrders: OrderWithType[] = [
           ...(regularOrders.orders || []).map((o: Order) => ({ ...o, isFishOrder: false })),
@@ -44,10 +51,12 @@ export default function Orders() {
           return dateB - dateA;
         });
 
+        console.log("All orders combined:", allOrders.length, allOrders);
         setOrders(allOrders);
         setError(null);
       } catch (error) {
         logger.error("Failed to fetch orders:", error);
+        console.error("Orders fetch error:", error);
         setOrders([]);
         setError("Failed to load orders. Please try again later.");
       } finally {
