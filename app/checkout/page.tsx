@@ -266,16 +266,21 @@ function CheckoutContent() {
       }
 
       if (fishCart.length > 0) {
+        // CRITICAL: Capture cart state at this exact moment to avoid closure issues
+        // Create a deep copy to ensure we're working with the current state
+        const currentFishCart = JSON.parse(JSON.stringify(fishCart));
+        
         // Debug: Log fish cart state before creating order
-        logger.info("Fish cart state before order creation:", JSON.stringify(fishCart.map(item => ({
+        logger.info("Fish cart state before order creation (captured):", JSON.stringify(currentFishCart.map((item: any) => ({
           productId: typeof item.fishProduct === 'string' ? item.fishProduct : (item.fishProduct._id || item.fishProduct.id),
           sizeCategoryId: item.sizeCategoryId,
           quantity: item.quantity,
           quantityType: typeof item.quantity,
+          rawItem: item,
         }))));
         
         // Convert fish cart items to order items (no requestedWeight, no totalPrice)
-        const fishOrderItems = fishCart.map((item) => {
+        const fishOrderItems = currentFishCart.map((item: any) => {
           const fishProductId = typeof item.fishProduct === 'string' 
             ? item.fishProduct 
             : (item.fishProduct._id || item.fishProduct.id);
@@ -284,15 +289,27 @@ function CheckoutContent() {
             throw new Error(`Invalid fish cart item: missing fishProduct or sizeCategoryId`);
           }
 
-          // Ensure quantity is properly set - explicitly convert to number and validate
-          const rawQuantity = item.quantity;
-          const quantity = rawQuantity && Number(rawQuantity) > 0 ? Number(rawQuantity) : 1;
+          // CRITICAL: Ensure quantity is properly set - explicitly convert to number and validate
+          // Use explicit property access to avoid any undefined issues
+          const rawQuantity = item.quantity !== undefined && item.quantity !== null ? item.quantity : 1;
+          const quantity = Number(rawQuantity);
           
-          if (quantity <= 0 || !Number.isInteger(quantity)) {
-            logger.error(`Invalid quantity for fish order item: ${rawQuantity}, defaulting to 1`, { item });
+          // Validate quantity is a positive integer
+          if (isNaN(quantity) || quantity <= 0 || !Number.isInteger(quantity)) {
+            const errorMsg = `Invalid quantity for fish order item: ${rawQuantity} (type: ${typeof rawQuantity}). Expected positive integer.`;
+            logger.error(errorMsg, { item, rawQuantity, quantity, itemKeys: Object.keys(item) });
             throw new Error(`Invalid quantity for fish product: ${rawQuantity}. Please update the quantity in your cart.`);
           }
           
+          // Log extensively to debug
+          console.log(`[CHECKOUT] Creating fish order item:`, {
+            productId: fishProductId,
+            sizeCategoryId: item.sizeCategoryId,
+            rawQuantity,
+            quantity,
+            quantityType: typeof rawQuantity,
+            fullItem: item,
+          });
           logger.info(`Creating fish order item: Product ${fishProductId}, Size ${item.sizeCategoryId}, Quantity: ${quantity} (raw: ${rawQuantity}, type: ${typeof rawQuantity})`);
 
           return {
@@ -300,15 +317,38 @@ function CheckoutContent() {
             sizeCategoryId: item.sizeCategoryId,
             // requestedWeight is optional - set to 0 for cart-based orders (price will be calculated later)
             requestedWeight: 0,
-            quantity: quantity,
+            quantity: quantity, // Explicitly set quantity
             notes: 'মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে',
           };
         });
 
         // Fish orders are created without total price (totalPrice: 0)
         // Price will be calculated later based on actual weight
+        
+        // CRITICAL: Verify all order items have quantity before sending
+        const verifiedFishOrderItems = fishOrderItems.map((item: any, index: number) => {
+          const rawQty = item.quantity;
+          const itemQuantity: number = rawQty !== undefined && rawQty !== null ? Number(rawQty) : 0;
+          if (itemQuantity <= 0 || isNaN(itemQuantity)) {
+            const qtyStr = rawQty !== undefined && rawQty !== null ? String(rawQty) : 'undefined';
+            const errorMsg = `Fish order item at index ${index} has invalid quantity: ${qtyStr}`;
+            logger.error(errorMsg, { item, fishOrderItems });
+            throw new Error(errorMsg);
+          }
+          return {
+            ...item,
+            quantity: itemQuantity, // Ensure it's a number
+          };
+        });
+        
+        logger.info(`[CHECKOUT] Verified fish order items with quantities:`, verifiedFishOrderItems.map((item: any) => ({
+          fishProduct: item.fishProduct,
+          sizeCategoryId: item.sizeCategoryId,
+          quantity: item.quantity,
+        })));
+        
         const fishOrderData = {
-          orderItems: fishOrderItems,
+          orderItems: verifiedFishOrderItems,
           shippingAddress,
           paymentMethod: selectedPayment === "cod" ? "Cash on Delivery" : "Online Payment",
           totalPrice: 0, // No price calculation - will be determined later based on actual weight
@@ -324,6 +364,10 @@ function CheckoutContent() {
               }
             : {}),
         };
+        
+        // CRITICAL: Log the final data being sent
+        console.log('[CHECKOUT] Final fish order data being sent:', JSON.stringify(fishOrderData, null, 2));
+        logger.info(`[CHECKOUT] Creating fish order with ${verifiedFishOrderItems.length} items, quantities: ${verifiedFishOrderItems.map((i: any) => i.quantity).join(', ')}`);
         
         try {
           const fishRes = await fishOrderApi.create(fishOrderData) as OrderResponse;

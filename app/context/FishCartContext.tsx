@@ -466,33 +466,48 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
           }
           
           if (cartData && cartData.items && Array.isArray(cartData.items)) {
-            // Merge backend response with current state to preserve any optimistic updates
+            // CRITICAL FIX: Don't overwrite the optimistic update with backend response
+            // Only update if backend quantity matches what we requested, or if backend has a higher quantity
+            // This prevents the backend response from overwriting our optimistic update with stale data
             setFishCart((currentCart) => {
+              // First, check if the item we just updated is in the current cart with the correct quantity
+              const updatedItem = currentCart.find((ci) => {
+                const ciProductId = typeof ci.fishProduct === 'string' 
+                  ? ci.fishProduct 
+                  : (ci.fishProduct._id || ci.fishProduct.id);
+                return ciProductId === fishProductId && ci.sizeCategoryId === sizeCategoryId;
+              });
+              
+              // If current cart has the quantity we just set, keep it - don't overwrite with backend
+              if (updatedItem && updatedItem.quantity === quantity) {
+                logger.info(`Keeping optimistic update: quantity ${quantity} matches requested quantity. Not overwriting with backend response.`);
+                return currentCart; // Don't update - keep the optimistic update
+              }
+              
+              // Otherwise, merge backend response
               const convertedFishCart: FishCartItem[] = cartData.items.map((item: any) => {
                 const backendItem = item as BackendFishCartItem;
                 const fishProduct = typeof backendItem.fishProduct === 'string' 
                   ? { _id: backendItem.fishProduct } as FishProduct
                   : backendItem.fishProduct;
-                const sizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
+                const itemSizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
                   ? backendItem.sizeCategoryId._id 
                   : backendItem.sizeCategoryId;
                 const backendQuantity = Number((backendItem as any).quantity) || 1;
                 
-                // Find matching item in current cart to preserve optimistic updates
+                // Find matching item in current cart
                 const currentItem = currentCart.find((ci) => {
                   const ciProductId = typeof ci.fishProduct === 'string' 
                     ? ci.fishProduct 
                     : (ci.fishProduct._id || ci.fishProduct.id);
-                  return ciProductId === (typeof fishProduct === 'string' ? fishProduct : (fishProduct._id || fishProduct.id)) 
-                    && ci.sizeCategoryId === sizeCategoryId;
+                  const itemProductId = typeof fishProduct === 'string' ? fishProduct : (fishProduct._id || fishProduct.id);
+                  return ciProductId === itemProductId && ci.sizeCategoryId === itemSizeCategoryId;
                 });
                 
-                // Use backend quantity, but if current cart has a higher quantity and we just updated, keep the higher one
-                // This prevents race conditions where backend hasn't updated yet
-                const currentQuantity = currentItem?.quantity || 1;
-                const finalQuantity = (currentItem && currentQuantity > backendQuantity && currentQuantity === quantity)
-                  ? currentQuantity  // Keep optimistic update if it matches what we just set
-                  : backendQuantity;     // Otherwise use backend value
+                // Use backend quantity, but prefer current quantity if it matches what we just requested
+                const finalQuantity = (currentItem && currentItem.quantity === quantity && quantity > 0)
+                  ? quantity  // Use the quantity we just set
+                  : Math.max(backendQuantity, currentItem?.quantity || 1); // Use the higher of backend or current
                 
                 logger.info(`Updated fish cart item quantity from backend: ${finalQuantity}`, { 
                   backendItem, 
@@ -506,7 +521,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                 return {
                   _id: backendItem._id,
                   fishProduct,
-                  sizeCategoryId,
+                  sizeCategoryId: itemSizeCategoryId,
                   sizeCategoryLabel: backendItem.sizeCategoryLabel,
                   pricePerKg: backendItem.pricePerKg,
                   quantity: finalQuantity,
@@ -520,8 +535,10 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
           }
         } catch (error) {
           logger.error("Error updating fish cart quantity via API:", error);
-          // Don't revert - keep optimistic update, but log the error
+          // CRITICAL: Don't revert - keep optimistic update
           // The user should see the updated quantity even if backend update fails
+          // The quantity will be sent correctly when the order is created
+          logger.warn("Backend update failed, but keeping optimistic update. Quantity will be sent correctly in order creation.");
         }
       }
     } catch (error) {

@@ -67,6 +67,17 @@ export default function OrderDetailsPage() {
         setLoading(true);
         setError(null);
         const response = await getAdminOrderById(orderId);
+        
+        // CRITICAL: Log the order data to see what we're receiving
+        console.log('[ADMIN ORDER] Full order response:', JSON.stringify(response.order, null, 2));
+        console.log('[ADMIN ORDER] Order items quantities:', response.order.orderItems?.map((item: any, index: number) => ({
+          index,
+          name: item.name || (item as any).fishProductName,
+          quantity: item.quantity,
+          quantityType: typeof item.quantity,
+          rawItem: item,
+        })));
+        
         setOrder(response.order);
         setNewStatus(response.order.status || "");
         setNewPaymentStatus(response.order.paymentStatus || "");

@@ -190,6 +190,7 @@ export const fishOrderApi = {
       fishProduct: string;
       sizeCategoryId: string;
       requestedWeight?: number;
+      quantity?: number; // CRITICAL: Add quantity field
       notes?: string;
     }>;
     shippingAddress: {
@@ -213,6 +214,16 @@ export const fishOrderApi = {
   }) => {
     // Fish orders use /fish-order endpoint, not /fish/orders
     const base = getApiBaseUrl().replace(/\/$/, "");
+    
+    // CRITICAL: Log the data being sent to verify quantity is included
+    console.log('[FISH API] Creating fish order with data:', JSON.stringify(data, null, 2));
+    console.log('[FISH API] Order items quantities:', data.orderItems.map(item => ({ 
+      fishProduct: item.fishProduct, 
+      sizeCategoryId: item.sizeCategoryId, 
+      quantity: item.quantity,
+      requestedWeight: item.requestedWeight 
+    })));
+    
     const response = await axios.post(`${base}/fish-order`, data, {
       headers: {
         Authorization: typeof window !== "undefined" ? `Bearer ${localStorage.getItem("accessToken") || ""}` : "",

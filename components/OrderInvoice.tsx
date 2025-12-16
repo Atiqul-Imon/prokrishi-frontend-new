@@ -240,7 +240,10 @@ export default function OrderInvoice({ order, onPrint, onDownload, showActions =
                   {order.orderItems?.map((item, index) => {
                     const itemName = item.name || "Product";
                     const variant = (item as any).variant;
-                    const quantity = item.quantity || (item as any).quantity || 1;
+                    // CRITICAL: Log to see what quantity we're getting
+                    const rawQuantity = item.quantity !== undefined ? item.quantity : (item as any).quantity;
+                    const quantity = rawQuantity && Number(rawQuantity) > 0 ? Number(rawQuantity) : 1;
+                    console.log(`[ORDER INVOICE] Item ${index}: name=${item.name || (item as any).fishProductName}, rawQuantity=${rawQuantity}, finalQuantity=${quantity}`, item);
                     const price = item.price || 0;
                     // For fish orders, use actualWeight or requestedWeight for weight calculation
                     const fishWeight = isFishOrder ? ((item as any).actualWeight || (item as any).requestedWeight || 0) : 0;
