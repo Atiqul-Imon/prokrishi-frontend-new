@@ -72,6 +72,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
               sizeCategoryId,
               sizeCategoryLabel: backendItem.sizeCategoryLabel,
               pricePerKg: backendItem.pricePerKg,
+              quantity: (backendItem as any).quantity || 1,
             } as FishCartItem;
           });
         }
@@ -197,6 +198,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                                 sizeCategoryId,
                                 sizeCategoryLabel: backendItem.sizeCategoryLabel,
                                 pricePerKg: backendItem.pricePerKg,
+                                quantity: (backendItem as any).quantity || 1,
                               } as FishCartItem;
                             });
                             setFishCart(convertedFishCart);
@@ -246,6 +248,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                                 sizeCategoryId,
                                 sizeCategoryLabel: backendItem.sizeCategoryLabel,
                                 pricePerKg: backendItem.pricePerKg,
+                                quantity: (backendItem as any).quantity || 1,
                               } as FishCartItem;
                             });
                             setFishCart(convertedFishCart);
