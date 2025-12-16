@@ -12,10 +12,7 @@ import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ResourcePrefetcher from "../components/ResourcePrefetcher";
 import OfflineIndicator from "../components/OfflineIndicator";
 import { SkipLinks } from "../components/SkipLinks";
-import PerformanceMonitor from "../components/PerformanceMonitor";
-import KeyboardNavigation from "../components/KeyboardNavigation";
-import NetworkOptimizer from "../components/NetworkOptimizer";
-import MemoryMonitor from "../components/MemoryMonitor";
+import LazyLoadedComponents from "../components/LazyLoadedComponents";
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -57,10 +54,7 @@ export default function RootLayout({
       </head>
       <body className={`${roboto.variable} antialiased`}>
         <SkipLinks />
-        <KeyboardNavigation />
-        <PerformanceMonitor />
-        <NetworkOptimizer />
-        <MemoryMonitor />
+        <LazyLoadedComponents />
         <ResourcePrefetcher />
         <FontLoader />
         <BanglaFontAdjuster />
