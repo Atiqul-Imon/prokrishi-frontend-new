@@ -1362,15 +1362,16 @@ export async function getUserOrders(): Promise<{ success: boolean; orders: Order
 
 // Get fish orders for user
 export async function getUserFishOrders(): Promise<{ success: boolean; orders: Order[] }> {
+  // Backend controller is @Controller('fish-order') so endpoint is /fish-order
   // Backend controller returns: { message, orders, pagination }
-  // TransformInterceptor wraps it as: { success: true, data: { orders, pagination }, message }
+  // TransformInterceptor wraps it as: { success: true, data: orders[], message, pagination }
   const response = await apiRequest<{ 
     success?: boolean; 
     data?: Order[] | { orders?: Order[]; pagination?: unknown }; 
     orders?: Order[]; 
     message?: string;
     pagination?: unknown;
-  }>("/fish/orders/user");
+  }>("/fish-order");
   
   console.log("[getUserFishOrders] Raw API response:", JSON.stringify(response, null, 2));
   
