@@ -131,43 +131,48 @@ function CheckoutContent() {
         return;
       }
 
-      // Get final shipping quote before placing order
+      // Get final shipping quote before placing order (only for regular products)
       let finalShippingFee = shippingFee;
-      try {
-        const finalQuote = await getShippingQuote({
+      if (cart.length > 0) {
+        try {
+          const finalQuote = await getShippingQuote({
+            orderItems: cart.map((item) => ({
+              product: item.id || item._id,
+              quantity: item.quantity,
+              variantId: item.variantId,
+            })),
+            shippingAddress: {
+              name: shippingAddress.name,
+              phone: shippingAddress.phone,
+              address: shippingAddress.address,
+              ...(shippingAddress.division && {
+                division: shippingAddress.division,
+                district: shippingAddress.district,
+                upazila: shippingAddress.upazila,
+              }),
+            },
+            shippingZone: selectedZone,
+          });
+          finalShippingFee = finalQuote.shippingFee || shippingFee;
+        } catch (err) {
+          logger.warn("Failed to get final shipping quote, using cached value:", err);
+        }
+      }
+
+      // Pre-validate cart server-side (only for regular products)
+      let validation = null;
+      if (cart.length > 0) {
+        const validatePayload = {
           orderItems: cart.map((item) => ({
             product: item.id || item._id,
             quantity: item.quantity,
             variantId: item.variantId,
+            name: item.name,
+            price: item.variantSnapshot?.price || item.price,
           })),
-          shippingAddress: {
-            name: shippingAddress.name,
-            phone: shippingAddress.phone,
-            address: shippingAddress.address,
-            ...(shippingAddress.division && {
-              division: shippingAddress.division,
-              district: shippingAddress.district,
-              upazila: shippingAddress.upazila,
-            }),
-          },
-          shippingZone: selectedZone,
-        });
-        finalShippingFee = finalQuote.shippingFee || shippingFee;
-      } catch (err) {
-        logger.warn("Failed to get final shipping quote, using cached value:", err);
+        };
+        validation = await validateCartApi(validatePayload);
       }
-
-      // Pre-validate cart server-side
-      const validatePayload = {
-        orderItems: cart.map((item) => ({
-          product: item.id || item._id,
-          quantity: item.quantity,
-          variantId: item.variantId,
-          name: item.name,
-          price: item.variantSnapshot?.price || item.price,
-        })),
-      };
-      const validation = await validateCartApi(validatePayload);
       if (validation?.hasChanges) {
         const items = (validation.items || []) as ValidationItem[];
         const unavailable = items.filter((i: ValidationItem) => !i.available);
@@ -276,6 +281,7 @@ function CheckoutContent() {
             sizeCategoryId: item.sizeCategoryId,
             // requestedWeight is optional - set to 0 for cart-based orders (price will be calculated later)
             requestedWeight: 0,
+            quantity: item.quantity || 1,
             notes: 'মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে',
           };
         });
@@ -404,7 +410,7 @@ function CheckoutContent() {
         {/* Progress Indicator */}
         <CheckoutProgress currentStep={currentStep} steps={checkoutSteps} />
 
-        {cart.length === 0 && (
+        {cart.length === 0 && fishCart.length === 0 && (
           <Card padding="lg" variant="elevated">
             <div className="text-center py-12">
               <p className="text-gray-600 mb-4">Your cart is empty.</p>
@@ -415,7 +421,7 @@ function CheckoutContent() {
           </Card>
         )}
 
-        {cart.length > 0 && (
+        {(cart.length > 0 || fishCart.length > 0) && (
           <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-4">
               {/* Delivery Zone */}
@@ -639,29 +645,70 @@ function CheckoutContent() {
               <Card padding="lg" variant="elevated" className="shadow-xl border border-gray-100 hidden md:block">
                 <h2 className="text-xl font-extrabold text-gray-900 mb-6 tracking-tight">Order Summary</h2>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
-                    <p className="text-base text-gray-600 font-medium">Items</p>
-                    <p className="text-base font-bold text-gray-900">{cart.length + fishCart.length}</p>
-                  </div>
+                  {/* Regular Products List */}
                   {cart.length > 0 && (
-                    <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
-                      <p className="text-sm text-gray-500 font-medium">Regular Products</p>
-                      <p className="text-sm font-semibold text-gray-700">{cart.length}</p>
+                    <div className="mb-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Regular Products</p>
+                      <div className="space-y-2">
+                        {cart.map((item) => (
+                          <div key={item._id || item.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 border border-gray-200">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                              {item.variantSnapshot?.label && (
+                                <p className="text-xs text-gray-500">{item.variantSnapshot.label}</p>
+                              )}
+                            </div>
+                            <div className="ml-3 text-right">
+                              <p className="text-sm font-semibold text-gray-700">Qty: {item.quantity || 1}</p>
+                              <p className="text-xs text-gray-500">{formatCurrency((item.variantSnapshot?.price || item.price || 0) * (item.quantity || 1))}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+
+                  {/* Fish Products List */}
                   {fishCart.length > 0 && (
-                    <>
-                      <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
-                        <p className="text-sm text-gray-500 font-medium">Fish Products</p>
-                        <p className="text-sm font-semibold text-gray-700">{fishCart.length}</p>
+                    <div className="mb-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Fish Products</p>
+                      <div className="space-y-2">
+                        {fishCart.map((item, index) => {
+                          const fishProduct = typeof item.fishProduct === 'string' 
+                            ? null 
+                            : item.fishProduct;
+                          const productName = fishProduct?.name || 'Fish Product';
+                          return (
+                            <div key={item._id || `${item.sizeCategoryId}-${index}`} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 border border-gray-200">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{productName}</p>
+                                <p className="text-xs text-gray-500">{item.sizeCategoryLabel}</p>
+                                <p className="text-xs text-gray-500">৳{item.pricePerKg?.toLocaleString()}/kg</p>
+                              </div>
+                              <div className="ml-3 text-right">
+                                <p className="text-sm font-semibold text-gray-700">Qty: {item.quantity || 1}</p>
+                                <p className="text-xs text-gray-500 italic">Price TBD</p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                        <p className="text-xs text-gray-600 italic">
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                        <p className="text-xs text-amber-800 italic">
                           মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে
                         </p>
                       </div>
-                    </>
+                    </div>
                   )}
+
+                  {/* Total Items Count */}
+                  <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors border-t border-gray-200 pt-3">
+                    <p className="text-base text-gray-600 font-medium">Total Items</p>
+                    <p className="text-base font-bold text-gray-900">
+                      {cart.reduce((sum, item) => sum + (item.quantity || 1), 0) + 
+                       fishCart.reduce((sum, item) => sum + (item.quantity || 1), 0)}
+                    </p>
+                  </div>
                   <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
                     <p className="text-base text-gray-600 font-medium">Subtotal</p>
                     <p className="text-lg font-extrabold text-gray-900">{formatCurrency(cartTotal)}</p>
@@ -748,7 +795,7 @@ function CheckoutContent() {
                     flex-shrink-0 font-bold text-base px-6 py-3 min-h-[44px] 
                     shadow-lg hover:shadow-xl transition-shadow touch-manipulation
                     inline-flex items-center justify-center rounded-lg
-                    ${isSubmitting || !selectedZone || cart.length === 0
+                    ${isSubmitting || !selectedZone || (cart.length === 0 && fishCart.length === 0)
                       ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
                       : 'bg-[var(--primary-green)] text-white hover:bg-[var(--primary-green)]/90 active:scale-95'
                     }

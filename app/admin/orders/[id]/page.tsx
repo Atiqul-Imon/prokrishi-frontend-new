@@ -223,10 +223,16 @@ export default function OrderDetailsPage() {
                   key={index}
                   className="flex items-center gap-4 p-3 rounded-lg bg-slate-50"
                 >
-                  {(item as any).variant?.image || (item as any).product?.image ? (
+                  {((order as any).orderType === 'fish' 
+                    ? (item as any).fishProduct?.image
+                    : (item as any).variant?.image || (item as any).product?.image) ? (
                     <img
-                      src={(item as any).variant?.image || (item as any).product?.image}
-                      alt={item.name}
+                      src={(order as any).orderType === 'fish'
+                        ? (item as any).fishProduct?.image
+                        : (item as any).variant?.image || (item as any).product?.image}
+                      alt={(order as any).orderType === 'fish'
+                        ? ((item as any).fishProductName || item.name)
+                        : item.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
                   ) : (
@@ -235,22 +241,55 @@ export default function OrderDetailsPage() {
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                    {(item as any).variant?.label && (
-                      <p className="text-xs text-slate-500">
-                        {(order as any).orderType === 'fish' ? 'Size' : 'Variant'}: {(item as any).variant.label}
-                        {(order as any).orderType === 'fish' && (item as any).variant.pricePerKg && (
-                          <span className="ml-1">({formatCurrency((item as any).variant.pricePerKg)}/kg)</span>
-                        )}
-                      </p>
-                    )}
-                    <p className="text-xs text-slate-500">
-                      {(order as any).orderType === 'fish' ? 'Weight' : 'Quantity'}: {item.quantity} {(order as any).orderType === 'fish' ? 'kg' : ''} × {formatCurrency(item.price || 0)}
+                    <p className="text-sm font-medium text-slate-900">
+                      {(order as any).orderType === 'fish' 
+                        ? ((item as any).fishProductName || item.name)
+                        : item.name}
                     </p>
+                    {(order as any).orderType === 'fish' ? (
+                      <>
+                        {(item as any).sizeCategoryLabel && (
+                          <p className="text-xs text-slate-500">
+                            Size: {(item as any).sizeCategoryLabel}
+                            {(item as any).pricePerKg && (
+                              <span className="ml-1">({formatCurrency((item as any).pricePerKg)}/kg)</span>
+                            )}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500">
+                          Quantity: {(item as any).quantity || 1}
+                          {(item as any).actualWeight 
+                            ? ` • Actual Weight: ${(item as any).actualWeight} kg`
+                            : (item as any).requestedWeight && (item as any).requestedWeight > 0
+                            ? ` • Requested Weight: ${(item as any).requestedWeight} kg`
+                            : ' • Weight: To be determined'}
+                          {(item as any).actualWeight && (item as any).pricePerKg && (
+                            <span className="ml-1">× {formatCurrency((item as any).pricePerKg)}/kg</span>
+                          )}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        {(item as any).variant?.label && (
+                          <p className="text-xs text-slate-500">
+                            Variant: {(item as any).variant.label}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500">
+                          Quantity: {item.quantity || 1} × {formatCurrency(item.price || 0)}
+                        </p>
+                      </>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-slate-900">
-                      {formatCurrency((item.price || 0) * (item.quantity || 0))}
+                      {(order as any).orderType === 'fish' 
+                        ? ((item as any).totalPrice 
+                            ? formatCurrency((item as any).totalPrice)
+                            : (item as any).actualWeight && (item as any).pricePerKg
+                            ? formatCurrency((item as any).actualWeight * (item as any).pricePerKg)
+                            : 'TBD')
+                        : formatCurrency((item.price || 0) * (item.quantity || 0))}
                     </p>
                   </div>
                 </div>
