@@ -271,6 +271,7 @@ function CheckoutContent() {
           productId: typeof item.fishProduct === 'string' ? item.fishProduct : (item.fishProduct._id || item.fishProduct.id),
           sizeCategoryId: item.sizeCategoryId,
           quantity: item.quantity,
+          quantityType: typeof item.quantity,
         }))));
         
         // Convert fish cart items to order items (no requestedWeight, no totalPrice)
@@ -283,9 +284,16 @@ function CheckoutContent() {
             throw new Error(`Invalid fish cart item: missing fishProduct or sizeCategoryId`);
           }
 
-          // Ensure quantity is properly set - log for debugging
-          const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
-          logger.info(`Creating fish order item: Product ${fishProductId}, Size ${item.sizeCategoryId}, Quantity: ${quantity} (from item.quantity: ${item.quantity})`);
+          // Ensure quantity is properly set - explicitly convert to number and validate
+          const rawQuantity = item.quantity;
+          const quantity = rawQuantity && Number(rawQuantity) > 0 ? Number(rawQuantity) : 1;
+          
+          if (quantity <= 0 || !Number.isInteger(quantity)) {
+            logger.error(`Invalid quantity for fish order item: ${rawQuantity}, defaulting to 1`, { item });
+            throw new Error(`Invalid quantity for fish product: ${rawQuantity}. Please update the quantity in your cart.`);
+          }
+          
+          logger.info(`Creating fish order item: Product ${fishProductId}, Size ${item.sizeCategoryId}, Quantity: ${quantity} (raw: ${rawQuantity}, type: ${typeof rawQuantity})`);
 
           return {
             fishProduct: fishProductId,

@@ -42,6 +42,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
   const [syncing, setSyncing] = useState(false);
   const { user } = useAuth();
   const [previousUser, setPreviousUser] = useState<User | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Sync localStorage fish cart to backend when user logs in
   const syncLocalFishCartToBackend = useCallback(async (localFishCartItems: FishCartItem[]): Promise<{ success: number; failed: number; errors: string[] }> => {
@@ -133,7 +134,21 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
   }, [user]);
 
   // Load fish cart from backend if user is logged in, otherwise from localStorage
+  // Only load on initial mount or when user changes (login/logout), not on every render
   useEffect(() => {
+    // Check if user changed (login/logout)
+    const userChanged = previousUser !== null && user !== previousUser;
+    
+    // Reset hasLoadedOnce if user changed, so we reload the cart
+    if (userChanged) {
+      setHasLoadedOnce(false);
+    }
+    
+    // Only load if we haven't loaded yet, or if user changed
+    if (hasLoadedOnce && !userChanged) {
+      return; // Don't reload if we've already loaded and user hasn't changed
+    }
+    
     async function loadFishCart() {
       setLoading(true);
       try {
@@ -167,6 +182,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
               });
               setFishCart(convertedFishCart);
               setLoading(false);
+              setHasLoadedOnce(true);
               
               // Clear localStorage since backend has the source of truth
               localStorage.removeItem(localFishCartKey);
@@ -227,6 +243,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                     logger.info("Backend fish cart empty but localStorage has items - syncing in background");
                     setFishCart(localFishCartItems);
                     setLoading(false);
+                    setHasLoadedOnce(true);
                     
                     // Sync localStorage items to backend in background
                     syncLocalFishCartToBackend(localFishCartItems).then((syncResults) => {
@@ -269,6 +286,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
               }
               setFishCart([]);
               setLoading(false);
+              setHasLoadedOnce(true);
             }
           } catch (error) {
             logger.error("Error loading fish cart from backend:", error);
@@ -285,6 +303,7 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
               setFishCart([]);
             }
             setLoading(false);
+            setHasLoadedOnce(true);
             return;
           }
         } else {
@@ -301,18 +320,22 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
             setFishCart([]);
           }
           setLoading(false);
+          setHasLoadedOnce(true);
         }
       } catch (error) {
         logger.error("Error loading fish cart:", error);
         setFishCart([]);
         setLoading(false);
+        setHasLoadedOnce(true);
       }
     }
     loadFishCart();
-    
-    // Update previousUser to track login state changes
+  }, [user, previousUser, hasLoadedOnce]);
+  
+  // Update previousUser separately to avoid infinite loop
+  useEffect(() => {
     setPreviousUser(user);
-  }, [user, syncLocalFishCartToBackend, previousUser]);
+  }, [user]);
 
   // Save fish cart to localStorage for both guest and logged-in users (as backup)
   useEffect(() => {
@@ -421,12 +444,31 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
       // Sync with backend if user is logged in
       if (user) {
         // Use the update quantity endpoint to set the exact quantity
-        updateFishCartQuantityAPI(fishProductId, sizeCategoryId, quantity)
-          .then((response) => {
-            logger.info("Successfully updated fish cart quantity");
-            // Update local state with backend response to ensure sync
-            if (response.cart && response.cart.items) {
-              const convertedFishCart: FishCartItem[] = response.cart.items.map((item) => {
+        try {
+          const response = await updateFishCartQuantityAPI(fishProductId, sizeCategoryId, quantity);
+          logger.info("Successfully updated fish cart quantity via API", { fishProductId, sizeCategoryId, quantity, response });
+          
+          // Handle different response structures from NestJS interceptor
+          // Response could be: { success: true, data: { cart: {...} } } or { cart: {...} } or directly the cart
+          let cartData: any = null;
+          if (response) {
+            if ((response as any).cart) {
+              cartData = (response as any).cart;
+            } else if ((response as any).data?.cart) {
+              cartData = (response as any).data.cart;
+            } else if ((response as any).data && (response as any).data.items) {
+              // Response is directly the cart object
+              cartData = (response as any).data;
+            } else if ((response as any).items) {
+              // Response is directly the cart object (no wrapper)
+              cartData = response;
+            }
+          }
+          
+          if (cartData && cartData.items && Array.isArray(cartData.items)) {
+            // Merge backend response with current state to preserve any optimistic updates
+            setFishCart((currentCart) => {
+              const convertedFishCart: FishCartItem[] = cartData.items.map((item: any) => {
                 const backendItem = item as BackendFishCartItem;
                 const fishProduct = typeof backendItem.fishProduct === 'string' 
                   ? { _id: backendItem.fishProduct } as FishProduct
@@ -434,46 +476,53 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
                 const sizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
                   ? backendItem.sizeCategoryId._id 
                   : backendItem.sizeCategoryId;
+                const backendQuantity = Number((backendItem as any).quantity) || 1;
+                
+                // Find matching item in current cart to preserve optimistic updates
+                const currentItem = currentCart.find((ci) => {
+                  const ciProductId = typeof ci.fishProduct === 'string' 
+                    ? ci.fishProduct 
+                    : (ci.fishProduct._id || ci.fishProduct.id);
+                  return ciProductId === (typeof fishProduct === 'string' ? fishProduct : (fishProduct._id || fishProduct.id)) 
+                    && ci.sizeCategoryId === sizeCategoryId;
+                });
+                
+                // Use backend quantity, but if current cart has a higher quantity and we just updated, keep the higher one
+                // This prevents race conditions where backend hasn't updated yet
+                const currentQuantity = currentItem?.quantity || 1;
+                const finalQuantity = (currentItem && currentQuantity > backendQuantity && currentQuantity === quantity)
+                  ? currentQuantity  // Keep optimistic update if it matches what we just set
+                  : backendQuantity;     // Otherwise use backend value
+                
+                logger.info(`Updated fish cart item quantity from backend: ${finalQuantity}`, { 
+                  backendItem, 
+                  rawQuantity: (backendItem as any).quantity,
+                  backendQuantity,
+                  currentQuantity: currentItem?.quantity,
+                  requestedQuantity: quantity,
+                  finalQuantity
+                });
+                
                 return {
                   _id: backendItem._id,
                   fishProduct,
                   sizeCategoryId,
                   sizeCategoryLabel: backendItem.sizeCategoryLabel,
                   pricePerKg: backendItem.pricePerKg,
-                  quantity: (backendItem as any).quantity || 1,
+                  quantity: finalQuantity,
                 } as FishCartItem;
               });
-              setFishCart(convertedFishCart);
-            }
-          })
-          .catch((error) => {
-            logger.error("Error updating fish cart quantity via API:", error);
-            // Revert optimistic update on error
-            getFishCart().then((response) => {
-              if (response.cart && response.cart.items) {
-                const convertedFishCart: FishCartItem[] = response.cart.items.map((item) => {
-                  const backendItem = item as BackendFishCartItem;
-                  const fishProduct = typeof backendItem.fishProduct === 'string' 
-                    ? { _id: backendItem.fishProduct } as FishProduct
-                    : backendItem.fishProduct;
-                  const sizeCategoryId = typeof backendItem.sizeCategoryId === 'object' 
-                    ? backendItem.sizeCategoryId._id 
-                    : backendItem.sizeCategoryId;
-                  return {
-                    _id: backendItem._id,
-                    fishProduct,
-                    sizeCategoryId,
-                    sizeCategoryLabel: backendItem.sizeCategoryLabel,
-                    pricePerKg: backendItem.pricePerKg,
-                    quantity: (backendItem as any).quantity || 1,
-                  } as FishCartItem;
-                });
-                setFishCart(convertedFishCart);
-              }
-            }).catch((err) => {
-              logger.error("Error reverting fish cart after update failure:", err);
+              logger.info("Fish cart state updated from backend response", { convertedFishCart, quantities: convertedFishCart.map(i => i.quantity) });
+              return convertedFishCart;
             });
-          });
+          } else {
+            logger.warn("Backend response missing cart or items", { response, cartData });
+          }
+        } catch (error) {
+          logger.error("Error updating fish cart quantity via API:", error);
+          // Don't revert - keep optimistic update, but log the error
+          // The user should see the updated quantity even if backend update fails
+        }
       }
     } catch (error) {
       logger.error("Error updating fish cart quantity:", error);
