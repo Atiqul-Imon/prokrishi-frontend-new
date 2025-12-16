@@ -626,7 +626,9 @@ export default function OrderDetailsPage() {
                 <div>
                   <p className="text-xs text-slate-500">Total Items</p>
                   <p className="text-sm font-medium text-slate-900">
-                    {order.orderItems?.length || 0}
+                    {(order as any).orderType === 'fish'
+                      ? order.orderItems?.reduce((sum: number, item: any) => sum + ((item.quantity || (item as any).quantity || 1)), 0) || 0
+                      : order.orderItems?.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) || 0}
                   </p>
                 </div>
               </div>

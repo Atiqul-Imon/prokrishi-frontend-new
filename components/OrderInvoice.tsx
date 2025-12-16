@@ -209,6 +209,9 @@ export default function OrderInvoice({ order, onPrint, onDownload, showActions =
                           Size
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-900">
+                          Qty
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-900">
                           Weight (kg)
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-gray-900">
@@ -237,9 +240,13 @@ export default function OrderInvoice({ order, onPrint, onDownload, showActions =
                   {order.orderItems?.map((item, index) => {
                     const itemName = item.name || "Product";
                     const variant = (item as any).variant;
-                    const quantity = item.quantity || 0;
+                    const quantity = item.quantity || (item as any).quantity || 1;
                     const price = item.price || 0;
-                    const total = price * quantity;
+                    // For fish orders, use actualWeight or requestedWeight for weight calculation
+                    const fishWeight = isFishOrder ? ((item as any).actualWeight || (item as any).requestedWeight || 0) : 0;
+                    const total = isFishOrder && fishWeight > 0 
+                      ? fishWeight * ((item as any).pricePerKg || variant?.pricePerKg || price)
+                      : price * quantity;
 
                     return (
                       <tr key={index} className="hover:bg-gray-50">
@@ -252,13 +259,16 @@ export default function OrderInvoice({ order, onPrint, onDownload, showActions =
                         {isFishOrder ? (
                           <>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-center text-gray-700">
-                              {variant?.label || "N/A"}
+                              {variant?.label || (item as any).sizeCategoryLabel || "N/A"}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-center text-gray-700">
-                              {quantity.toFixed(2)}
+                              {quantity}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-3 text-sm text-center text-gray-700">
+                              {fishWeight > 0 ? fishWeight.toFixed(2) : "TBD"}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-right text-gray-700">
-                              {variant?.pricePerKg ? formatCurrency(variant.pricePerKg) : formatCurrency(price / quantity)}
+                              {(item as any).pricePerKg || variant?.pricePerKg ? formatCurrency((item as any).pricePerKg || variant.pricePerKg) : "N/A"}
                             </td>
                           </>
                         ) : (
