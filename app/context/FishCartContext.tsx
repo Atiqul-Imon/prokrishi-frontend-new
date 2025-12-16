@@ -394,8 +394,8 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
       }
 
       // Optimistic update
-      setFishCart((prev) =>
-        prev.map((item) => {
+      setFishCart((prev) => {
+        const updated = prev.map((item) => {
           const itemFishProductId = typeof item.fishProduct === 'string' 
             ? item.fishProduct 
             : (item.fishProduct._id || item.fishProduct.id);
@@ -403,8 +403,20 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
             return { ...item, quantity };
           }
           return item;
-        })
-      );
+        });
+        
+        // Save to localStorage for guest users immediately
+        if (!user && typeof window !== "undefined") {
+          try {
+            localStorage.setItem("fishCart", JSON.stringify(updated));
+            logger.info("Saved updated fish cart to localStorage for guest user");
+          } catch (error) {
+            logger.error("Error saving fish cart to localStorage:", error);
+          }
+        }
+        
+        return updated;
+      });
 
       // Sync with backend if user is logged in
       if (user) {
@@ -530,6 +542,18 @@ export function FishCartProvider({ children }: FishCartProviderProps) {
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+
+  // Save fishCart to localStorage whenever it changes (for guest users)
+  useEffect(() => {
+    if (!user && !loading && typeof window !== "undefined") {
+      try {
+        localStorage.setItem("fishCart", JSON.stringify(fishCart));
+        logger.info("Auto-saved fish cart to localStorage for guest user");
+      } catch (error) {
+        logger.error("Error auto-saving fish cart to localStorage:", error);
+      }
+    }
+  }, [fishCart, user, loading]);
 
   const contextValue = useMemo(
     () => ({

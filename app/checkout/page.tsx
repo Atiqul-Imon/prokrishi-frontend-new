@@ -266,6 +266,13 @@ function CheckoutContent() {
       }
 
       if (fishCart.length > 0) {
+        // Debug: Log fish cart state before creating order
+        logger.info("Fish cart state before order creation:", JSON.stringify(fishCart.map(item => ({
+          productId: typeof item.fishProduct === 'string' ? item.fishProduct : (item.fishProduct._id || item.fishProduct.id),
+          sizeCategoryId: item.sizeCategoryId,
+          quantity: item.quantity,
+        }))));
+        
         // Convert fish cart items to order items (no requestedWeight, no totalPrice)
         const fishOrderItems = fishCart.map((item) => {
           const fishProductId = typeof item.fishProduct === 'string' 
@@ -276,12 +283,16 @@ function CheckoutContent() {
             throw new Error(`Invalid fish cart item: missing fishProduct or sizeCategoryId`);
           }
 
+          // Ensure quantity is properly set - log for debugging
+          const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
+          logger.info(`Creating fish order item: Product ${fishProductId}, Size ${item.sizeCategoryId}, Quantity: ${quantity} (from item.quantity: ${item.quantity})`);
+
           return {
             fishProduct: fishProductId,
             sizeCategoryId: item.sizeCategoryId,
             // requestedWeight is optional - set to 0 for cart-based orders (price will be calculated later)
             requestedWeight: 0,
-            quantity: item.quantity || 1,
+            quantity: quantity,
             notes: 'মাছের প্রকৃত ওজন হিসাবে মোট দাম জানানো হবে',
           };
         });
