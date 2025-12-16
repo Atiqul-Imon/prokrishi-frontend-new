@@ -37,7 +37,7 @@ const CategoryCard = memo(({ category, isFirst }: { category: Category; isFirst?
   </Link>
 ));
 
-export default function FeaturedCategories() {
+function FeaturedCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,4 +109,6 @@ export default function FeaturedCategories() {
     </section>
   );
 }
+
+export default React.memo(FeaturedCategories);
 

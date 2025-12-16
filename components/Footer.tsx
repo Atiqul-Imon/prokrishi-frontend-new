@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MapPin, Facebook, Instagram, Twitter, Youtube, ArrowRight } from "lucide-react";
 
-export default function Footer() {
+function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -149,4 +149,6 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default React.memo(Footer);
 
