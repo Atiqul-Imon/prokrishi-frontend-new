@@ -316,7 +316,7 @@ export default function ProductDetailPage() {
                         <p className="text-sm text-gray-500">/ {unit}</p>
                       )}
                       {priceType === "PER_UNIT" && unit !== "pcs" && measurement && measurement > 1 && (
-                        <p className="text-sm text-gray-500">for {measurement}{unit}</p>
+                        <p className="text-sm text-gray-500">/ {measurement}{unit}</p>
                       )}
                       {priceType === "PER_UNIT" && unit !== "pcs" && (!measurement || measurement === 1) && (
                         <p className="text-sm text-gray-500">/ {unit}</p>
@@ -572,12 +572,9 @@ export default function ProductDetailPage() {
                     <span className="text-sm text-gray-500">/ {unit}</span>
                   )}
                   {priceType === "PER_UNIT" && unit !== "pcs" && measurement && measurement > 1 && (
-                    <span className="text-sm text-gray-500">for {measurement * quantity}{unit}</span>
+                    <span className="text-sm text-gray-500">/ {measurement}{unit}</span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {inStock ? `${currentStock} ${unit} available` : "Out of stock"}
-                </p>
               </div>
               <Button
                 variant="primary"
