@@ -148,6 +148,9 @@ export default function ProductDetailPage() {
     product?.priceType ||
     ((selectedVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
 
+  // Get measurement for display
+  const measurement = selectedVariant?.measurement || product?.measurement;
+
   const currentStock = useMemo(() => {
     if (isFishProduct && selectedSizeCategory) {
       return selectedSizeCategory.stock || 0;
@@ -165,11 +168,13 @@ export default function ProductDetailPage() {
   const unit = selectedSizeCategory ? "kg" : selectedVariant?.unit || product?.unit || "pcs";
   const stockType =
     selectedSizeCategory ? "WEIGHT" : selectedVariant?.stockType || product?.stockType || (unit === "pcs" ? "COUNT" : "WEIGHT");
+  // Always increment by 1 unit (standard e-commerce behavior)
+  // Example: 100 tk / 200g → click +1 = add 1 unit (200g) = 100 tk
   const step =
     selectedSizeCategory?.measurementIncrement ??
     selectedVariant?.measurementIncrement ??
     product?.measurementIncrement ??
-    (unit === "pcs" ? 1 : unit === "kg" || unit === "g" ? 0.01 : 1);
+    1;
 
   const productImages = useMemo(() => {
     if (!product) return [];
@@ -302,13 +307,21 @@ export default function ProductDetailPage() {
                 <div className="pt-3 border-t border-gray-200">
                   <div className="flex items-baseline gap-2">
                     <p className="text-sm text-gray-500">Price</p>
-                    <p className="text-4xl font-bold text-gray-900">{formatCurrency(price)}</p>
-                    {priceType === "PER_WEIGHT" && (
-                      <p className="text-sm text-gray-500">/ {unit}</p>
-                    )}
-                    {priceType === "PER_UNIT" && unit !== "pcs" && (
-                      <p className="text-sm text-gray-500">/ {unit}</p>
-                    )}
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-4xl font-bold text-gray-900">{formatCurrency(price)}</p>
+                      {priceType === "PER_WEIGHT" && (
+                        <p className="text-sm text-gray-500">/ {unit}</p>
+                      )}
+                      {priceType === "PER_UNIT" && unit === "pcs" && (
+                        <p className="text-sm text-gray-500">/ {unit}</p>
+                      )}
+                      {priceType === "PER_UNIT" && unit !== "pcs" && measurement && measurement > 1 && (
+                        <p className="text-sm text-gray-500">for {measurement}{unit}</p>
+                      )}
+                      {priceType === "PER_UNIT" && unit !== "pcs" && (!measurement || measurement === 1) && (
+                        <p className="text-sm text-gray-500">/ {unit}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -557,6 +570,9 @@ export default function ProductDetailPage() {
                   </span>
                   {priceType === "PER_WEIGHT" && (
                     <span className="text-sm text-gray-500">/ {unit}</span>
+                  )}
+                  {priceType === "PER_UNIT" && unit !== "pcs" && measurement && measurement > 1 && (
+                    <span className="text-sm text-gray-500">for {measurement * quantity}{unit}</span>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">

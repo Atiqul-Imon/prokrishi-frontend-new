@@ -32,9 +32,8 @@ function getMeasurementInfo(product: Product | CartItem, variantId?: string) {
     const variant = product.variants?.find((v) => v._id === variantId) || (product as CartItem).variantSnapshot;
     if (variant) {
       const unit = variant.unit || product.unit;
-      const measurementIncrement =
-        variant.measurementIncrement ??
-        (unit === "pcs" ? 1 : product.measurementIncrement ?? (unit === "kg" || unit === "g" ? 0.01 : 1));
+      // Always increment by 1 unit (standard e-commerce behavior)
+      const measurementIncrement = variant.measurementIncrement ?? product.measurementIncrement ?? 1;
       return {
         measurement: normalizeMeasurement(variant.measurement),
         unit,
@@ -45,9 +44,8 @@ function getMeasurementInfo(product: Product | CartItem, variantId?: string) {
   return {
     measurement: normalizeMeasurement(product.measurement),
     unit: product.unit,
-    measurementIncrement:
-      product.measurementIncrement ??
-      (product.unit === "pcs" ? 1 : product.unit === "kg" || product.unit === "g" ? 0.01 : 1),
+    // Always increment by 1 unit (standard e-commerce behavior)
+    measurementIncrement: product.measurementIncrement ?? 1,
   };
 }
 
@@ -494,9 +492,8 @@ export function CartProvider({ children }: CartProviderProps) {
             newItem.stock = variant.stock;
             newItem.measurement = variant.measurement;
             newItem.unit = variant.unit;
-            newItem.measurementIncrement =
-              variant.measurementIncrement ??
-              (variant.unit === "pcs" ? 1 : variant.unit === "kg" || variant.unit === "g" ? 0.01 : 1);
+            // Always increment by 1 unit (standard e-commerce behavior)
+            newItem.measurementIncrement = variant.measurementIncrement ?? 1;
             newItem.unitWeightKg = variant.unitWeightKg ?? product.unitWeightKg;
           }
           // If variant not found, continue with product defaults (shouldn't happen, but safe)
