@@ -142,14 +142,21 @@ export default function ProductDetailPage() {
     return null;
   }, [product, variantId]);
 
+  // Prioritize variant priceType over product priceType
+  // If variant exists, use its priceType; otherwise use product priceType
+  // Get measurement for display (prioritize variant measurement)
+  const measurement = selectedVariant?.measurement || product?.measurement;
+  
+  // Determine priceType: prioritize variant, then check if product has variants (use default variant)
+  // If product has variants but none selected, use the default variant's priceType
+  const defaultVariant = product?.variants?.find((v: any) => v.isDefault) || product?.variants?.[0];
+  const effectiveVariant = selectedVariant || defaultVariant;
+  
   const priceType =
     (isFishProduct && 'PER_WEIGHT') ||
-    selectedVariant?.priceType ||
+    effectiveVariant?.priceType ||
     product?.priceType ||
-    ((selectedVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
-
-  // Get measurement for display
-  const measurement = selectedVariant?.measurement || product?.measurement;
+    ((effectiveVariant?.unit || product?.unit) === "pcs" ? "PER_UNIT" : "PER_WEIGHT");
 
   const currentStock = useMemo(() => {
     if (isFishProduct && selectedSizeCategory) {
@@ -165,7 +172,8 @@ export default function ProductDetailPage() {
   }, [product, selectedVariant, selectedSizeCategory, isFishProduct, sizeCategories]);
 
   const inStock = currentStock > 0;
-  const unit = selectedSizeCategory ? "kg" : selectedVariant?.unit || product?.unit || "pcs";
+  // Use variant unit if available, otherwise product unit
+  const unit = selectedSizeCategory ? "kg" : (effectiveVariant?.unit || product?.unit || "pcs");
   const stockType =
     selectedSizeCategory ? "WEIGHT" : selectedVariant?.stockType || product?.stockType || (unit === "pcs" ? "COUNT" : "WEIGHT");
   // Always increment by 1 unit (standard e-commerce behavior)
