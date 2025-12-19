@@ -188,7 +188,7 @@ export function SizeCategoryManager({
                   type="number"
                   min="0.01"
                   step="0.01"
-                  value={category.measurementIncrement || "0.25"}
+                  value={category.measurementIncrement || "1"}
                   onChange={(e) => onUpdate(index, "measurementIncrement", e.target.value)}
                   containerClassName=""
                   className="text-sm"

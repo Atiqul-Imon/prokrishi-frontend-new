@@ -216,7 +216,7 @@ export function VariantManager({
                   type="number"
                   min="0.01"
                   step="0.01"
-                  value={variant.measurementIncrement || "0.01"}
+                  value={variant.measurementIncrement || "1"}
                   onChange={(e) => onUpdate(index, "measurementIncrement", e.target.value)}
                   containerClassName=""
                   className="text-sm"

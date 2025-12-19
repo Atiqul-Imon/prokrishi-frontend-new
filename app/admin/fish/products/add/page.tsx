@@ -24,7 +24,7 @@ export default function AddFishProductPage() {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sizeCategories, setSizeCategories] = useState<SizeCategoryForm[]>([
-    { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: true },
+    { label: "", pricePerKg: "", stock: "", measurementIncrement: "1", status: "active", isDefault: true },
   ]);
   const [formData, setFormData] = useState({
     name: "",
@@ -52,7 +52,7 @@ export default function AddFishProductPage() {
   const addSizeCategory = () => {
     setSizeCategories([
       ...sizeCategories,
-      { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: false },
+      { label: "", pricePerKg: "", stock: "", measurementIncrement: "1", status: "active", isDefault: false },
     ]);
   };
 

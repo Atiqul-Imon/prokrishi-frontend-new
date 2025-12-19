@@ -72,14 +72,14 @@ export default function EditFishProductPage() {
               minWeight: cat.minWeight?.toString() || undefined,
               maxWeight: cat.maxWeight?.toString() || undefined,
               sku: cat.sku || undefined,
-              measurementIncrement: cat.measurementIncrement?.toString() || "0.25",
+              measurementIncrement: cat.measurementIncrement?.toString() || "1",
               status: cat.status || "active",
               isDefault: cat.isDefault || false,
             }))
           );
         } else {
           setSizeCategories([
-            { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: true },
+            { label: "", pricePerKg: "", stock: "", measurementIncrement: "1", status: "active", isDefault: true },
           ]);
         }
       } catch (err) {
@@ -110,7 +110,7 @@ export default function EditFishProductPage() {
   const addSizeCategory = () => {
     setSizeCategories([
       ...sizeCategories,
-      { label: "", pricePerKg: "", stock: "", measurementIncrement: "0.25", status: "active", isDefault: false },
+      { label: "", pricePerKg: "", stock: "", measurementIncrement: "1", status: "active", isDefault: false },
     ]);
   };
 
