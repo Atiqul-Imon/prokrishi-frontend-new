@@ -72,6 +72,9 @@ export default function ProductDetailPage() {
         setLoading(true);
         // OPTIMIZED: Smart fallback - try regular first (99% of products)
         // Only call fish API if regular fails (saves 50% bandwidth and API calls)
+        // Note: 404 errors for regular products are expected when loading fish products
+        let regularProductError: any = null;
+        
         try {
           const res = await getProductById(id);
           if (res.product) {
@@ -79,10 +82,15 @@ export default function ProductDetailPage() {
             setLoading(false);
             return; // Fast path for regular products (99% of cases)
           }
-        } catch (regularErr) {
-          const err = regularErr as { status?: number; message?: string };
+        } catch (regularErr: any) {
+          regularProductError = regularErr;
+          const err = regularErr as { status?: number; response?: { status?: number }; message?: string };
+          const statusCode = err.status || err.response?.status;
+          
           // Only try fish product if regular product returns 404
-          if (err.status === 404 || err.message?.includes('not found')) {
+          if (statusCode === 404 || err.message?.includes('not found')) {
+            // This 404 is expected - it means the product might be a fish product
+            // We'll try the fish product API next, so we don't need to show this error
             try {
               const fishRes = await fishProductApi.getById(id);
               const fishProduct = fishRes.data?.fishProduct || fishRes.fishProduct;
@@ -107,14 +115,15 @@ export default function ProductDetailPage() {
                 return;
               }
             } catch (fishErr) {
-              // Both failed
+              // Both failed - show error
               setError("Product not found - it may have been deleted");
               setLoading(false);
               return;
             }
+          } else {
+            // Re-throw if not a 404 (network error, etc.)
+            throw regularErr;
           }
-          // Re-throw if not a 404 (network error, etc.)
-          throw regularErr;
         }
       } catch (err) {
         setError(handleApiError(err, "loading product"));

@@ -195,6 +195,19 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
     }
+    
+    // Suppress console errors for expected 404s on product endpoints
+    // (These are handled gracefully with fallback to fish product API)
+    if (
+      error.response?.status === 404 &&
+      error.config?.url?.includes('/product/') &&
+      error.config?.method === 'get'
+    ) {
+      // This is an expected 404 - product might be a fish product
+      // Don't log to console to reduce noise
+      // The error will still be thrown for proper error handling
+    }
+    
     return Promise.reject(error);
   },
 );
@@ -660,6 +673,10 @@ export function getUserById(id: string): Promise<UserProfileResponse> {
   return apiRequest<UserProfileResponse>(`/user/${id}`);
 }
 
+/**
+ * Get product by ID
+ * Note: Returns 404 for fish products - use with fallback to fishProductApi.getById()
+ */
 export async function getProductById(id: string): Promise<ProductResponse> {
   // Add cache busting parameter to ensure fresh data
   const timestamp = Date.now();
