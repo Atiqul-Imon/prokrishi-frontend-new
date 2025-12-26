@@ -14,9 +14,10 @@ interface ProductCardProps {
   product: Product;
   showBadges?: boolean;
   className?: string;
+  priority?: boolean; // OPTIMIZED: Priority loading for above-the-fold images
 }
 
-function ProductCard({ product, showBadges = true, className = "" }: ProductCardProps) {
+function ProductCard({ product, showBadges = true, className = "", priority = false }: ProductCardProps) {
   const { addToCart } = useCart();
   // Normalize product stock to ensure consistency (handles variantSummary.totalStock)
   const normalizedProduct = useMemo(() => normalizeProductStock(product), [product]);
@@ -110,7 +111,8 @@ function ProductCard({ product, showBadges = true, className = "" }: ProductCard
                     ? "group-hover:opacity-0 group-hover:scale-110" 
                     : "group-hover:scale-105 group-hover:brightness-110"
                 }`}
-                loading="lazy"
+                loading={priority ? "eager" : "lazy"}
+                priority={priority}
                 imageType="product"
                 size="medium"
                 quality={80}

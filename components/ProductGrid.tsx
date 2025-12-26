@@ -75,11 +75,12 @@ function ProductGrid({
 
   return (
     <div className={`grid ${gridCols} ${gapClasses[gap]} items-stretch ${className}`}>
-      {products.map((product) => (
+      {products.map((product, index) => (
         <ProductCard
           key={product._id || product.id}
           product={product}
           showBadges={showBadges}
+          priority={index < 8} // OPTIMIZED: Priority loading for first 8 products (above-the-fold)
         />
       ))}
     </div>

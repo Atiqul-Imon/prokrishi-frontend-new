@@ -49,12 +49,16 @@ function FeaturedCategories() {
         setError(null);
         const data = await getFeaturedCategories();
         const categoriesList = data.categories || [];
-        console.log("Loaded categories:", categoriesList.length, categoriesList);
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Loaded categories:", categoriesList.length, categoriesList);
+        }
         setCategories(categoriesList.slice(0, 8));
       } catch (err: any) {
         const errorMessage = err?.message || "Failed to load featured categories.";
         setError(errorMessage);
-        console.error("Error loading categories:", err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Error loading categories:", err);
+        }
       } finally {
         setLoading(false);
       }
@@ -76,7 +80,9 @@ function FeaturedCategories() {
   }
 
   if (error) {
-    console.warn("Categories error:", error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("Categories error:", error);
+    }
     // Don't hide on error, show a message instead for debugging
     return (
       <section className="py-8 lg:py-12 bg-gradient-to-br from-amber-50 via-white to-green-50">
@@ -90,7 +96,9 @@ function FeaturedCategories() {
   }
 
   if (categories.length === 0) {
-    console.warn("No categories found");
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("No categories found");
+    }
     return null;
   }
 

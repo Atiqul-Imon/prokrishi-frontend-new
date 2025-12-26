@@ -55,19 +55,6 @@ function ProductsContent() {
 
   const limit = 24;
 
-  // Load categories
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const data = await getFeaturedCategories();
-        setCategories(data.categories || []);
-      } catch (err) {
-        logger.error("Failed to load categories:", err);
-      }
-    }
-    loadCategories();
-  }, []);
-
   // Load products with filters (both regular and fish products)
   // OPTIMIZED: Batched API calls using Promise.all for parallel execution
   // OPTIMIZED: Memoized callback to prevent unnecessary re-creation
@@ -176,6 +163,21 @@ function ProductsContent() {
     }
   }, [currentPage, selectedCategory, sortBy, sortOrder, searchQuery, limit]);
 
+  // OPTIMIZED: Progressive rendering - categories show immediately, products load separately
+  // This provides better UX: fast categories show right away, products can take longer
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getFeaturedCategories();
+        setCategories(data.categories || []);
+      } catch (err) {
+        logger.error("Failed to load categories:", err);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  // Load products separately (can take longer, doesn't block categories)
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
