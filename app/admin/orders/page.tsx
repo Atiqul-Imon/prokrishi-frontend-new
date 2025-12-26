@@ -69,12 +69,11 @@ export default function AdminOrdersPage() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    // Load orders and stats in parallel for faster page load
+    Promise.all([fetchOrders(), fetchStats()]).catch((err) => {
+      logger.error("Failed to load orders or stats:", err);
+    });
+  }, [fetchOrders, fetchStats]);
 
   const handleDeleteOrder = async (orderId: string) => {
     try {

@@ -6,7 +6,6 @@ import { CartProvider } from "./context/CartContext";
 import { FishCartProvider } from "./context/FishCartContext";
 import ConditionalLayout from "./ConditionalLayout";
 import { ErrorBoundaryWrapper } from "./components/ErrorBoundaryWrapper";
-import FontLoader from "../components/FontLoader";
 import BanglaFontAdjuster from "../components/BanglaFontAdjuster";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import ResourcePrefetcher from "../components/ResourcePrefetcher";
@@ -19,6 +18,7 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
+  preload: true, // Keep preload but ensure font is used immediately via className
 });
 
 export const metadata: Metadata = {
@@ -51,12 +51,30 @@ export default function RootLayout({
         {/* Preconnect to ImageKit CDN for faster image loading */}
         <link rel="preconnect" href="https://ik.imagekit.io" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://ik.imagekit.io" />
+        
+        {/* Preconnect to Google Fonts for faster loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Load Kalpurush font server-side to avoid CORS errors */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Kalpurush:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+        
+        {/* Preload logo for immediate display - explicit preload prevents warning */}
+        <link
+          rel="preload"
+          href="/logo/prokrishihublogo.png"
+          as="image"
+          type="image/png"
+        />
       </head>
       <body className={`${roboto.variable} antialiased`}>
         <SkipLinks />
         <LazyLoadedComponents />
         <ResourcePrefetcher />
-        <FontLoader />
+        {/* FontLoader removed - fonts now loaded server-side to avoid CORS errors */}
         <BanglaFontAdjuster />
         <ServiceWorkerRegistration />
         <OfflineIndicator />

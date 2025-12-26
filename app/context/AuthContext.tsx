@@ -17,33 +17,68 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Load cached user immediately (non-blocking)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Try to load from cache first for immediate render
+      const cachedUser = localStorage.getItem("cachedUser");
+      if (cachedUser) {
+        try {
+          const parsedUser = JSON.parse(cachedUser);
+          setUser(parsedUser);
+          setLoading(false); // Don't block - show page immediately
+        } catch (e) {
+          // Invalid cache, clear it
+          localStorage.removeItem("cachedUser");
+        }
+      } else {
+        setLoading(false); // No cache, but don't block
+      }
+    }
+  }, []);
+
+  // Refresh user from API in background (non-blocking)
   useEffect(() => {
     async function loadUser() {
-      setLoading(true);
       try {
         if (typeof window !== "undefined" && localStorage.getItem("accessToken")) {
           try {
             const data = await fetchProfile();
             setUser(data.user);
-            console.log("AuthContext: User loaded from token:", data.user);
+            // Cache user for next time
+            if (data.user) {
+              localStorage.setItem("cachedUser", JSON.stringify(data.user));
+            }
+            if (process.env.NODE_ENV === "development") {
+              console.log("AuthContext: User loaded from token:", data.user);
+            }
           } catch (error) {
-            console.error("AuthContext: Failed to fetch profile, clearing tokens:", error);
             // Token might be invalid, clear it
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
+            localStorage.removeItem("cachedUser");
             setUser(null);
+            if (process.env.NODE_ENV === "development") {
+              console.error("AuthContext: Failed to fetch profile, clearing tokens:", error);
+            }
           }
         } else {
+          // No token, clear cache
+          localStorage.removeItem("cachedUser");
           setUser(null);
         }
         setError(null);
       } catch (error) {
-        console.error("AuthContext: Error loading user:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("AuthContext: Error loading user:", error);
+        }
         setUser(null);
       }
       setLoading(false);
     }
-    loadUser();
+    // Small delay to let cached user render first
+    const timer = setTimeout(loadUser, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   async function register(form: RegisterRequest) {
@@ -66,16 +101,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
-      console.log("AuthContext: Attempting login with:", { email: form.email, passwordLength: form.password?.length });
+      if (process.env.NODE_ENV === "development") {
+        console.log("AuthContext: Attempting login with:", { email: form.email, passwordLength: form.password?.length });
+      }
       const data = await loginUser(form);
-      console.log("AuthContext: Login response received:", data);
+      if (process.env.NODE_ENV === "development") {
+        console.log("AuthContext: Login response received:", data);
+      }
       
       if (!data.user) {
         throw new Error("Login response missing user data");
       }
       
       setUser(data.user);
-      console.log("AuthContext: User state updated:", data.user);
+      // Cache user for next time
+      if (data.user) {
+        localStorage.setItem("cachedUser", JSON.stringify(data.user));
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.log("AuthContext: User state updated:", data.user);
+      }
       setLoading(false);
       return { success: true, user: data.user };
     } catch (err) {
@@ -89,12 +134,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   function logout() {
     logoutUser();
+    localStorage.removeItem("cachedUser"); // Clear cache on logout
     setUser(null);
     setError(null);
   }
 
   function updateUser(updatedUser: User) {
     setUser(updatedUser);
+    // Update cache
+    if (updatedUser) {
+      localStorage.setItem("cachedUser", JSON.stringify(updatedUser));
+    }
   }
 
   const isAdmin = useMemo(() => user?.role === "admin" || user?.role === "super_admin", [user]);

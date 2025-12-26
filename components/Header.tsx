@@ -254,7 +254,7 @@ export default function Header() {
                   width={200}
                   height={64}
                   className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                  priority
+                  // Priority removed - logo is preloaded in layout.tsx to avoid double preload warning
                 />
               </div>
             </Link>

@@ -27,10 +27,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login?redirect=" + encodeURIComponent(pathname));
-    } else if (!loading && user && !isAdmin) {
-      router.push("/unauthorized");
+    // Only redirect if we're sure user is not authenticated
+    // Don't block on loading - use cached user for immediate render
+    if (!loading) {
+      if (!user) {
+        router.push("/login?redirect=" + encodeURIComponent(pathname));
+      } else if (user && !isAdmin) {
+        router.push("/unauthorized");
+      }
     }
   }, [user, isAdmin, loading, router, pathname]);
 
@@ -38,7 +42,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setSidebarOpen(false);
   }, [pathname]);
 
-  if (loading) {
+  // Show loading only if we have no cached user and still loading
+  // This allows optimistic rendering with cached user
+  if (loading && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="relative">
@@ -48,9 +54,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!user || !isAdmin) {
+  // Only hide if we're sure user is not admin (after loading completes)
+  if (!loading && (!user || !isAdmin)) {
     return null;
   }
+
+  // Optimistic render: Show page even if still loading (using cached user)
+  // Auth check happens in background
 
   return (
     <ErrorBoundary>
