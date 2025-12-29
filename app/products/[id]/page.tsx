@@ -467,10 +467,27 @@ export default function ProductDetailPage() {
 
                   {/* Shipping Info */}
                   <div className="pt-4 border-t border-gray-200 space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Truck className="w-4 h-4 text-green-600" />
-                      <span>Inside Dhaka: ৳80 · Outside Dhaka: ৳150</span>
-                    </div>
+                    {isFishProduct ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Truck className="w-4 h-4 text-green-600" />
+                          <span>Inside Dhaka: ৳100 (Flat Rate)</span>
+                        </div>
+                        <p className="text-xs text-amber-800 font-medium">
+                          Fish products can only be delivered inside Dhaka
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Truck className="w-4 h-4 text-green-600" />
+                          <span>Inside Dhaka: ৳80 · Outside Dhaka: ৳150</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Up to 3kg. Additional ৳20/kg (inside) or ৳30/kg (outside) for heavier orders
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

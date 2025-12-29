@@ -10,6 +10,7 @@ import { fishOrderApi } from "../utils/fishApi";
 import { logger } from "../utils/logger";
 import { handleApiError, retryWithBackoff } from "../utils/errorHandler";
 import { formatCurrency, formatPhone } from "@/app/utils";
+import { calculateShipping, getShippingRates, type ShippingZone } from "../utils/shipping";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -62,16 +63,30 @@ function CheckoutContent() {
     }
   }, [fishCart.length, selectedZone]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Calculate shipping fee silently based on zone (no API call, instant calculation)
-  // Use fallback rates for instant UI updates, backend will calculate accurate rate on order placement
-  const shippingFee = useMemo(() => {
+  // Calculate shipping fee accurately based on zone, product type, and weight
+  // Matches backend calculation logic
+  const shippingCalculation = useMemo(() => {
     if (!selectedZone || (cart.length === 0 && fishCart.length === 0)) {
-      return 0;
+      return null;
     }
-    // Use standard rates for instant calculation
-    // Backend will calculate accurate rate based on weight when placing order
-    return selectedZone === "inside_dhaka" ? 80 : 150;
-  }, [selectedZone, cart.length, fishCart.length]);
+    // Cast cart items to ShippingCartItem type (CartItem has all required properties)
+    return calculateShipping(selectedZone as ShippingZone, cart as unknown as Array<{
+      measurement?: number;
+      unit?: string;
+      unitWeightKg?: number;
+      variantSnapshot?: {
+        measurement?: number;
+        unit?: string;
+        unitWeightKg?: number;
+      };
+      quantity: number;
+      [key: string]: unknown;
+    }>, fishCart.length > 0);
+  }, [selectedZone, cart, fishCart.length]);
+
+  const shippingFee = useMemo(() => {
+    return shippingCalculation?.shippingFee || 0;
+  }, [shippingCalculation]);
 
   const total = useMemo(() => cartTotal + shippingFee, [cartTotal, shippingFee]);
 
@@ -521,7 +536,7 @@ function CheckoutContent() {
                         <div className="text-lg font-extrabold">Inside Dhaka</div>
                       </div>
                       <div className={`text-sm font-medium mt-1 ${selectedZone === "inside_dhaka" ? "text-emerald-700" : "text-gray-600"}`}>
-                        From ৳80
+                        {fishCart.length > 0 ? "৳100 (Fish)" : "From ৳80"}
                       </div>
                     </div>
                     {selectedZone === "inside_dhaka" && (
@@ -783,7 +798,25 @@ function CheckoutContent() {
                     </div>
                   )}
                   <div className="flex items-center justify-between py-2.5 px-2 rounded-lg hover:bg-gray-50/50 transition-colors">
-                    <p className="text-base text-gray-600 font-medium">Shipping</p>
+                    <div className="flex-1">
+                      <p className="text-base text-gray-600 font-medium">Shipping</p>
+                      {shippingCalculation && selectedZone && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {shippingCalculation.breakdown.fishFee && (
+                            <span>Fish: {formatCurrency(shippingCalculation.breakdown.fishFee)}</span>
+                          )}
+                          {shippingCalculation.breakdown.fishFee && shippingCalculation.breakdown.otherFee && <span> + </span>}
+                          {shippingCalculation.breakdown.otherFee && (
+                            <span>
+                              Other: {formatCurrency(shippingCalculation.breakdown.otherFee)}
+                              {shippingCalculation.breakdown.otherWeightKg && shippingCalculation.breakdown.otherWeightKg > 0 && (
+                                <span> ({shippingCalculation.breakdown.otherWeightKg.toFixed(2)}kg)</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <p className="text-lg font-extrabold text-gray-900">
                       {selectedZone ? (
                         formatCurrency(shippingFee)

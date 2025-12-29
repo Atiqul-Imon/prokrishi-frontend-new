@@ -18,11 +18,15 @@ function CartContent() {
   const hasItems = cart.length > 0 || fishCart.length > 0;
 
   const summary = useMemo(() => {
+    const hasFish = fishCart.length > 0;
+    const shippingHint = hasFish
+      ? "Inside Dhaka: ৳100 (Fish) · Outside Dhaka: Not available for fish"
+      : "Inside Dhaka: ৳80 · Outside Dhaka: ৳150 (weight-based)";
     return {
       subtotal: cartTotal,
-      shippingHint: "Inside Dhaka: ৳80 · Outside Dhaka: ৳150",
+      shippingHint,
     };
-  }, [cartTotal]);
+  }, [cartTotal, fishCart.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50/50 to-white py-8 pb-24 md:pb-20 overflow-x-hidden w-full">
