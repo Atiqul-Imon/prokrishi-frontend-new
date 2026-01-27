@@ -17,6 +17,8 @@ export default function HeroSection() {
           quality={90}
         />
       </div>
+      {/* Subtle Overlay */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-black/20 via-black/10 to-black/5" />
     </section>
   );
 }
