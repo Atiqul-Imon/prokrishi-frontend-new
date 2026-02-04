@@ -3,13 +3,19 @@
 import React from "react";
 import Image from "next/image";
 
+// Update this version whenever the hero image changes to force cache refresh
+const HERO_IMAGE_VERSION = "2";
+
 export default function HeroSection() {
+  // Add version query parameter to bust browser cache
+  const heroImageSrc = `/hero-image.webp?v=${HERO_IMAGE_VERSION}`;
+
   return (
     <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] aspect-[16/9] sm:aspect-[21/9] lg:aspect-[16/6] overflow-hidden">
       {/* Hero Image Background */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src="/hero-image.webp"
+          src={heroImageSrc}
           alt="Prokrishi Hero"
           fill
           priority

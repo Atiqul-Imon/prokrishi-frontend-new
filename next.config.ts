@@ -94,6 +94,16 @@ const nextConfig: NextConfig = {
           }
         ],
       },
+      {
+        // Force cache refresh for hero image to ensure clients see updated version
+        source: '/hero-image.webp',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate'
+          },
+        ],
+      },
     ];
   },
 };
