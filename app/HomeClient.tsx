@@ -40,7 +40,7 @@ const ProductGrid = dynamic(() => import("@/components/ProductGrid"), {
 // Smart lazy loading configuration
 const INITIAL_BATCH_SIZE = 12; // Load first 12 products immediately
 const LAZY_BATCH_SIZE = 6; // Load 6 more products per batch
-const TOTAL_PRODUCTS = 30; // Total products to show
+const TOTAL_PRODUCTS = 15; // Reduced from 30 to 15 for faster initial load
 
 export default function HomeClient() {
   // Featured products state
@@ -77,10 +77,12 @@ export default function HomeClient() {
       setFishLoading(true);
       
       try {
+        // CRITICAL FIX: Reduced initial load from 30 to 15 products for faster first load
+        // Products will lazy load as user scrolls
         const [featuredRes, fishRes] = await Promise.allSettled([
           getFeaturedProducts(),
           fishProductApi.getAll({
-            limit: TOTAL_PRODUCTS,
+            limit: TOTAL_PRODUCTS, // Now 15 instead of 30
             status: "active",
             sort: "createdAt",
             order: "desc",
